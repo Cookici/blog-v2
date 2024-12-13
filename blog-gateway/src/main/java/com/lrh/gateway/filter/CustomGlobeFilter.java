@@ -3,11 +3,11 @@ package com.lrh.gateway.filter;
 import com.alibaba.fastjson2.JSON;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.lrh.common.constant.PasswordKeyConstant;
-import com.lrh.common.context.UserInfoDTO;
-import com.lrh.common.result.Result;
-import com.lrh.common.util.JwtUtil;
+import com.lrh.gateway.constant.PasswordKeyConstant;
 import com.lrh.gateway.constant.WhiteListConstant;
+import com.lrh.gateway.context.UserInfoDTO;
+import com.lrh.gateway.result.Result;
+import com.lrh.gateway.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -45,7 +45,7 @@ public class CustomGlobeFilter implements GlobalFilter {
 
         String requestPath = exchange.getRequest().getURI().getPath();
 
-        for (String whiteUrl : WhiteListConstant.whiteList) {
+        for (String whiteUrl : WhiteListConstant.WHITE_LIST) {
             if (requestPath.contains(whiteUrl)) {
                 return chain.filter(exchange);
             }
@@ -92,8 +92,8 @@ public class CustomGlobeFilter implements GlobalFilter {
     private static DataBuffer getFailDataBuffer(ServerWebExchange exchange) {
         // 创建自定义的 Result 对象
         Result<Object> message = Result.fail()
-                .code(HttpStatus.UNAUTHORIZED.value())  // 设置状态码
-                .message(HttpStatus.UNAUTHORIZED.getReasonPhrase());  // 设置消息内容
+                .code(HttpStatus.UNAUTHORIZED.value())
+                .message(HttpStatus.UNAUTHORIZED.getReasonPhrase());
 
         // 将响应内容转为 JSON 字符串
         String responseBody = JSON.toJSONString(message);

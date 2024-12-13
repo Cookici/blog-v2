@@ -24,20 +24,8 @@ public class UserUpdateReq {
 
     private String userName;
 
-    private String userPassword;
-
-    private String userPhone;
-
-    private Integer userLevel;
-
     private String userSex;
 
     @JsonFormat(locale = "zh", timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime userBirthday;
-
-    private String roleName;
-
-    private String userEmail;
-
-    private String userIp;
 }

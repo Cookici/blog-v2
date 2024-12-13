@@ -26,7 +26,7 @@ public class UserInfoFilter implements Filter, Ordered {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws ServletException, IOException {
         try {
             HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-            String userInfoDTOJson = httpServletRequest.getHeader(PasswordKeyConstant.Authorization);
+            String userInfoDTOJson = httpServletRequest.getHeader(PasswordKeyConstant.AUTHORIZATION);
             if (StringUtils.hasText(userInfoDTOJson)) {
                 UserInfoDTO userInfoDTO = JSON.parseObject(userInfoDTOJson, UserInfoDTO.class);
                 UserContext.setUser(userInfoDTO);

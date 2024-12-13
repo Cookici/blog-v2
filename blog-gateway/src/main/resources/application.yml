@@ -5,14 +5,15 @@ spring:
   application:
     name: blog-gateway
   redis:
-    host: 127.0.0.1
+    host: 192.168.29.200
     port: 6379
     password: 123456
   cloud:
     nacos:
       discovery:
-        server-addr: 192.168.29.200:9002
-
+        server-addr: 127.0.0.1:8848
+        username: nacos
+        password: nacos
     gateway:
       default-filters:
         - AddRequestHeader=gateway-env, blog-gateway

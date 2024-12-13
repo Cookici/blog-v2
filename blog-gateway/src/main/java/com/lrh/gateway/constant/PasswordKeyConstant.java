@@ -1,4 +1,4 @@
-package com.lrh.common.constant;
+package com.lrh.gateway.constant;
 
 /**
  * @ProjectName: blog-ddd
@@ -12,6 +12,6 @@ package com.lrh.common.constant;
 public class PasswordKeyConstant {
 
     public static final String HEADER_USER_ID = "HEADER_USER_ID";
-    public static final String AUTHORIZATION = "Authorization";
+    public static final String Authorization = "Authorization";
 
 }
