@@ -92,8 +92,8 @@ public class CustomGlobeFilter implements GlobalFilter {
     private static DataBuffer getFailDataBuffer(ServerWebExchange exchange) {
         // 创建自定义的 Result 对象
         Result<Object> message = Result.fail()
-                .code(HttpStatus.UNAUTHORIZED.value())  // 设置状态码
-                .message(HttpStatus.UNAUTHORIZED.getReasonPhrase());  // 设置消息内容
+                .code(HttpStatus.UNAUTHORIZED.value())
+                .message(HttpStatus.UNAUTHORIZED.getReasonPhrase());
 
         // 将响应内容转为 JSON 字符串
         String responseBody = JSON.toJSONString(message);
