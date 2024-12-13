@@ -1,0 +1,28 @@
+server:
+  port: 7001
+
+spring:
+  application:
+    name: blog-gateway
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    password: 123456
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.29.200:9002
+
+    gateway:
+      default-filters:
+        - AddRequestHeader=gateway-env, blog-gateway
+      routes:
+        - id: user
+          uri: lb://blog-user
+          predicates:
+            - Path=/api/user/**
+
+        - id: identity
+          uri: lb://blog-identity
+          predicates:
+            - Path=/api/role/**

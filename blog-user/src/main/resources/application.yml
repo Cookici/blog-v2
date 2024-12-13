@@ -1,0 +1,29 @@
+server:
+  port: 9000
+
+spring:
+  application:
+    name: blog-user
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    username: root
+    password: lrh,903.520hhhh
+    url: jdbc:mysql://127.0.0.1:3306/user?characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    password: 123456
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.29.200:9002
+
+mybatis-plus:
+  mapper-locations: classpath*:xml/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      logic-delete-field: is_deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0

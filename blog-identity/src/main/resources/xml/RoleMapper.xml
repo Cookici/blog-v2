@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.lrh.identity.mapper.RoleMapper">
+
+    <select id="selectRoleKinds" resultType="com.lrh.identity.dao.RoleModel">
+        SELECT role_name, role_level
+        FROM t_role
+        WHERE is_deleted = 0
+        GROUP BY role_name
+    </select>
+
+
+</mapper>
