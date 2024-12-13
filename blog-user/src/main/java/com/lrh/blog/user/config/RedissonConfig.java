@@ -10,10 +10,10 @@ import org.springframework.context.annotation.Configuration;
 /**
  * @ProjectName: blog-ddd
  * @Package: com.lrh.blog.user.config
- * @ClassName: RedissionConfig
+ * @ClassName: RedissonConfig
  * @Author: 63283
  * @Description:
- * @Date: 2024/12/12 21:37
+ * @Date: 2024/12/13 20:58
  */
 
 @Configuration
@@ -26,13 +26,11 @@ public class RedissonConfig {
     }
 
     @Bean
-    public RedissonClient redissonClient(){
+    public RedissonClient redissonClient() {
         Config config = new Config();
-        String redisUrl = String.format("redis://%s:%s",redisProperties.getHost()+"",redisProperties.getPort()+"");
-        config.useSingleServer().setAddress(redisUrl).setPassword(redisProperties.getPassword());
-        config.useSingleServer().setDatabase(3);
-        config.useSingleServer().setConnectionMinimumIdleSize(10);
+        config.useSingleServer()
+                .setAddress(String.format("redis://%s:%s", redisProperties.getHost(), redisProperties.getPort()))
+                .setPassword(redisProperties.getPassword());
         return Redisson.create(config);
     }
-
 }

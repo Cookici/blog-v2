@@ -1,10 +1,9 @@
 package com.lrh.blog.user.dto;
 
+import com.lrh.blog.user.constant.UserConstant;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
-
-import static com.lrh.blog.user.constant.UserConstant.SEX_MAN;
-import static com.lrh.blog.user.constant.UserConstant.SEX_WOMAN;
 
 /**
  * @ProjectName: blog-ddd
@@ -38,7 +37,7 @@ public class UserValid {
     }
 
     public static boolean validUserSex(String userSex){
-        return userSex == null || (!Objects.equals(userSex, SEX_MAN) && !Objects.equals(userSex, SEX_WOMAN));
+        return userSex == null || (!Objects.equals(userSex, UserConstant.SEX_MAN) && !Objects.equals(userSex, UserConstant.SEX_WOMAN));
     }
 
     public static boolean validUserBirthday(LocalDateTime userBirthday){

@@ -10,13 +10,15 @@ spring:
     password: lrh,903.520hhhh
     url: jdbc:mysql://127.0.0.1:3306/user?characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
   redis:
-    host: 127.0.0.1
+    host: 192.168.29.200
     port: 6379
     password: 123456
   cloud:
     nacos:
       discovery:
-        server-addr: 192.168.29.200:9002
+        server-addr: 127.0.0.1:8848
+        username: nacos
+        password: nacos
 
 mybatis-plus:
   mapper-locations: classpath*:xml/*.xml

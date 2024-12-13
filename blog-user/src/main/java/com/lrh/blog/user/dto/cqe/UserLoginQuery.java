@@ -17,18 +17,18 @@ import lombok.Getter;
 @Getter
 public class UserLoginQuery {
 
-    private final String userName;
+    private final String userPhone;
 
     private final String userPassword;
 
     public UserLoginQuery(UserLoginReq req) throws ValidException {
-        if (UserValid.validUserName(req.getUserName())) {
-            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "用户名"));
+        if (UserValid.validUserPhone(req.getUserPhone())) {
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "手机号"));
         }
         if (UserValid.validUserPassword(req.getUserPassword())) {
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "密码"));
         }
-        this.userName = req.getUserName();
+        this.userPhone = req.getUserPhone();
         this.userPassword = req.getUserPassword();
     }
 }
