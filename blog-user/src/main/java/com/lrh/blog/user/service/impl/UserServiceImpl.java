@@ -17,9 +17,9 @@ import com.lrh.blog.user.dto.resp.UserUpdateResp;
 import com.lrh.blog.user.mapper.UserMapper;
 import com.lrh.blog.user.service.UserService;
 import com.lrh.blog.user.util.DESUtil;
+import com.lrh.blog.user.util.LockUtil;
 import com.lrh.common.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -74,24 +74,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
     }
 
     private String fetchOrGenerateToken(String redisKey, UserLoginResp resp, UserModel userModel) {
-        RLock lock = redissonClient.getLock(String.format(RedisKeyConstant.LOGIN_KEY, redisKey));
-        lock.lock(2, TimeUnit.MINUTES);
-        try {
-            String token = (String) redisTemplate.opsForValue().get(redisKey);
-            if (token == null) {
-                token = getToken(resp.getUserId(), resp.getUserName(), userModel.getRoleName());
-                redisTemplate.opsForValue().setIfAbsent(redisKey, token, 2, TimeUnit.HOURS);
-            }
-            return token;
-        } catch (Exception e) {
-            log.error("[UserServiceImpl] Error while fetching or generating token: {}", e.getMessage(), e);
-            throw new RuntimeException("Token generation failed");
-        } finally {
-            if (lock.isLocked() && lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
-        }
+        LockUtil lockUtil = new LockUtil(redissonClient);
+        return lockUtil.executeWithLock(
+                String.format(RedisKeyConstant.LOGIN_KEY, redisKey), 2, TimeUnit.MILLISECONDS,
+                () -> {
+                    String token = (String) redisTemplate.opsForValue().get(redisKey);
+                    if (token == null) {
+                        token = getToken(resp.getUserId(), resp.getUserName(), userModel.getRoleName());
+                        redisTemplate.opsForValue().setIfAbsent(redisKey, token, 2, TimeUnit.HOURS);
+                    }
+                    return token;
+                }
+        );
     }
+
 
     private String getToken(String userId, String userName, String roleName) {
         Map<String, String> payload = new HashMap<>();
