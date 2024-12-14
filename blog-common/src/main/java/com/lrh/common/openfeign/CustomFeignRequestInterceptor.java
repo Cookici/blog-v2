@@ -25,8 +25,8 @@ public class CustomFeignRequestInterceptor implements RequestInterceptor {
     public void apply(RequestTemplate requestTemplate) {
         RequestAttributes reqAttributes = RequestContextHolder.currentRequestAttributes();
         HttpServletRequest request = ((ServletRequestAttributes) reqAttributes).getRequest();
-        String userInfoJson = request.getHeader(PasswordKeyConstant.AUTHORIZATION);
-        log.info("[CustomFeignRequestInterceptor] apply , Authorization is {}",userInfoJson);
-        requestTemplate.header(PasswordKeyConstant.AUTHORIZATION, userInfoJson);
+        String token = request.getHeader(PasswordKeyConstant.AUTHORIZATION);
+        log.info("[CustomFeignRequestInterceptor] apply , Authorization is {}",token);
+        requestTemplate.header(PasswordKeyConstant.AUTHORIZATION, token);
     }
 }

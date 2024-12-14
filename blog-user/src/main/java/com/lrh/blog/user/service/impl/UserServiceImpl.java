@@ -14,6 +14,7 @@ import com.lrh.blog.user.dto.cqe.UserUpdateCmd;
 import com.lrh.blog.user.dto.resp.UserLoginResp;
 import com.lrh.blog.user.dto.resp.UserRegisterResp;
 import com.lrh.blog.user.dto.resp.UserUpdateResp;
+import com.lrh.blog.user.dto.vo.UserVO;
 import com.lrh.blog.user.mapper.UserMapper;
 import com.lrh.blog.user.service.UserService;
 import com.lrh.blog.user.util.DESUtil;
@@ -25,9 +26,11 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * @ProjectName: blog-ddd
@@ -132,4 +135,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
         }
         return new UserUpdateResp(update);
     }
+
+    @Override
+    public Map<String, UserVO> getUserByIds(List<String> userIds) {
+        LambdaQueryWrapper<UserModel> queryWrapper = Wrappers.lambdaQuery(UserModel.class)
+                .in(UserModel::getUserId, userIds);
+
+        List<UserModel> userModelList = userMapper.selectList(queryWrapper);
+
+        return userModelList.stream().collect(Collectors.toMap(
+                UserModel::getUserId,
+                userModel -> new UserVO(userModel.getUserId(),
+                        userModel.getUserName(),
+                        userModel.getUserLevel())
+        ));
+    }
+
 }

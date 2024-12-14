@@ -33,6 +33,8 @@ public class  UserLoginResp {
 
     private LocalDateTime userBirthday;
 
+    private LocalDateTime creatTime;
+
     private String userIp;
 
     private String userEmail;
@@ -51,6 +53,7 @@ public class  UserLoginResp {
         this.userBirthday = userModel.getUserBirthday();
         this.userIp = userModel.getUserIp();
         this.userEmail = userModel.getUserEmail();
+        this.creatTime = userModel.getCreateTime();
         return this;
     }
 
