@@ -6,6 +6,8 @@ import com.lrh.blog.user.dto.req.UserLoginReq;
 import com.lrh.blog.user.exception.ValidException;
 import lombok.Getter;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * @ProjectName: blog-ddd
  * @Package: com.lrh.blog.user.dto.cqe
@@ -21,7 +23,7 @@ public class UserLoginQuery {
 
     private final String userPassword;
 
-    public UserLoginQuery(UserLoginReq req) throws ValidException {
+    public UserLoginQuery(@NotNull UserLoginReq req) throws ValidException {
         if (UserValid.validUserPhone(req.getUserPhone())) {
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "手机号"));
         }
