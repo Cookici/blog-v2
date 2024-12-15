@@ -1,7 +1,8 @@
 package com.lrh.article.adapter.http;
 
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
-import com.lrh.article.application.dto.article.ArticlePageDTO;
+import com.lrh.article.application.dto.PageDTO;
+import com.lrh.article.application.dto.article.ArticleDTO;
 import com.lrh.article.application.service.ArticleApplicationService;
 import com.lrh.common.exception.ValidException;
 import com.lrh.common.result.Result;
@@ -28,10 +29,10 @@ public class ArticleApplicationController {
     }
 
 
-    @GetMapping
-    public Result<ArticlePageDTO> pageArticle(ArticlePageQuery query) throws ValidException {
-        ArticlePageDTO articlePageDTO = articleApplicationService.pageArticles(query);
-        return Result.success(articlePageDTO);
+    @GetMapping("/page")
+    public Result<PageDTO<ArticleDTO>> pageArticle(ArticlePageQuery query) throws ValidException {
+        PageDTO<ArticleDTO> resp = articleApplicationService.pageArticles(query);
+        return Result.success(resp);
     }
 
 }

@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
 import com.lrh.article.application.dto.PageDTO;
 import com.lrh.article.application.dto.article.ArticleDTO;
-import com.lrh.article.application.dto.article.ArticlePageDTO;
 import com.lrh.article.domain.entity.ArticleEntity;
 import com.lrh.article.domain.service.ArticleOperateService;
 import com.lrh.article.domain.vo.UserVO;
@@ -17,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @ProjectName: blog-ddd
@@ -39,37 +39,39 @@ public class ArticleApplicationService {
         this.userClient = userClient;
     }
 
-    public ArticlePageDTO pageArticles(ArticlePageQuery query) throws ValidException {
+    public PageDTO<ArticleDTO> pageArticles(ArticlePageQuery query) throws ValidException {
         try {
             query.valid();
         } catch (ValidException e) {
-            log.error("[ArticleApplicationService] pageArticles error : {}",e.getMessage());
+            log.error("[ArticleApplicationService] pageArticles error : {}", e.getMessage());
             throw new ValidException(e.getMessage());
         }
 
         Long total = articleOperateService.countArticlesPage(query);
-        if(total == null || total == 0){
+        if (total == null || total == 0) {
             return null;
         }
         Page<ArticleEntity> articleEntityPage = articleOperateService.getArticlesPage(query);
-        List<ArticleDTO> articleDTOList = new ArrayList<>();
-        List<String> userIds = new ArrayList<>();
-        articleEntityPage.getRecords().forEach(articleEntity -> {
-                    articleDTOList.add(ArticleDTO.fromEntity(articleEntity));
-                    userIds.add(articleEntity.getUserId());
-                }
-        );
+        List<ArticleEntity> articleEntityList = articleEntityPage.getRecords();
+        List<String> userIds = articleEntityList.stream().map(ArticleEntity::getUserId).collect(Collectors.toList());
+
         Result<Map<String, UserVO>> userList = userClient.getByIds(userIds);
         Map<String, UserVO> userIdForUser = userList.getData();
-        articleDTOList.forEach(articleDTO -> {
-                    UserVO userVO = userIdForUser.get(articleDTO.getUserId());
+
+        List<ArticleDTO> articleDTOList = new ArrayList<>();
+        articleEntityList.forEach(articleEntity -> {
+                    UserVO userVO = userIdForUser.get(articleEntity.getUserId());
                     if (userVO != null) {
-                        articleDTO.setUserInfo(userVO);
+                        articleDTOList.add(ArticleDTO.fromEntity(articleEntity, userVO));
                     }
                 }
         );
 
-        return new ArticlePageDTO(new PageDTO<>(articleDTOList, total,
-                articleEntityPage.getCurrent(), articleEntityPage.getSize()));
+        return PageDTO.<ArticleDTO>builder()
+                .page(articleEntityPage.getCurrent())
+                .total(total)
+                .pageSize(articleEntityPage.getSize())
+                .data(articleDTOList).
+                build();
     }
 }

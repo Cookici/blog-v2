@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @ProjectName: blog-ddd
@@ -28,14 +29,16 @@ public class ArticleEntity {
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 
+    private List<LabelEntity> labelEntityList;
+
     public static ArticleEntity fromPO(ArticlePO articlePO) {
-        return new ArticleEntity(
-                articlePO.getArticleId(),
-                articlePO.getUserId(),
-                articlePO.getArticleTitle(),
-                articlePO.getArticleContent(),
-                articlePO.getCreateTime(),
-                articlePO.getUpdateTime()
-        );
+        return ArticleEntity.builder()
+                .articleId(articlePO.getArticleId())
+                .userId(articlePO.getUserId())
+                .articleTitle(articlePO.getArticleTitle())
+                .articleContent(articlePO.getArticleContent())
+                .createTime(articlePO.getCreateTime())
+                .updateTime(articlePO.getUpdateTime())
+                .build();
     }
 }

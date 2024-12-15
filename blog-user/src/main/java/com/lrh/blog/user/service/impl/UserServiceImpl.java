@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lrh.blog.user.constant.DESConstant;
 import com.lrh.blog.user.constant.RedisKeyConstant;
-import com.lrh.blog.user.constant.UserConstant;
 import com.lrh.blog.user.dao.UserModel;
 import com.lrh.blog.user.dto.cqe.UserLoginQuery;
 import com.lrh.blog.user.dto.cqe.UserRegisterCmd;
@@ -19,6 +18,7 @@ import com.lrh.blog.user.mapper.UserMapper;
 import com.lrh.blog.user.service.UserService;
 import com.lrh.blog.user.util.DESUtil;
 import com.lrh.blog.user.util.LockUtil;
+import com.lrh.common.constant.BusinessConstant;
 import com.lrh.common.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
@@ -60,7 +60,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
     public UserLoginResp login(UserLoginQuery query) {
         LambdaQueryWrapper<UserModel> queryWrapper = Wrappers.lambdaQuery(UserModel.class)
                 .eq(UserModel::getUserPhone, query.getUserPhone())
-                .eq(UserModel::getIsDeleted, UserConstant.IS_NOT_DELETED);
+                .eq(UserModel::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
         UserModel userModel = userMapper.selectOne(queryWrapper);
         try {
             String password = DESUtil.decrypt(userModel.getUserPassword(), DESConstant.PASSWORD_KEY);
@@ -72,13 +72,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
             throw new RuntimeException("Login failed");
         }
         UserLoginResp resp = new UserLoginResp().convertedUserModelToUserLoginResp(userModel);
-        resp.setToken(fetchOrGenerateToken(resp.getUserId(), resp, userModel));
+        fetchOrGenerateToken(resp.getUserId(), resp, userModel);
         return resp;
     }
 
-    private String fetchOrGenerateToken(String redisKey, UserLoginResp resp, UserModel userModel) {
+    private void fetchOrGenerateToken(String redisKey, UserLoginResp resp, UserModel userModel) {
         LockUtil lockUtil = new LockUtil(redissonClient);
-        return lockUtil.executeWithLock(
+        lockUtil.executeWithLock(
                 String.format(RedisKeyConstant.LOGIN_KEY, redisKey), 2, TimeUnit.MILLISECONDS,
                 () -> {
                     String token = (String) redisTemplate.opsForValue().get(redisKey);
@@ -86,7 +86,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
                         token = getToken(resp.getUserId(), resp.getUserName(), userModel.getRoleName());
                         redisTemplate.opsForValue().setIfAbsent(redisKey, token, 2, TimeUnit.HOURS);
                     }
-                    return token;
                 }
         );
     }
@@ -125,7 +124,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
     public UserUpdateResp updateUserInfo(UserUpdateCmd cmd) {
         LambdaUpdateWrapper<UserModel> updateWrapper = Wrappers.lambdaUpdate(UserModel.class)
                 .eq(UserModel::getUserId, cmd.getUserId())
-                .eq(UserModel::getIsDeleted, UserConstant.IS_NOT_DELETED)
+                .eq(UserModel::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
                 .set(UserModel::getUserName, cmd.getUserName())
                 .set(UserModel::getUserSex, cmd.getUserSex())
                 .set(UserModel::getUserBirthday, cmd.getUserBirthday());

@@ -28,7 +28,7 @@ import java.time.LocalDateTime;
 public class ArticlePO {
 
     @TableId(type = IdType.AUTO)
-    private Integer id;
+    private Long id;
 
     @TableField("article_id")
     private String articleId;

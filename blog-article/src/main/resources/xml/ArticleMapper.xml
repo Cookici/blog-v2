@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.lrh.article.infrastructure.database.mapper.ArticleMapper">
+
+    <select id="selectCountPage" resultType="java.lang.Long">
+            SELECT COUNT(*) AS total
+            FROM t_article
+            WHERE is_deleted = 0
+            <if test="query.articleTitle != null and query.articleTitle != ''">
+                AND article_title LIKE CONCAT('%', #{query.articleTitle}, '%')
+            </if>
+            <if test="query.articleContent != null and query.articleContent != ''">
+                AND article_content LIKE CONCAT('%', #{query.articleContent}, '%')
+            </if>
+    </select>
+
+
+</mapper>

@@ -39,8 +39,6 @@ public class  UserLoginResp {
 
     private String userEmail;
 
-    private String token;
-
     public UserLoginResp convertedUserModelToUserLoginResp(UserModel userModel) {
         if (userModel == null) {
             return null;

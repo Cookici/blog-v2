@@ -13,4 +13,6 @@ public class BusinessConstant {
     public final static String VALID_ERROR = "%s，不符合规范";
     public final static String NO_USER = "没有该用户或者账户密码错误";
     public final static String DUP_KEY = "数据已存在";
+    public final static Integer IS_DELETED = 1;
+    public final static Integer IS_NOT_DELETED = 0;
 }

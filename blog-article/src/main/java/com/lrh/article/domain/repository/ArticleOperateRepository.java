@@ -2,7 +2,7 @@ package com.lrh.article.domain.repository;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
-import com.lrh.article.infrastructure.po.ArticlePO;
+import com.lrh.article.domain.entity.ArticleEntity;
 
 /**
  * @ProjectName: blog-ddd
@@ -14,7 +14,7 @@ import com.lrh.article.infrastructure.po.ArticlePO;
  */
 
 public interface ArticleOperateRepository {
-    Page<ArticlePO> getArticlesPage(ArticlePageQuery query);
+    Page<ArticleEntity> getArticlesPage(ArticlePageQuery query);
 
     Long countArticlesPage(ArticlePageQuery query);
 }

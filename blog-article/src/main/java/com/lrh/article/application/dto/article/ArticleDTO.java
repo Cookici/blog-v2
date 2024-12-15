@@ -1,5 +1,6 @@
 package com.lrh.article.application.dto.article;
 
+import com.lrh.article.application.dto.label.LabelDTO;
 import com.lrh.article.domain.entity.ArticleEntity;
 import com.lrh.article.domain.vo.UserVO;
 import lombok.AllArgsConstructor;
@@ -8,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @ProjectName: blog-ddd
@@ -29,18 +31,23 @@ public class ArticleDTO {
     private String articleTitle;
     private String articleContent;
     private LocalDateTime createTime;
+    private LocalDateTime updateTime;
 
     private UserVO userInfo;
 
-    public static ArticleDTO fromEntity(ArticleEntity articleEntity) {
-        return new ArticleDTO(
-                articleEntity.getArticleId(),
-                articleEntity.getUserId(),
-                articleEntity.getArticleTitle(),
-                articleEntity.getArticleContent(),
-                articleEntity.getCreateTime(),
-                new UserVO()
-        );
+    private List<LabelDTO> labels;
+
+    public static ArticleDTO fromEntity(ArticleEntity articleEntity, UserVO userVO) {
+        return ArticleDTO.builder()
+                .articleId(articleEntity.getArticleId())
+                .userId(articleEntity.getUserId())
+                .articleTitle(articleEntity.getArticleTitle())
+                .articleContent(articleEntity.getArticleContent())
+                .createTime(articleEntity.getCreateTime())
+                .updateTime(articleEntity.getUpdateTime())
+                .userInfo(userVO)
+                .labels(LabelDTO.fromEntityList(articleEntity.getLabelEntityList()))
+                .build();
     }
 
 }
