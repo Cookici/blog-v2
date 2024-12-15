@@ -1,11 +1,8 @@
 package com.lrh.gateway.filter;
 
 import com.alibaba.fastjson2.JSON;
-import com.auth0.jwt.interfaces.Claim;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.lrh.gateway.constant.PasswordKeyConstant;
 import com.lrh.gateway.constant.WhiteListConstant;
-import com.lrh.gateway.context.UserInfoDTO;
 import com.lrh.gateway.result.Result;
 import com.lrh.gateway.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +17,6 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
 /**
  * @ProjectName: blog-ddd
@@ -66,18 +62,9 @@ public class CustomGlobeFilter implements GlobalFilter {
         }
 
         try {
-            DecodedJWT verify = JwtUtil.verify(token);
-            Map<String, Claim> claims = verify.getClaims();
-            String userName = String.valueOf(claims.get("userName"));
-            String roleName = String.valueOf(claims.get("roleName"));
-            UserInfoDTO userInfoDTO = UserInfoDTO.builder()
-                    .userId(userId)
-                    .userName(userName)
-                    .roleName(roleName)
-                    .token(token)
-                    .build();
+            JwtUtil.verify(token);
             exchange.getRequest().mutate()
-                    .header(PasswordKeyConstant.Authorization, JSON.toJSONString(userInfoDTO))
+                    .header(PasswordKeyConstant.Authorization, token)
                     .build();
         } catch (Exception e) {
             log.error("[CustomGlobeFilter] filter error : {}", e.getMessage());

@@ -27,3 +27,8 @@ spring:
           uri: lb://blog-identity
           predicates:
             - Path=/api/role/**
+
+        - id: article
+          uri: lb://blog-article
+          predicates:
+            - Path=/api/article/**

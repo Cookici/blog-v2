@@ -1,4 +1,4 @@
-package com.lrh.gateway.context;
+package com.lrh.article.domain.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,20 +7,19 @@ import lombok.NoArgsConstructor;
 
 /**
  * @ProjectName: blog-ddd
- * @Package: com.lrh.blog.user.context
- * @ClassName: UserInfoDTO
+ * @Package: com.lrh.article.domain.vo
+ * @ClassName: UserVO
  * @Author: 63283
  * @Description:
- * @Date: 2024/12/13 16:10
+ * @Date: 2024/12/14 21:08
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class UserInfoDTO {
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class UserVO {
     private String userId;
     private String userName;
-    private String roleName;
-    private String token;
+    private Integer userLevel;
 }

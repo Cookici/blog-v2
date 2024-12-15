@@ -1,4 +1,4 @@
-package com.lrh.blog.user.exception;
+package com.lrh.common.exception;
 
 /**
  * @ProjectName: blog-ddd

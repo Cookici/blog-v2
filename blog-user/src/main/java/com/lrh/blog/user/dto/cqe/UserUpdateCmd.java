@@ -1,11 +1,12 @@
 package com.lrh.blog.user.dto.cqe;
 
-import com.lrh.blog.user.constant.BusinessConstant;
+import com.lrh.common.constant.BusinessConstant;
 import com.lrh.blog.user.dto.UserValid;
 import com.lrh.blog.user.dto.req.UserUpdateReq;
-import com.lrh.blog.user.exception.ValidException;
+import com.lrh.common.exception.ValidException;
 import lombok.Getter;
 
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 /**
@@ -27,7 +28,7 @@ public class UserUpdateCmd {
 
     private final LocalDateTime userBirthday;
 
-    public UserUpdateCmd(UserUpdateReq req) throws ValidException {
+    public UserUpdateCmd(@NotNull UserUpdateReq req) throws ValidException {
         if (UserValid.validUserName(req.getUserName())) {
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "用户名"));
         }
