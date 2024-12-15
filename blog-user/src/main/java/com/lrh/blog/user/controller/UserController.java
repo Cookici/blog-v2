@@ -9,14 +9,15 @@ import com.lrh.blog.user.dto.req.UserUpdateReq;
 import com.lrh.blog.user.dto.resp.UserLoginResp;
 import com.lrh.blog.user.dto.resp.UserRegisterResp;
 import com.lrh.blog.user.dto.resp.UserUpdateResp;
-import com.lrh.blog.user.exception.NoUserException;
-import com.lrh.blog.user.exception.ValidException;
+import com.lrh.blog.user.dto.vo.UserVO;
 import com.lrh.blog.user.service.UserService;
+import com.lrh.common.exception.NoUserException;
+import com.lrh.common.exception.ValidException;
 import com.lrh.common.result.Result;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @ProjectName: blog-ddd
@@ -64,6 +65,12 @@ public class UserController {
             return Result.fail();
         }
         return Result.success();
+    }
+
+    @GetMapping("/getByIds")
+    Result<Map<String, UserVO>> getByIds(@RequestParam("userIds") List<String> userIds){
+        Map<String, UserVO> userMap = userService.getUserByIds(userIds);
+        return Result.success(userMap);
     }
 
 }

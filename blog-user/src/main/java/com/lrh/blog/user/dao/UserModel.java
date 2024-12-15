@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 public class UserModel {
 
     @TableId(type = IdType.AUTO)
-    private Integer id;
+    private Long id;
 
     @TableField("user_id")
     private String userId;

@@ -1,13 +1,14 @@
 package com.lrh.blog.user.dto.cqe;
 
-import com.lrh.blog.user.constant.BusinessConstant;
+import com.lrh.common.constant.BusinessConstant;
 import com.lrh.blog.user.constant.DESConstant;
 import com.lrh.blog.user.dto.UserValid;
 import com.lrh.blog.user.dto.req.UserRegisterReq;
-import com.lrh.blog.user.exception.ValidException;
+import com.lrh.common.exception.ValidException;
 import com.lrh.blog.user.util.DESUtil;
 import lombok.Getter;
 
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 
@@ -39,7 +40,7 @@ public class UserRegisterCmd {
 
     private final String userRole;
 
-    public UserRegisterCmd(UserRegisterReq req) throws Exception {
+    public UserRegisterCmd(@NotNull UserRegisterReq req) throws Exception {
         if (UserValid.validUserPassword(req.getUserPassword())) {
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "用户名"));
         }

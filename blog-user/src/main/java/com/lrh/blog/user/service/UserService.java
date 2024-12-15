@@ -8,6 +8,10 @@ import com.lrh.blog.user.dto.cqe.UserUpdateCmd;
 import com.lrh.blog.user.dto.resp.UserLoginResp;
 import com.lrh.blog.user.dto.resp.UserRegisterResp;
 import com.lrh.blog.user.dto.resp.UserUpdateResp;
+import com.lrh.blog.user.dto.vo.UserVO;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @ProjectName: blog-ddd
@@ -25,4 +29,6 @@ public interface UserService extends IService<UserModel> {
     UserRegisterResp register(UserRegisterCmd cmd);
 
     UserUpdateResp updateUserInfo(UserUpdateCmd cmd);
+
+    Map<String, UserVO> getUserByIds(List<String> userIds);
 }

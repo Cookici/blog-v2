@@ -1,12 +1,11 @@
-package com.lrh.blog.user.exception.handler;
+package com.lrh.blog.user.exception;
 
 import com.auth0.jwt.exceptions.AlgorithmMismatchException;
 import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
-import com.lrh.blog.user.constant.MySqlConstant;
-import com.lrh.blog.user.constant.UserConstant;
-import com.lrh.blog.user.exception.NoUserException;
-import com.lrh.blog.user.exception.ValidException;
+import com.lrh.common.constant.BusinessConstant;
+import com.lrh.common.exception.NoUserException;
+import com.lrh.common.exception.ValidException;
 import com.lrh.common.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -30,13 +29,13 @@ public class CustomExceptionHandler {
     @ResponseBody
     @ExceptionHandler(NoUserException.class)
     public Result<Object> handleNoUserException() {
-        return Result.fail().code(HttpStatus.UNAUTHORIZED.value()).message(UserConstant.NO_USER);
+        return Result.fail().code(HttpStatus.UNAUTHORIZED.value()).message(BusinessConstant.NO_USER);
     }
 
     @ResponseBody
     @ExceptionHandler(DuplicateKeyException.class)
     public Result<Object> handleDuplicateKeyException() {
-        return Result.fail().code(HttpStatus.BAD_REQUEST.value()).message(MySqlConstant.DUP_KEY);
+        return Result.fail().code(HttpStatus.BAD_REQUEST.value()).message(BusinessConstant.DUP_KEY);
     }
 
     @ResponseBody
