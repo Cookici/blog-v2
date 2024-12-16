@@ -48,8 +48,7 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
         LambdaQueryWrapper<ArticlePO> queryWrapper = Wrappers.lambdaQuery(ArticlePO.class)
                 .eq(ArticlePO::getArticleId, articleId)
                 .eq(ArticlePO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
-        ArticlePO articlePO = articleMapper.selectOne(queryWrapper);
-        return articlePO;
+        return articleMapper.selectOne(queryWrapper);
     }
 
     @Override
