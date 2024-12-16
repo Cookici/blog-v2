@@ -21,15 +21,14 @@ import lombok.NoArgsConstructor;
 public class LabelEntity {
     private String labelId;
     private String labelName;
-    private String labelAlias;
-    private String labelDescription;
 
     public static LabelEntity fromPO(LabelPO labelPO) {
+        if(labelPO == null){
+            return null;
+        }
         return LabelEntity.builder()
                 .labelId(labelPO.getLabelId())
                 .labelName(labelPO.getLabelName())
-                .labelAlias(labelPO.getLabelAlias())
-                .labelDescription(labelPO.getLabelDescription())
                 .build();
     }
 }

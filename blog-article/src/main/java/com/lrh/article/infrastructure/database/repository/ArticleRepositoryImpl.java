@@ -1,16 +1,18 @@
 package com.lrh.article.infrastructure.database.repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.lrh.article.application.cqe.article.ArticleInsertCommand;
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
-import com.lrh.article.domain.entity.ArticleEntity;
 import com.lrh.article.domain.repository.ArticleOperateRepository;
-import com.lrh.article.infrastructure.database.convertor.ArticleConvertor;
 import com.lrh.article.infrastructure.database.mapper.ArticleMapper;
 import com.lrh.article.infrastructure.po.ArticlePO;
 import com.lrh.common.constant.BusinessConstant;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
 
 /**
  * @ProjectName: blog-ddd
@@ -32,25 +34,59 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
 
 
     @Override
-    public Page<ArticleEntity> getArticlesPage(ArticlePageQuery query) {
-        LambdaQueryWrapper<ArticlePO> queryWrapper = Wrappers.lambdaQuery(ArticlePO.class)
-                .eq(ArticlePO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
-
-        if (query.getArticleTitle() != null && !query.getArticleTitle().isEmpty()) {
-            queryWrapper.like(ArticlePO::getArticleTitle, query.getArticleTitle());
-        }
-        if (query.getArticleContent() != null && !query.getArticleContent().isEmpty()) {
-            queryWrapper.like(ArticlePO::getArticleContent, query.getArticleContent());
-        }
-
-        queryWrapper.orderByAsc(ArticlePO::getUpdateTime);
-
-        Page<ArticlePO> page = new Page<>(query.getPage(), query.getPageSize());
-        return ArticleConvertor.toPageArticleEntityConvertor(articleMapper.selectPage(page, queryWrapper));
+    public List<ArticlePO> getArticlesPage(ArticlePageQuery query, Long offset, Long limit) {
+        return articleMapper.selectPageArticle(query, offset, limit);
     }
 
     @Override
     public Long countArticlesPage(ArticlePageQuery query) {
         return articleMapper.selectCountPage(query);
+    }
+
+    @Override
+    public ArticlePO getArticlesById(String articleId) {
+        LambdaQueryWrapper<ArticlePO> queryWrapper = Wrappers.lambdaQuery(ArticlePO.class)
+                .eq(ArticlePO::getArticleId, articleId)
+                .eq(ArticlePO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
+        ArticlePO articlePO = articleMapper.selectOne(queryWrapper);
+        return articlePO;
+    }
+
+    @Override
+    public void deleteArticleById(String articleId) {
+        LambdaUpdateWrapper<ArticlePO> updateWrapper = Wrappers.lambdaUpdate(ArticlePO.class)
+                .eq(ArticlePO::getArticleId, articleId)
+                .eq(ArticlePO::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
+                .set(ArticlePO::getIsDeleted, BusinessConstant.IS_DELETED);
+        articleMapper.update(updateWrapper);
+    }
+
+    @Override
+    public void updateArticleById(String articleId, String articleTitle, String articleContent) {
+        if(articleTitle == null && articleContent == null){
+            return;
+        }
+        LambdaUpdateWrapper<ArticlePO> updateWrapper = Wrappers.lambdaUpdate(ArticlePO.class)
+                .eq(ArticlePO::getArticleId, articleId)
+                .eq(ArticlePO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
+        if (articleTitle != null) {
+            updateWrapper.set(ArticlePO::getArticleTitle, articleTitle);
+        }
+        if (articleContent != null) {
+            updateWrapper.set(ArticlePO::getArticleContent, articleContent);
+        }
+        articleMapper.update(updateWrapper);
+    }
+
+    @Override
+    public ArticlePO insertArticle(ArticleInsertCommand command) {
+        ArticlePO articlePO = ArticlePO.builder()
+                .articleId(UUID.randomUUID().toString())
+                .articleTitle(command.getArticleTitle())
+                .articleContent(command.getArticleContent())
+                .userId(command.getUserId())
+                .build();
+        articleMapper.insert(articlePO);
+        return articlePO;
     }
 }

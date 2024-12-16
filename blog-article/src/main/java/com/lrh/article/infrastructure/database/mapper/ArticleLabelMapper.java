@@ -2,7 +2,6 @@ package com.lrh.article.infrastructure.database.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.lrh.article.infrastructure.po.ArticleLabelPO;
-import com.lrh.article.infrastructure.po.ArticlePO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -19,6 +18,10 @@ import java.util.List;
  */
 @Mapper
 public interface ArticleLabelMapper extends BaseMapper<ArticleLabelPO> {
+    void batchUpsert(@Param("articleLabelPOList") List<ArticleLabelPO> articleLabelPOList);
+
+    void restoreDeleted(@Param("articleId")String articleId,@Param("labelIdList") List<String> labelIdList);
+
     @Select({
             "<script>",
             "SELECT *",

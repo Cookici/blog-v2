@@ -25,15 +25,11 @@ import java.util.stream.Collectors;
 public class LabelDTO {
     private String labelId;
     private String labelName;
-    private String labelAlias;
-    private String labelDescription;
 
     public static LabelDTO fromEntity(LabelEntity labelEntity) {
         return LabelDTO.builder()
                 .labelId(labelEntity.getLabelId())
                 .labelName(labelEntity.getLabelName())
-                .labelAlias(labelEntity.getLabelAlias())
-                .labelDescription(labelEntity.getLabelDescription())
                 .build();
     }
 

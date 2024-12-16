@@ -2,9 +2,7 @@ package com.lrh.article.infrastructure.database.repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.lrh.article.domain.entity.LabelEntity;
 import com.lrh.article.domain.repository.LabelOperateRepository;
-import com.lrh.article.infrastructure.database.convertor.LabelConvertor;
 import com.lrh.article.infrastructure.database.mapper.LabelMapper;
 import com.lrh.article.infrastructure.po.LabelPO;
 import com.lrh.common.constant.BusinessConstant;
@@ -30,10 +28,16 @@ public class LabelRepositoryImpl implements LabelOperateRepository {
     }
 
     @Override
-    public List<LabelEntity> getLabelListByIds(List<String> labelIds) {
+    public List<LabelPO> getLabelListByIds(List<String> labelIds) {
         LambdaQueryWrapper<LabelPO> queryWrapper = Wrappers.lambdaQuery(LabelPO.class).in(LabelPO::getLabelId, labelIds)
                 .eq(LabelPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
         List<LabelPO> labelPOS = labelMapper.selectList(queryWrapper);
-        return LabelConvertor.toListLabelEntityConvertor(labelPOS);
+        return labelPOS;
+    }
+
+    @Override
+    public List<LabelPO> selectLabelsByArticleId(String articleId) {
+        List<LabelPO> labelPOList = labelMapper.selectLabelsByArticleId(articleId);
+        return labelPOList;
     }
 }

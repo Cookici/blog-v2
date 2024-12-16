@@ -17,25 +17,25 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class PageQuery {
-    private Integer page;
-    private Integer pageSize;
+    private Long page;
+    private Long pageSize;
 
-    public PageQuery(Integer page, Integer pageSize) {
+    public PageQuery(Long page, Long pageSize) {
         if (page <= 1) {
-            page = 1;
+            page = 1L;
         }
         if (pageSize <= 0) {
-            pageSize = 10;
+            pageSize = 10L;
         }
         this.page = page;
         this.pageSize = pageSize;
     }
 
-    public Integer getOffset() {
+    public Long getOffset() {
         return (page - 1) * pageSize;
     }
 
-    public Integer getLimit() {
+    public Long getLimit() {
         return pageSize;
     }
 

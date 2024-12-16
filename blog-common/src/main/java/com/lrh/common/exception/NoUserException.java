@@ -9,7 +9,7 @@ package com.lrh.common.exception;
  * @Date: 2024/12/12 下午2:28
  */
 
-public class NoUserException extends Exception{
+public class NoUserException extends RuntimeException{
     public NoUserException() {
         super();
     }
