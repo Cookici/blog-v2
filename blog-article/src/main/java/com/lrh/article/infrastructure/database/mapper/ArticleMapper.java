@@ -6,6 +6,8 @@ import com.lrh.article.infrastructure.po.ArticlePO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * @ProjectName: blog-ddd
  * @Package: com.lrh.article.infrastructure.mapper
@@ -17,4 +19,8 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface ArticleMapper extends BaseMapper<ArticlePO> {
     Long selectCountPage(@Param("query") ArticlePageQuery query);
+
+    List<ArticlePO> selectPageArticle(@Param("query") ArticlePageQuery query,
+                                          @Param("offset") Long offset,
+                                          @Param("limit") Long limit);
 }

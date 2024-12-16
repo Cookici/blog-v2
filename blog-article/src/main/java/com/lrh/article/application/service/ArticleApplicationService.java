@@ -1,14 +1,12 @@
 package com.lrh.article.application.service;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.lrh.article.application.cqe.article.ArticlePageQuery;
+import com.lrh.article.application.cqe.article.*;
 import com.lrh.article.application.dto.PageDTO;
 import com.lrh.article.application.dto.article.ArticleDTO;
 import com.lrh.article.domain.entity.ArticleEntity;
 import com.lrh.article.domain.service.ArticleOperateService;
 import com.lrh.article.domain.vo.UserVO;
 import com.lrh.article.infrastructure.client.UserClient;
-import com.lrh.common.exception.ValidException;
 import com.lrh.common.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -39,20 +37,13 @@ public class ArticleApplicationService {
         this.userClient = userClient;
     }
 
-    public PageDTO<ArticleDTO> pageArticles(ArticlePageQuery query) throws ValidException {
-        try {
-            query.valid();
-        } catch (ValidException e) {
-            log.error("[ArticleApplicationService] pageArticles error : {}", e.getMessage());
-            throw new ValidException(e.getMessage());
-        }
-
+    public PageDTO<ArticleDTO> pageArticles(ArticlePageQuery query) {
+        query.valid();
         Long total = articleOperateService.countArticlesPage(query);
         if (total == null || total == 0) {
             return null;
         }
-        Page<ArticleEntity> articleEntityPage = articleOperateService.getArticlesPage(query);
-        List<ArticleEntity> articleEntityList = articleEntityPage.getRecords();
+        List<ArticleEntity> articleEntityList = articleOperateService.getArticlesPage(query);
         List<String> userIds = articleEntityList.stream().map(ArticleEntity::getUserId).collect(Collectors.toList());
 
         Result<Map<String, UserVO>> userList = userClient.getByIds(userIds);
@@ -68,10 +59,42 @@ public class ArticleApplicationService {
         );
 
         return PageDTO.<ArticleDTO>builder()
-                .page(articleEntityPage.getCurrent())
+                .page(query.getPage())
                 .total(total)
-                .pageSize(articleEntityPage.getSize())
+                .pageSize(query.getPageSize())
                 .data(articleDTOList).
                 build();
+    }
+
+    public ArticleDTO getArticleById(ArticleQuery query) {
+        query.valid();
+        ArticleEntity articleEntity = articleOperateService.getArticleById(query);
+        if (articleEntity == null) {
+            return null;
+        }
+        List<String> userIdList = new ArrayList<>();
+        userIdList.add(articleEntity.getUserId());
+        Result<Map<String, UserVO>> userList = userClient.getByIds(userIdList);
+        Map<String, UserVO> userIdForUser = userList.getData();
+        UserVO userInfo = userIdForUser.get(articleEntity.getUserId());
+        if (userInfo == null) {
+            userInfo = new UserVO();
+        }
+        return ArticleDTO.fromEntity(articleEntity, userInfo);
+    }
+
+    public void deleteArticleById(ArticleDeleteCommand command) {
+        command.valid();
+        articleOperateService.deleteArticleById(command);
+    }
+
+    public void updateArticle(ArticleUpdateCommand command) {
+        command.valid();
+        articleOperateService.updateArticleById(command);
+    }
+
+    public void insertArticle(ArticleInsertCommand command) {
+        command.valid();
+        articleOperateService.insertArticle(command);
     }
 }

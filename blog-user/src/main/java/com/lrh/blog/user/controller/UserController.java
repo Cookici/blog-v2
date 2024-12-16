@@ -12,7 +12,6 @@ import com.lrh.blog.user.dto.resp.UserUpdateResp;
 import com.lrh.blog.user.dto.vo.UserVO;
 import com.lrh.blog.user.service.UserService;
 import com.lrh.common.exception.NoUserException;
-import com.lrh.common.exception.ValidException;
 import com.lrh.common.result.Result;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,10 +37,10 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public Result<UserLoginResp> login(@RequestBody UserLoginReq req) throws NoUserException, ValidException {
+    public Result<UserLoginResp> login(@RequestBody UserLoginReq req) {
         UserLoginQuery query = new UserLoginQuery(req);
         UserLoginResp resp = userService.login(query);
-        if (resp == null){
+        if (resp == null) {
             throw new NoUserException();
         }
         return Result.success(resp);
@@ -51,24 +50,24 @@ public class UserController {
     public Result<UserRegisterResp> register(@RequestBody UserRegisterReq req) throws Exception {
         UserRegisterCmd cmd = new UserRegisterCmd(req);
         UserRegisterResp resp = userService.register(cmd);
-        if (resp == null){
+        if (resp == null) {
             return Result.fail();
         }
         return Result.success(resp);
     }
 
     @PostMapping("/update")
-    public Result<UserUpdateResp> updateUserInfo(@RequestBody UserUpdateReq req) throws ValidException {
+    public Result<UserUpdateResp> updateUserInfo(@RequestBody UserUpdateReq req) {
         UserUpdateCmd cmd = new UserUpdateCmd(req);
         UserUpdateResp resp = userService.updateUserInfo(cmd);
-        if (resp.getUpdate() <= 0){
+        if (resp.getUpdate() <= 0) {
             return Result.fail();
         }
         return Result.success();
     }
 
     @GetMapping("/getByIds")
-    Result<Map<String, UserVO>> getByIds(@RequestParam("userIds") List<String> userIds){
+    Result<Map<String, UserVO>> getByIds(@RequestParam("userIds") List<String> userIds) {
         Map<String, UserVO> userMap = userService.getUserByIds(userIds);
         return Result.success(userMap);
     }

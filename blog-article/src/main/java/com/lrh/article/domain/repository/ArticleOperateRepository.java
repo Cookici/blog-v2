@@ -1,8 +1,10 @@
 package com.lrh.article.domain.repository;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.lrh.article.application.cqe.article.ArticleInsertCommand;
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
-import com.lrh.article.domain.entity.ArticleEntity;
+import com.lrh.article.infrastructure.po.ArticlePO;
+
+import java.util.List;
 
 /**
  * @ProjectName: blog-ddd
@@ -14,7 +16,15 @@ import com.lrh.article.domain.entity.ArticleEntity;
  */
 
 public interface ArticleOperateRepository {
-    Page<ArticleEntity> getArticlesPage(ArticlePageQuery query);
+    List<ArticlePO> getArticlesPage(ArticlePageQuery query, Long offset, Long limit);
 
     Long countArticlesPage(ArticlePageQuery query);
+
+    ArticlePO getArticlesById(String articleId);
+
+    void deleteArticleById(String articleId);
+
+    void updateArticleById(String articleId, String articleTitle, String articleContent);
+
+    ArticlePO insertArticle(ArticleInsertCommand command);
 }

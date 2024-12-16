@@ -32,6 +32,9 @@ public class ArticleEntity {
     private List<LabelEntity> labelEntityList;
 
     public static ArticleEntity fromPO(ArticlePO articlePO) {
+        if(articlePO == null){
+            return null;
+        }
         return ArticleEntity.builder()
                 .articleId(articlePO.getArticleId())
                 .userId(articlePO.getUserId())
