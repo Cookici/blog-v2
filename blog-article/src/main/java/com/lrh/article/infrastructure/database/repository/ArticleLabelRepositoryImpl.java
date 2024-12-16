@@ -1,14 +1,16 @@
 package com.lrh.article.infrastructure.database.repository;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.lrh.article.domain.repository.ArticleLabelOperateRepository;
+import com.lrh.article.infrastructure.database.convertor.ArticleLabelConvertor;
 import com.lrh.article.infrastructure.database.mapper.ArticleLabelMapper;
 import com.lrh.article.infrastructure.po.ArticleLabelPO;
+import com.lrh.common.constant.BusinessConstant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @ProjectName: blog-ddd
@@ -25,12 +27,30 @@ public class ArticleLabelRepositoryImpl implements ArticleLabelOperateRepository
     private ArticleLabelMapper articleLabelMapper;
 
     @Override
-    public Map<String, List<String>> getArticleIdMapLableIdList(List<String> articleIdList) {
+    public List<ArticleLabelPO> getArticleIdMapLableIdList(List<String> articleIdList) {
         List<ArticleLabelPO> articleLabelPOList = articleLabelMapper.getArticleIdToLabelIdMap(articleIdList);
-        return articleLabelPOList.stream()
-                .collect(Collectors.groupingBy(
-                        ArticleLabelPO::getArticleId,
-                        Collectors.mapping(ArticleLabelPO::getLabelId, Collectors.toList())
-                ));
+        return articleLabelPOList;
     }
+
+    @Override
+    public void upsertLabelForArticle(String articleId, List<String> labelIdList) {
+        List<ArticleLabelPO> articleLabelPOList =
+                ArticleLabelConvertor.buildArticleLabelPOConvertor(articleId, labelIdList);
+        articleLabelMapper.batchUpsert(articleLabelPOList);
+    }
+
+    @Override
+    public void deleteLabelForArticle(String articleId) {
+        LambdaUpdateWrapper<ArticleLabelPO> updateWrapper = Wrappers.lambdaUpdate(ArticleLabelPO.class)
+                .eq(ArticleLabelPO::getArticleId, articleId)
+                .eq(ArticleLabelPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
+                .set(ArticleLabelPO::getIsDeleted, BusinessConstant.IS_DELETED);
+        articleLabelMapper.update(updateWrapper);
+    }
+
+    @Override
+    public void restoreDeletedArticleLabel(String articleId, List<String> labelIdList) {
+        articleLabelMapper.restoreDeleted(articleId,labelIdList);
+    }
+
 }

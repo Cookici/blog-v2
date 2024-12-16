@@ -9,7 +9,7 @@ package com.lrh.common.exception;
  * @Date: 2024/12/12 下午3:25
  */
 
-public class ValidException extends Exception {
+public class ValidException extends RuntimeException {
     public ValidException(String message) {
         super(message);
     }

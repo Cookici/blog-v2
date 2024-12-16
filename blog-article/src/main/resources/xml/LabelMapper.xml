@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.lrh.article.infrastructure.database.mapper.LabelMapper">
+
+    <select id="selectLabelsByArticleId" resultType="com.lrh.article.infrastructure.po.LabelPO">
+        SELECT *
+        FROM t_label l
+        LEFT JOIN t_article_label al ON l.label_id = al.label_id
+        WHERE al.article_id = #{articleId}
+          AND l.is_deleted = 0
+          AND al.is_deleted = 0
+    </select>
+
+</mapper>

@@ -60,13 +60,13 @@ public class UserRegisterCmd {
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "用户生日"));
         }
         if (UserValid.validUserIp(req.getUserIp())) {
-            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "业务错误"));
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
         }
         if (UserValid.validUserEmail(req.getUserEmail())) {
-            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "邮箱"));
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
         }
         if (UserValid.validUserRole(req.getRoleName())) {
-            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "业务错误"));
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
         }
         this.userName = req.getUserName();
         this.userPassword = DESUtil.encrypt(req.getUserPassword(), DESConstant.PASSWORD_KEY);

@@ -1,6 +1,5 @@
 package com.lrh.article.infrastructure.database.convertor;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lrh.article.domain.entity.ArticleEntity;
 import com.lrh.article.infrastructure.po.ArticlePO;
 
@@ -18,17 +17,11 @@ import java.util.List;
 
 public class ArticleConvertor {
 
-    public static Page<ArticleEntity> toPageArticleEntityConvertor(Page<ArticlePO> articlePOPage) {
-        List<ArticlePO> articles = articlePOPage.getRecords();
+    public static List<ArticleEntity> toArticleEntityListConvertor(List<ArticlePO> articlePOList) {
         List<ArticleEntity> articleEntityList = new ArrayList<>();
-        articles.forEach(article -> {
-            articleEntityList.add(ArticleEntity.fromPO(article));
+        articlePOList.forEach(articlePO -> {
+            articleEntityList.add(ArticleEntity.fromPO(articlePO));
         });
-
-        Page<ArticleEntity> articleEntityPage = new Page<>(articlePOPage.getCurrent(),
-                articlePOPage.getSize(), articlePOPage.getTotal());
-        articleEntityPage.setRecords(articleEntityList);
-        return articleEntityPage;
+        return articleEntityList;
     }
-
 }

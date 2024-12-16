@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.lrh.article.infrastructure.po.LabelPO;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
+
 /**
  * @ProjectName: blog-ddd
  * @Package: com.lrh.article.infrastructure.mapper
@@ -15,4 +17,5 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface LabelMapper extends BaseMapper<LabelPO> {
 
+    List<LabelPO> selectLabelsByArticleId(String articleId);
 }

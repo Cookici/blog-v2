@@ -1,7 +1,8 @@
 package com.lrh.article.domain.repository;
 
+import com.lrh.article.infrastructure.po.ArticleLabelPO;
+
 import java.util.List;
-import java.util.Map;
 
 /**
  * @ProjectName: blog-ddd
@@ -14,5 +15,11 @@ import java.util.Map;
 
 public interface ArticleLabelOperateRepository {
 
-    Map<String, List<String>> getArticleIdMapLableIdList(List<String> articleIdList);
+    void upsertLabelForArticle(String articleId, List<String> labelIdList);
+
+    void deleteLabelForArticle(String articleId);
+
+    void restoreDeletedArticleLabel(String articleId, List<String> labelIdList);
+
+    List<ArticleLabelPO> getArticleIdMapLableIdList(List<String> articleIdList);
 }

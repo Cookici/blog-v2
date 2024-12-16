@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.lrh.article.infrastructure.database.mapper.ArticleLabelMapper">
+
+    <update id="restoreDeleted" parameterType="java.util.List">
+        UPDATE t_article_label
+        SET is_deleted = 0
+        WHERE article_id = #{articleId} AND label_id IN
+        <foreach collection="labelIdList" item="labelId" separator="," open="(" close=")">
+            #{labelId}
+        </foreach>
+        AND is_deleted = 1;
+    </update>
+
+    <insert id="batchUpsert" parameterType="java.util.List">
+        INSERT INTO t_article_label (article_id, label_id, is_deleted)
+        VALUES
+        <foreach collection="articleLabelPOList" item="label" separator=",">
+            (#{label.articleId}, #{label.labelId}, 0)
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        is_deleted = IF(is_deleted = 1, 0, is_deleted);
+    </insert>
+
+</mapper>
