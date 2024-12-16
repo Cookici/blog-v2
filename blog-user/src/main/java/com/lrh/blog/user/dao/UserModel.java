@@ -51,6 +51,9 @@ public class UserModel {
     @TableField("user_ip")
     private String userIp;
 
+    @TableField("user_photo")
+    private String userPhoto;
+
     @TableField("role_name")
     private String roleName;
 

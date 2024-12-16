@@ -39,6 +39,8 @@ public class  UserLoginResp {
 
     private String userEmail;
 
+    private String userPhoto;
+
     public UserLoginResp convertedUserModelToUserLoginResp(UserModel userModel) {
         if (userModel == null) {
             return null;
@@ -50,6 +52,7 @@ public class  UserLoginResp {
         this.userSex = userModel.getUserSex();
         this.userBirthday = userModel.getUserBirthday();
         this.userIp = userModel.getUserIp();
+        this.userPhoto = userModel.getUserPhoto();
         this.userEmail = userModel.getUserEmail();
         this.creatTime = userModel.getCreateTime();
         return this;

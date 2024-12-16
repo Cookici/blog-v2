@@ -29,6 +29,9 @@ public class UserUpdateCmd {
     private final LocalDateTime userBirthday;
 
     public UserUpdateCmd(@NotNull UserUpdateReq req) throws ValidException {
+        if(UserValid.validUserId(req.getUserId())){
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验错误"));
+        }
         if (UserValid.validUserName(req.getUserName())) {
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "用户名"));
         }
