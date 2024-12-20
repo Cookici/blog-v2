@@ -15,4 +15,5 @@ public class BusinessConstant {
     public final static String DUP_KEY = "数据已存在";
     public final static Integer IS_DELETED = 1;
     public final static Integer IS_NOT_DELETED = 0;
+    public final static String LOGIN_FAIL_RECORD = "账号或密码错误";
 }
