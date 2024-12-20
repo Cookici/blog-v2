@@ -65,7 +65,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
         try {
             String password = DESUtil.decrypt(userModel.getUserPassword(), DESConstant.PASSWORD_KEY);
             if (!password.equals(query.getUserPassword())) {
-                return null;
+                throw new RuntimeException(BusinessConstant.LOGIN_FAIL_RECORD);
             }
         } catch (Exception e) {
             log.error("[UserServiceImpl] login error : {}", query.getUserPassword());
