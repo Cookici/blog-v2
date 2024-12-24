@@ -25,4 +25,14 @@
         is_deleted = IF(is_deleted = 1, 0, is_deleted);
     </insert>
 
+    <select id="getArticleLabelListByArticles" resultType="com.lrh.article.infrastructure.po.ArticleLabelPO">
+        SELECT *
+        FROM t_article_label
+        WHERE article_id IN
+        <foreach collection="articleIdList" item="articleId" open="(" separator="," close=")">
+            #{articleId}
+        </foreach>
+        AND is_deleted = 0
+    </select>
+
 </mapper>

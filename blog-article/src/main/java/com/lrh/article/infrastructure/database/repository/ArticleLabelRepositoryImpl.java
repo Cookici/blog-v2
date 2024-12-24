@@ -27,8 +27,8 @@ public class ArticleLabelRepositoryImpl implements ArticleLabelOperateRepository
     private ArticleLabelMapper articleLabelMapper;
 
     @Override
-    public List<ArticleLabelPO> getArticleIdMapLableIdList(List<String> articleIdList) {
-        List<ArticleLabelPO> articleLabelPOList = articleLabelMapper.getArticleIdToLabelIdMap(articleIdList);
+    public List<ArticleLabelPO> getArticleLabelListByArticles(List<String> articleIdList) {
+        List<ArticleLabelPO> articleLabelPOList = articleLabelMapper.getArticleLabelListByArticles(articleIdList);
         return articleLabelPOList;
     }
 
