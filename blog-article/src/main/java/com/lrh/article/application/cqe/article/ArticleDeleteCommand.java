@@ -21,9 +21,13 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ArticleDeleteCommand {
     private String articleId;
-    public void valid(){
-        if(this.articleId == null || this.articleId.length() > 128){
-            throw new ValidException(String.format(BusinessConstant.VALID_ERROR,"校验失败"));
+
+    public void valid() {
+        if (this.articleId == null) {
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
+        }
+        if (this.articleId.length() > BusinessConstant.ID_MAX_LENGTH) {
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
         }
     }
 }

@@ -31,4 +31,4 @@ spring:
         - id: article
           uri: lb://blog-article
           predicates:
-            - Path=/api/article/**
+            - Path=/api/article/**,/api/comment/**

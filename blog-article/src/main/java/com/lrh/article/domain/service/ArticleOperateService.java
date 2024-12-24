@@ -31,7 +31,8 @@ public class ArticleOperateService {
     private final ArticleLabelOperateRepository articleLabelOperateRepository;
     private final LabelOperateRepository labelOperateRepository;
 
-    public ArticleOperateService(ArticleOperateRepository articleRepository, ArticleLabelOperateRepository articleLabelOperateRepository, LabelOperateRepository labelOperateRepository) {
+    public ArticleOperateService(ArticleOperateRepository articleRepository, ArticleLabelOperateRepository articleLabelOperateRepository,
+                                 LabelOperateRepository labelOperateRepository) {
         this.articleRepository = articleRepository;
         this.articleLabelOperateRepository = articleLabelOperateRepository;
         this.labelOperateRepository = labelOperateRepository;
@@ -47,6 +48,14 @@ public class ArticleOperateService {
 
         List<ArticleEntity> articleEntityList = ArticleConvertor.toArticleEntityListConvertor(articlePOList);
 
+        // 为每篇文章设置对应的标签列表
+        setLabelListForArticleEntityList(articleEntityList);
+
+        // 返回分页结果
+        return articleEntityList;
+    }
+
+    private void setLabelListForArticleEntityList(List<ArticleEntity> articleEntityList) {
         // 提取文章 ID 列表
         List<String> articleIdList = articleEntityList.stream()
                 .map(ArticleEntity::getArticleId)
@@ -82,9 +91,6 @@ public class ArticleOperateService {
                     .collect(Collectors.toList());
             articleEntity.setLabelEntityList(labels);
         });
-
-        // 返回分页结果
-        return articleEntityList;
     }
 
     /**

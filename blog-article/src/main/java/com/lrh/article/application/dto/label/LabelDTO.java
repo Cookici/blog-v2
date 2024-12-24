@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,6 +36,9 @@ public class LabelDTO {
 
 
     public static List<LabelDTO> fromEntityList(List<LabelEntity> labelEntityList) {
+        if (labelEntityList == null) {
+            return new ArrayList<>();
+        }
         return labelEntityList.stream().map(LabelDTO::fromEntity).collect(Collectors.toList());
     }
 }
