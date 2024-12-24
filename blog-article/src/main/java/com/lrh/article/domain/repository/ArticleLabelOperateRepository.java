@@ -21,5 +21,5 @@ public interface ArticleLabelOperateRepository {
 
     void restoreDeletedArticleLabel(String articleId, List<String> labelIdList);
 
-    List<ArticleLabelPO> getArticleIdMapLableIdList(List<String> articleIdList);
+    List<ArticleLabelPO> getArticleLabelListByArticles(List<String> articleIdList);
 }

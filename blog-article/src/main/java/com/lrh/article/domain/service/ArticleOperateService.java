@@ -62,7 +62,7 @@ public class ArticleOperateService {
                 .collect(Collectors.toList());
 
         // 获取文章与标签 ID 的映射关系
-        List<ArticleLabelPO> articleLabelPOList = articleLabelOperateRepository.getArticleIdMapLableIdList(articleIdList);
+        List<ArticleLabelPO> articleLabelPOList = articleLabelOperateRepository.getArticleLabelListByArticles(articleIdList);
         Map<String, List<String>> articleIdToLabelIdsMap = articleLabelPOList.stream().collect(Collectors.groupingBy(
                 ArticleLabelPO::getArticleId,
                 Collectors.mapping(ArticleLabelPO::getLabelId, Collectors.toList())
