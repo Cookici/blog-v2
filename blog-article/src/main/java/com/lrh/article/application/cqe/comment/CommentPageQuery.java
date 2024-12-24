@@ -1,33 +1,35 @@
-package com.lrh.article.application.cqe.article;
+package com.lrh.article.application.cqe.comment;
 
+import com.lrh.article.application.cqe.PageQuery;
 import com.lrh.common.constant.BusinessConstant;
 import com.lrh.common.exception.ValidException;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
  * @ProjectName: blog-ddd
- * @Package: com.lrh.article.application.cqe.article
- * @ClassName: ArticleQuery
+ * @Package: com.lrh.article.application.cqe.comment
+ * @ClassName: CommentPageQuery
  * @Author: 63283
  * @Description:
- * @Date: 2024/12/15 19:11
+ * @Date: 2024/12/24 16:50
  */
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-public class ArticleQuery {
+public class CommentPageQuery extends PageQuery {
+
     private String articleId;
 
     public void valid() {
-        if (this.articleId == null) {
+        if (articleId == null) {
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
         }
-        if (this.articleId.length() > BusinessConstant.ID_MAX_LENGTH) {
+        if (articleId.isEmpty() || articleId.length() > BusinessConstant.ID_MAX_LENGTH) {
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
         }
     }
+
 }

@@ -145,6 +145,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
         return userModelList.stream().collect(Collectors.toMap(
                 UserModel::getUserId,
                 userModel -> new UserVO(userModel.getUserId(),
+                        userModel.getUserPhoto(),
                         userModel.getUserName(),
                         userModel.getUserLevel())
         ));

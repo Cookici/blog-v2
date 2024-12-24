@@ -33,21 +33,21 @@ public class ArticleInsertCommand {
     private String articleContent;
 
 
-    public void valid(){
+    public void valid() {
         if (userId == null) {
-            throw new ValidException(String.format(BusinessConstant.VALID_ERROR,"校验失败"));
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
         }
-        if(labelIdList == null){
+        if (labelIdList == null) {
             labelIdList = new ArrayList<>();
         }
-        if(articleTitle == null){
-            throw new ValidException(String.format(BusinessConstant.VALID_ERROR,"文章标题"));
+        if (articleTitle == null) {
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "文章标题"));
         }
-        if (articleTitle.length() > 64) {
-            throw new ValidException(String.format(BusinessConstant.VALID_ERROR,"文章标题"));
+        if (articleTitle.length() > BusinessConstant.ID_MAX_LENGTH) {
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "文章标题"));
         }
-        if(articleContent == null){
-            throw new ValidException(String.format(BusinessConstant.VALID_ERROR,"文章内容"));
+        if (articleContent == null) {
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "文章内容"));
         }
 
     }

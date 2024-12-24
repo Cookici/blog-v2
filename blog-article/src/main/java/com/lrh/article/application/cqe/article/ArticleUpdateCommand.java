@@ -41,7 +41,7 @@ public class ArticleUpdateCommand {
             labelIdList = new ArrayList<>();
         }
         if (articleTitle != null) {
-            if (articleTitle.length() > 64 || articleTitle.trim().isEmpty()) {
+            if (articleTitle.length() > BusinessConstant.ID_MAX_LENGTH || articleTitle.trim().isEmpty()) {
                 throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "文章标题"));
             }
         }

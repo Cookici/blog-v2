@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.lrh.article.infrastructure.database.mapper.CommentMapper">
+
+    <select id="selectParentCommentPage" resultType="com.lrh.article.infrastructure.po.CommentPO">
+        SELECT *
+        FROM t_comment
+        WHERE article_id = #{articleId}
+          AND parent_comment_id = 0
+          AND is_deleted = 0
+        Order By create_time
+                DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="selectChildCommentPage" resultType="com.lrh.article.infrastructure.po.CommentPO">
+        SELECT *
+        FROM t_comment
+        WHERE article_id = #{articleId}
+          AND parent_comment_id = #{commentId}
+          AND is_deleted = 0
+        Order By create_time
+                DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+</mapper>
