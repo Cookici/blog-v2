@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: blog-oss
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+      config:
+        server-addr: 127.0.0.1:8848
+        namespace: d1afcdfc-534a-4c20-8e41-8b43fbb03762
+        file-extension: yaml
