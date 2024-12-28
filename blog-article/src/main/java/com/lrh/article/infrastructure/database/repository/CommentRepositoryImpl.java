@@ -1,6 +1,7 @@
 package com.lrh.article.infrastructure.database.repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.lrh.article.constants.CommentConstant;
 import com.lrh.article.domain.repository.CommentOperateRepository;
@@ -9,7 +10,6 @@ import com.lrh.article.infrastructure.po.CommentPO;
 import com.lrh.common.constant.BusinessConstant;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -44,22 +44,6 @@ public class CommentRepositoryImpl implements CommentOperateRepository {
     }
 
     @Override
-    public List<CommentPO> getChildComments(String parentId) {
-        LambdaQueryWrapper<CommentPO> queryWrapper = Wrappers.lambdaQuery(CommentPO.class)
-                .eq(CommentPO::getParentCommentId, parentId)
-                .eq(CommentPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
-        return commentMapper.selectList(queryWrapper);
-    }
-
-    @Override
-    public List<CommentPO> getCommentsByIds(ArrayList<String> commentIds) {
-        LambdaQueryWrapper<CommentPO> queryWrapper = Wrappers.lambdaQuery(CommentPO.class)
-                .in(CommentPO::getCommentId, commentIds)
-                .eq(CommentPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
-        return commentMapper.selectList(queryWrapper);
-    }
-
-    @Override
     public Long countChildComments(String articleId, String commentId) {
         LambdaQueryWrapper<CommentPO> queryWrapper = Wrappers.lambdaQuery(CommentPO.class)
                 .eq(CommentPO::getArticleId, articleId)
@@ -72,6 +56,43 @@ public class CommentRepositoryImpl implements CommentOperateRepository {
     @Override
     public List<CommentPO> selectChildCommentPage(String articleId, String commentId, Long offset, Long limit) {
         return commentMapper.selectChildCommentPage(articleId, commentId, offset, limit);
+    }
+
+    @Override
+    public void insertComment(CommentPO commentPO) {
+        commentMapper.insert(commentPO);
+    }
+
+    @Override
+    public void deleteTopComment(String articleId, String commentId) {
+        LambdaUpdateWrapper<CommentPO> updateWrapper = Wrappers.lambdaUpdate(CommentPO.class)
+                .eq(CommentPO::getArticleId, articleId)
+                .eq(CommentPO::getCommentId, commentId)
+                .eq(CommentPO::getParentCommentId, CommentConstant.TOP_COMMENT_PARENT_ID)
+                .eq(CommentPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
+                .set(CommentPO::getIsDeleted, BusinessConstant.IS_DELETED);
+        commentMapper.update(updateWrapper);
+    }
+
+    @Override
+    public void deleteChildComment(String articleId, String parentCommentId) {
+        LambdaUpdateWrapper<CommentPO> updateWrapper = Wrappers.lambdaUpdate(CommentPO.class)
+                .eq(CommentPO::getArticleId, articleId)
+                .eq(CommentPO::getParentCommentId, parentCommentId)
+                .eq(CommentPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
+                .set(CommentPO::getIsDeleted, BusinessConstant.IS_DELETED);
+        commentMapper.update(updateWrapper);
+    }
+
+    @Override
+    public void deleteComment(String articleId, String parentCommentId, String commentId) {
+        LambdaUpdateWrapper<CommentPO> updateWrapper = Wrappers.lambdaUpdate(CommentPO.class)
+                .eq(CommentPO::getArticleId, articleId)
+                .eq(CommentPO::getCommentId, commentId)
+                .eq(CommentPO::getParentCommentId, parentCommentId)
+                .eq(CommentPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
+                .set(CommentPO::getIsDeleted, BusinessConstant.IS_DELETED);
+        commentMapper.update(updateWrapper);
     }
 
 }

@@ -24,6 +24,8 @@ import java.util.List;
 @Builder
 public class ArticleUpdateCommand {
 
+    private String userId;
+
     private String articleId;
 
     private List<String> labelIdList;
@@ -34,6 +36,12 @@ public class ArticleUpdateCommand {
 
 
     public void valid() {
+        if (this.userId == null) {
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
+        }
+        if (this.userId.length() > BusinessConstant.ID_MAX_LENGTH) {
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
+        }
         if (articleId == null) {
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
         }
