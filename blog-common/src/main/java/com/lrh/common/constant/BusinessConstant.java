@@ -17,4 +17,7 @@ public class BusinessConstant {
     public final static Integer IS_NOT_DELETED = 0;
     public final static String LOGIN_FAIL_RECORD = "账号或密码错误";
     public final static Integer ID_MAX_LENGTH = 64;
+    public final static String EXECUTION_RECORD_LOCK = "execution:record:lock:%s";
+    public final static String EXECUTION_RECORD_KEY = "execution:record:%s-%s";
+    public final static String OPERATOR_MUCH = "操作过于频繁，请稍后再试";
 }

@@ -135,7 +135,13 @@ public class ArticleOperateService {
 
     @Transactional(rollbackFor = Exception.class)
     public void insertArticle(ArticleInsertCommand command) {
-        ArticlePO articlePO = articleRepository.insertArticle(command);
+        ArticlePO articlePO = ArticlePO.builder()
+                .articleId(UUID.randomUUID().toString())
+                .articleTitle(command.getArticleTitle())
+                .articleContent(command.getArticleContent())
+                .userId(command.getUserId())
+                .build();
+        articleRepository.insertArticle(articlePO);
         if (command.getLabelIdList().isEmpty()) {
             return;
         }

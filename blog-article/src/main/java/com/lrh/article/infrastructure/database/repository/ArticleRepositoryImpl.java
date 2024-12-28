@@ -3,7 +3,6 @@ package com.lrh.article.infrastructure.database.repository;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.lrh.article.application.cqe.article.ArticleInsertCommand;
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
 import com.lrh.article.domain.repository.ArticleOperateRepository;
 import com.lrh.article.infrastructure.database.mapper.ArticleMapper;
@@ -12,7 +11,6 @@ import com.lrh.common.constant.BusinessConstant;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * @ProjectName: blog-ddd
@@ -78,14 +76,7 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
     }
 
     @Override
-    public ArticlePO insertArticle(ArticleInsertCommand command) {
-        ArticlePO articlePO = ArticlePO.builder()
-                .articleId(UUID.randomUUID().toString())
-                .articleTitle(command.getArticleTitle())
-                .articleContent(command.getArticleContent())
-                .userId(command.getUserId())
-                .build();
+    public void insertArticle(ArticlePO articlePO) {
         articleMapper.insert(articlePO);
-        return articlePO;
     }
 }

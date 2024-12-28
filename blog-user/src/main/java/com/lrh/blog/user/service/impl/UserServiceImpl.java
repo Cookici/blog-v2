@@ -18,6 +18,7 @@ import com.lrh.blog.user.mapper.UserMapper;
 import com.lrh.blog.user.service.UserService;
 import com.lrh.blog.user.util.DESUtil;
 import com.lrh.blog.user.util.LockUtil;
+import com.lrh.common.annotations.ExecutionRecords;
 import com.lrh.common.constant.BusinessConstant;
 import com.lrh.common.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -57,6 +58,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
     }
 
     @Override
+    @ExecutionRecords(key = "user-login", userLabel = "#query.userPhone", maxTimes = 5, cooldown = 30, timeUnit = TimeUnit.MINUTES)
     public UserLoginResp login(UserLoginQuery query) {
         LambdaQueryWrapper<UserModel> queryWrapper = Wrappers.lambdaQuery(UserModel.class)
                 .eq(UserModel::getUserPhone, query.getUserPhone())
@@ -79,12 +81,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
     private void fetchOrGenerateToken(String redisKey, UserLoginResp resp, UserModel userModel) {
         LockUtil lockUtil = new LockUtil(redissonClient);
         lockUtil.executeWithLock(
-                String.format(RedisKeyConstant.LOGIN_KEY, redisKey), 2, TimeUnit.MILLISECONDS,
+                String.format(RedisKeyConstant.LOGIN_LOCK_KEY, redisKey), 4, TimeUnit.SECONDS,
                 () -> {
-                    String token = (String) redisTemplate.opsForValue().get(redisKey);
+                    String token = (String) redisTemplate.opsForHash().get(RedisKeyConstant.LOGIN_HASH_KEY, userModel.getUserId());
                     if (token == null) {
                         token = getToken(resp.getUserId(), resp.getUserName(), userModel.getRoleName());
-                        redisTemplate.opsForValue().setIfAbsent(redisKey, token, 2, TimeUnit.HOURS);
+                        redisTemplate.opsForHash().put(RedisKeyConstant.LOGIN_HASH_KEY, userModel.getUserId(), token);
+                        redisTemplate.expire(RedisKeyConstant.LOGIN_HASH_KEY, 2, TimeUnit.HOURS);
                     }
                 }
         );
@@ -102,22 +105,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
 
     @Override
     public UserRegisterResp register(UserRegisterCmd cmd) {
-        UserModel userModel = new UserModel();
-        userModel.setUserId(UUID.randomUUID().toString());
-        userModel.setUserName(cmd.getUserName());
-        userModel.setUserPassword(cmd.getUserPassword());
-        userModel.setUserPhone(cmd.getUserPhone());
-        userModel.setUserBirthday(cmd.getUserBirthday());
-        userModel.setUserSex(cmd.getUserSex());
-        userModel.setUserLevel(cmd.getUserLevel());
-        userModel.setUserIp(cmd.getUserIp());
-        userModel.setUserEmail(cmd.getUserEmail());
-        userModel.setRoleName(cmd.getUserRole());
-        int insert = userMapper.insert(userModel);
-        if (insert <= 0) {
-            return null;
-        }
-        return new UserRegisterResp().convertedUserModelToUserLoginResp(userModel);
+        LockUtil lockUtil = new LockUtil(redissonClient);
+        return lockUtil.tryLock(String.format(RedisKeyConstant.REGISTER_LOCK_KEY, cmd.getUserPhone()), () -> {
+                    UserModel userModel = new UserModel();
+                    userModel.setUserId(UUID.randomUUID().toString());
+                    userModel.setUserName(cmd.getUserName());
+                    userModel.setUserPassword(cmd.getUserPassword());
+                    userModel.setUserPhone(cmd.getUserPhone());
+                    userModel.setUserBirthday(cmd.getUserBirthday());
+                    userModel.setUserSex(cmd.getUserSex());
+                    userModel.setUserLevel(cmd.getUserLevel());
+                    userModel.setUserIp(cmd.getUserIp());
+                    userModel.setUserEmail(cmd.getUserEmail());
+                    userModel.setRoleName(cmd.getUserRole());
+                    int insert = userMapper.insert(userModel);
+                    if (insert <= 0) {
+                        return null;
+                    }
+                    return new UserRegisterResp().convertedUserModelToUserLoginResp(userModel);
+                });
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.lrh.article.application.cqe.article;
+package com.lrh.article.application.cqe.comment;
 
 import com.lrh.common.constant.BusinessConstant;
 import com.lrh.common.exception.ValidException;
@@ -9,19 +9,21 @@ import lombok.NoArgsConstructor;
 
 /**
  * @ProjectName: blog-ddd
- * @Package: com.lrh.article.application.cqe.article
- * @ClassName: ArticleDeleteCommand
+ * @Package: com.lrh.article.application.cqe.comment
+ * @ClassName: CommentDeleteCommand
  * @Author: 63283
  * @Description:
- * @Date: 2024/12/15 19:21
+ * @Date: 2024/12/25 16:25
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ArticleDeleteCommand {
+public class CommentDeleteCommand {
     private String userId;
     private String articleId;
+    private String commentId;
+    private String parentCommentId;
 
     public void valid() {
         if (this.articleId == null) {
@@ -34,6 +36,18 @@ public class ArticleDeleteCommand {
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
         }
         if (this.userId.length() > BusinessConstant.ID_MAX_LENGTH) {
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
+        }
+        if (this.commentId == null) {
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
+        }
+        if (this.commentId.length() > BusinessConstant.ID_MAX_LENGTH) {
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
+        }
+        if (this.parentCommentId == null) {
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
+        }
+        if (this.parentCommentId.isEmpty()) {
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
         }
     }

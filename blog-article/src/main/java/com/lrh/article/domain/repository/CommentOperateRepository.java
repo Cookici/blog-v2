@@ -2,7 +2,6 @@ package com.lrh.article.domain.repository;
 
 import com.lrh.article.infrastructure.po.CommentPO;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -20,11 +19,15 @@ public interface CommentOperateRepository {
 
     List<CommentPO> selectParentCommentPage(String articleId,Long offset,Long limit);
 
-    List<CommentPO> getChildComments(String parentId);
-
-    List<CommentPO> getCommentsByIds(ArrayList<String> commentIds);
-
     Long countChildComments(String articleId, String commentId);
 
     List<CommentPO> selectChildCommentPage(String articleId, String commentId, Long offset, Long limit);
+
+    void insertComment(CommentPO commentPO);
+
+    void deleteTopComment(String articleId, String commentId);
+
+    void deleteChildComment(String articleId, String parentCommentId);
+
+    void deleteComment(String articleId, String parentCommentId, String commentId);
 }
