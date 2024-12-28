@@ -11,8 +11,12 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/oss")
 public class PicUploadController {
-    @Autowired
-    private PicUploadService picUploadService;
+
+    private final PicUploadService picUploadService;
+
+    public PicUploadController(PicUploadService picUploadService) {
+        this.picUploadService = picUploadService;
+    }
 
     @PostMapping("/upload")
     @ResponseBody

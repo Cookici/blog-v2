@@ -6,7 +6,6 @@ import com.lrh.oss.config.AliyunConfig;
 import com.lrh.oss.dto.req.ImageUploadReq;
 import com.lrh.oss.dto.resp.FIleUploadResp;
 import com.lrh.oss.service.PicUploadService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -14,14 +13,16 @@ import java.io.ByteArrayInputStream;
 
 @Service
 public class PicUploadServiceImpl implements PicUploadService {
-    // 允许上传的格式
-    private static final String[] IMAGE_TYPE = new String[]{".bmp", ".jpg", ".jpeg", ".gif", ".png"};
 
-    @Autowired
-    private OSS ossClient;  // 注入 OSS 类型的 Bean
 
-    @Autowired
-    private AliyunConfig aliyunConfig;
+    private final OSS ossClient;  // 注入 OSS 类型的 Bean
+
+    private final AliyunConfig aliyunConfig;
+
+    public PicUploadServiceImpl(OSS ossClient, AliyunConfig aliyunConfig) {
+        this.ossClient = ossClient;
+        this.aliyunConfig = aliyunConfig;
+    }
 
     @Override
     public FIleUploadResp upload(ImageUploadReq cmd) {
