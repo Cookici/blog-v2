@@ -52,9 +52,9 @@ public class CustomExceptionHandler {
 
     @ResponseBody
     @ExceptionHandler(RuntimeException.class)
-    public Result<Object> handleRuntimeException(Exception e) {
+    public Result<String> handleRuntimeException(Exception e) {
         log.error("[CustomExceptionHandler] handleRuntimeException error : {}", e.getMessage());
-        return Result.fail().code(HttpStatus.BAD_REQUEST.value());
+        return Result.fail(e.getMessage()).code(HttpStatus.BAD_REQUEST.value());
     }
 
     @ResponseBody

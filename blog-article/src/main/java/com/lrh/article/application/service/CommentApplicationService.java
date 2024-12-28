@@ -1,6 +1,8 @@
 package com.lrh.article.application.service;
 
 import com.lrh.article.application.cqe.comment.CommentChildPageQuery;
+import com.lrh.article.application.cqe.comment.CommentDeleteCommand;
+import com.lrh.article.application.cqe.comment.CommentInsertCommand;
 import com.lrh.article.application.cqe.comment.CommentPageQuery;
 import com.lrh.article.application.dto.PageDTO;
 import com.lrh.article.application.dto.comment.CommentDTO;
@@ -99,5 +101,15 @@ public class CommentApplicationService {
             commentDTOList.add(commentDTO);
         });
         return commentDTOList;
+    }
+
+    public void insertComment(CommentInsertCommand command) {
+        command.valid();
+        commentOperateService.insertComment(command);
+    }
+
+    public void deleteComment(CommentDeleteCommand command) {
+        command.valid();
+        commentOperateService.deleteComment(command);
     }
 }

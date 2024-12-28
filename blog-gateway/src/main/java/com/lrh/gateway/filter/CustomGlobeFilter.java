@@ -54,7 +54,7 @@ public class CustomGlobeFilter implements GlobalFilter {
             return exchange.getResponse().writeWith(Mono.just(dataBuffer));
         }
 
-        String token = (String) redisTemplate.opsForValue().get(userId);
+        String token = (String) redisTemplate.opsForHash().get(PasswordKeyConstant.LOGIN_HASH_KEY, userId);
 
         if (token == null) {
             DataBuffer dataBuffer = getFailDataBuffer(exchange);

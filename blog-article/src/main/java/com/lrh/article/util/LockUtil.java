@@ -1,4 +1,4 @@
-package com.lrh.blog.user.util;
+package com.lrh.article.util;
 
 import com.lrh.common.constant.BusinessConstant;
 import lombok.extern.slf4j.Slf4j;
@@ -129,4 +129,5 @@ public class LockUtil {
 
 
 }
+
 
