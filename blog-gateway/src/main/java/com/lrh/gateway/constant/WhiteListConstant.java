@@ -10,9 +10,10 @@ package com.lrh.gateway.constant;
  */
 
 public class WhiteListConstant {
-    public static final String [] WHITE_LIST = {
+    public static final String[] WHITE_LIST = {
             "/api/user/login",
             "/api/user/register",
-            "/api/role/all_kinds"
+            "/api/role/all_kinds",
+            "/api/oss/file/upload",
     };
 }
