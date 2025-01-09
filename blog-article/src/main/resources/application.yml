@@ -8,15 +8,15 @@ spring:
     type: com.zaxxer.hikari.HikariDataSource
     username: root
     password: lrh,903.520hhhh
-    url: jdbc:mysql://127.0.0.1:3306/article?characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://sh-cdb-pezvivda.sql.tencentcdb.com:63950/article?characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
   redis:
-    host: 192.168.29.200
+    host: 106.53.50.195
     port: 6379
-    password: 123456
+    password: lrh,903.520hhhh
   cloud:
     nacos:
       discovery:
-        server-addr: 127.0.0.1:8848
+        server-addr: 106.53.50.195:8848
         username: nacos
         password: nacos
 

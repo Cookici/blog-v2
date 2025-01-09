@@ -1,6 +1,5 @@
 package com.lrh.blog.user.aspect;
 
-import com.lrh.blog.user.exception.CustomExceptionHandler;
 import com.lrh.common.annotations.ExecutionRecords;
 import com.lrh.common.constant.BusinessConstant;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -35,7 +34,7 @@ public class ExecutionRecordsAspect {
     private final RedisTemplate<String, Object> redisTemplate;
     private final RedissonClient redissonClient;
 
-    public ExecutionRecordsAspect(RedisTemplate<String, Object> redisTemplate, RedissonClient redissonClient, CustomExceptionHandler customExceptionHandler) {
+    public ExecutionRecordsAspect(RedisTemplate<String, Object> redisTemplate, RedissonClient redissonClient) {
         this.redisTemplate = redisTemplate;
         this.redissonClient = redissonClient;
     }
@@ -70,24 +69,32 @@ public class ExecutionRecordsAspect {
 
         RLock lock = redissonClient.getLock(String.format(BusinessConstant.EXECUTION_RECORD_LOCK, key));
         if (lock.tryLock()) {
-            String redisKey = String.format(BusinessConstant.EXECUTION_RECORD_KEY, key, resolvedUserLabel);
-            Integer currentCount = (Integer) redisTemplate.opsForValue().get(redisKey);
-            if (currentCount != null && currentCount >= maxTimes) {
-                throw new RuntimeException("达到最大操作次数，请稍后再试");
-            }
             try {
-                Object result = joinPoint.proceed();
-                redisTemplate.delete(redisKey);
-                return result;
-            } catch (Throwable ex) {
-                // 增加计数器
-                if (currentCount == null) {
-                    redisTemplate.opsForValue().set(redisKey, 1, cooldown, timeUnit);
-                } else {
-                    redisTemplate.opsForValue().increment(redisKey);
+                String redisKey = String.format(BusinessConstant.EXECUTION_RECORD_KEY, key, resolvedUserLabel);
+                Integer currentCount = (Integer) redisTemplate.opsForValue().get(redisKey);
+                if (currentCount != null && currentCount >= maxTimes) {
+                    throw new RuntimeException("达到最大操作次数，请稍后再试");
                 }
-                // 向上抛出原始异常
-                throw ex;
+                try {
+                    Object result = joinPoint.proceed();
+                    redisTemplate.delete(redisKey);
+                    return result;
+                } catch (Throwable ex) {
+                    // 增加计数器
+                    if (currentCount == null) {
+                        redisTemplate.opsForValue().set(redisKey, 1, cooldown, timeUnit);
+                    } else {
+                        redisTemplate.opsForValue().increment(redisKey);
+                    }
+                    // 向上抛出原始异常
+                    throw ex;
+                }
+            } catch (Throwable e) {
+                throw new RuntimeException(e.getMessage());
+            } finally {
+                if (lock.isLocked() && lock.isHeldByCurrentThread()) {
+                    lock.unlock();
+                }
             }
         } else {
             throw new RuntimeException(BusinessConstant.OPERATOR_MUCH);
