@@ -1,7 +1,7 @@
 package com.lrh.oss.service.impl;
 
 import com.aliyun.oss.OSS;
-import com.lrh.common.annotations.ExecutionRecords;
+import com.lrh.common.annotations.SubmitOnceRecords;
 import com.lrh.common.exception.ValidException;
 import com.lrh.oss.config.AliyunConfig;
 import com.lrh.oss.dto.cqe.ImageUploadCmd;
@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.io.ByteArrayInputStream;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 @Service
 public class UploadServiceImpl implements UploadService {
@@ -29,7 +28,7 @@ public class UploadServiceImpl implements UploadService {
     }
 
     @Override
-    @ExecutionRecords(key = "oss-upload", userLabel = "#cmd.ip", maxTimes = 5, cooldown = 30, timeUnit = TimeUnit.MINUTES)
+    @SubmitOnceRecords(key = "oss-upload", userLabel = "#cmd.ip", expireTime = 30)
     public FIleUploadResp upload(ImageUploadCmd cmd) {
         String fileName = UUID.randomUUID() + CommonUtil.getFileSuffix(cmd.getImageFile());
         String filePath = getFilePath(fileName);

@@ -4,12 +4,14 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: 127.0.0.1:8848
+        server-addr: 106.53.50.195:8848
+        username: nacos
+        password: nacos
       config:
-        server-addr: 127.0.0.1:8848
-        namespace: d1afcdfc-534a-4c20-8e41-8b43fbb03762
+        server-addr: 106.53.50.195:8848
+        namespace: 1aae6af7-a418-4ff0-9967-c35349cd15ab
         file-extension: yaml
   redis:
-    host: 192.168.29.200
+    host: 106.53.50.195
     port: 6379
-    password: 123456
+    password: lrh,903.520hhhh

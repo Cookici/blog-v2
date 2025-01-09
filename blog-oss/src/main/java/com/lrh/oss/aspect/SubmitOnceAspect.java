@@ -8,7 +8,6 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -30,11 +29,9 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class SubmitOnceAspect {
 
-    private final RedisTemplate<String, Object> redisTemplate;
     private final RedissonClient redissonClient;
 
-    public SubmitOnceAspect(RedisTemplate<String, Object> redisTemplate, RedissonClient redissonClient) {
-        this.redisTemplate = redisTemplate;
+    public SubmitOnceAspect(RedissonClient redissonClient) {
         this.redissonClient = redissonClient;
     }
 
@@ -66,24 +63,21 @@ public class SubmitOnceAspect {
         // 获取 Redisson 分布式锁
         RLock lock = redissonClient.getLock(redisKey);
 
-        // 防止重复提交逻辑
-        if (lock.tryLock(0, submitOnceRecords.expireTime(), TimeUnit.SECONDS)) {
-            try {
-                // Redis 中记录执行状态（如使用 token 或标志位）
-                Boolean isAlreadySubmitted = redisTemplate.opsForValue().setIfAbsent(redisKey, "LOCKED", submitOnceRecords.expireTime(), TimeUnit.SECONDS);
-                if (Boolean.FALSE.equals(isAlreadySubmitted)) {
-                    throw new RuntimeException("重复提交，请稍后重试！");
-                }
-                // 执行目标方法
-                return joinPoint.proceed();
-            } finally {
-                // 释放锁，防止死锁
-                if (lock.isLocked() && lock.isHeldByCurrentThread()) {
-                    lock.unlock();
-                }
+        // 尝试获取锁
+        boolean lockAcquired = false;
+        try {
+            lockAcquired = lock.tryLock(0, submitOnceRecords.expireTime(), TimeUnit.SECONDS);
+            if (!lockAcquired) {
+                throw new RuntimeException("操作正在处理中，请稍后重试！");
             }
-        } else {
-            throw new RuntimeException("操作正在处理中，请稍后重试！");
+
+            // 执行目标方法
+            return joinPoint.proceed();
+        } finally {
+            // 确保释放锁
+            if (lockAcquired && lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
     }
 }
