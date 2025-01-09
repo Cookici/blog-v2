@@ -50,12 +50,12 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
     }
 
     @Override
-    public void deleteArticleById(String articleId) {
+    public Integer deleteArticleById(String articleId) {
         LambdaUpdateWrapper<ArticlePO> updateWrapper = Wrappers.lambdaUpdate(ArticlePO.class)
                 .eq(ArticlePO::getArticleId, articleId)
                 .eq(ArticlePO::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
                 .set(ArticlePO::getIsDeleted, BusinessConstant.IS_DELETED);
-        articleMapper.update(updateWrapper);
+        return articleMapper.update(updateWrapper);
     }
 
     @Override

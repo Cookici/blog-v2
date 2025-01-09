@@ -5,6 +5,7 @@ import com.lrh.article.domain.entity.ArticleEntity;
 import com.lrh.article.domain.entity.LabelEntity;
 import com.lrh.article.domain.repository.ArticleLabelOperateRepository;
 import com.lrh.article.domain.repository.ArticleOperateRepository;
+import com.lrh.article.domain.repository.CommentOperateRepository;
 import com.lrh.article.domain.repository.LabelOperateRepository;
 import com.lrh.article.infrastructure.database.convertor.ArticleConvertor;
 import com.lrh.article.infrastructure.database.convertor.LabelConvertor;
@@ -30,12 +31,14 @@ public class ArticleOperateService {
     private final ArticleOperateRepository articleRepository;
     private final ArticleLabelOperateRepository articleLabelOperateRepository;
     private final LabelOperateRepository labelOperateRepository;
+    private final CommentOperateRepository commentOperateRepository;
 
     public ArticleOperateService(ArticleOperateRepository articleRepository, ArticleLabelOperateRepository articleLabelOperateRepository,
-                                 LabelOperateRepository labelOperateRepository) {
+                                 LabelOperateRepository labelOperateRepository, CommentOperateRepository commentOperateRepository) {
         this.articleRepository = articleRepository;
         this.articleLabelOperateRepository = articleLabelOperateRepository;
         this.labelOperateRepository = labelOperateRepository;
+        this.commentOperateRepository = commentOperateRepository;
     }
 
 
@@ -117,9 +120,14 @@ public class ArticleOperateService {
         return articleEntity;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void deleteArticleById(ArticleDeleteCommand command) {
         articleLabelOperateRepository.deleteLabelForArticle(command.getArticleId());
-        articleRepository.deleteArticleById(command.getArticleId());
+        Integer update = articleRepository.deleteArticleById(command.getArticleId());
+        if (update == null || update == 0) {
+            return;
+        }
+        commentOperateRepository.deleteCommentsByArticle(command.getArticleId());
     }
 
     @Transactional(rollbackFor = Exception.class)

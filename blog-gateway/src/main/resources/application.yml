@@ -5,13 +5,13 @@ spring:
   application:
     name: blog-gateway
   redis:
-    host: 192.168.29.200
+    host: 106.53.50.195
     port: 6379
-    password: 123456
+    password: lrh,903.520hhhh
   cloud:
     nacos:
       discovery:
-        server-addr: 127.0.0.1:8848
+        server-addr: 106.53.50.195:8848
         username: nacos
         password: nacos
     gateway:
