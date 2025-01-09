@@ -30,4 +30,6 @@ public interface CommentOperateRepository {
     void deleteChildComment(String articleId, String parentCommentId);
 
     void deleteComment(String articleId, String parentCommentId, String commentId);
+
+    void deleteCommentsByArticle(String articleId);
 }
