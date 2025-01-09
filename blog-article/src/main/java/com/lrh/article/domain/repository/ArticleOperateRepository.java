@@ -21,7 +21,7 @@ public interface ArticleOperateRepository {
 
     ArticlePO getArticlesById(String articleId);
 
-    void deleteArticleById(String articleId);
+    Integer deleteArticleById(String articleId);
 
     void updateArticleById(String articleId, String articleTitle, String articleContent);
 

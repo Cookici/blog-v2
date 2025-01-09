@@ -95,4 +95,13 @@ public class CommentRepositoryImpl implements CommentOperateRepository {
         commentMapper.update(updateWrapper);
     }
 
+    @Override
+    public void deleteCommentsByArticle(String articleId) {
+        LambdaUpdateWrapper<CommentPO> updateWrapper = Wrappers.lambdaUpdate(CommentPO.class)
+                .eq(CommentPO::getArticleId, articleId)
+                .eq(CommentPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
+                .set(CommentPO::getIsDeleted, BusinessConstant.IS_DELETED);
+        commentMapper.update(updateWrapper);
+    }
+
 }
