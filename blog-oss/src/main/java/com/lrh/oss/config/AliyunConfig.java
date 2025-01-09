@@ -1,11 +1,9 @@
 package com.lrh.oss.config;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,12 +30,6 @@ public class AliyunConfig {
 
     @Bean
     public OSS ossClient() {
-        if (accessKeyId == null || accessKeyId.isEmpty()) {
-            throw new IllegalArgumentException("Access Key ID is missing");
-        }
-        if (accessKeySecret == null || accessKeySecret.isEmpty()) {
-            throw new IllegalArgumentException("Access Key Secret is missing");
-        }
         return new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
     }
 }

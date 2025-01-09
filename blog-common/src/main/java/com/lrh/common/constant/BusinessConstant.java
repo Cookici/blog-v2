@@ -21,6 +21,5 @@ public class BusinessConstant {
     public final static String EXECUTION_RECORD_LOCK = "execution:record:lock:%s";
     public final static String EXECUTION_RECORD_KEY = "execution:record:%s-%s";
     public final static String OPERATOR_MUCH = "操作过于频繁，请稍后再试";
-    public final static String EXECUTION_RECORD_UPLOAD_LOCK = "execution:record:upload:lock:%s";
-    public final static String EXECUTION_RECORD_UPLOAD_KEY = "execution:record:upload:%s-%s";
+    public static final String SUBMIT_ONCE_UPLOAD_LOCK = "submit:once:upload:lock:%s-%s";
 }

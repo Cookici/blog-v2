@@ -10,5 +10,6 @@ spring:
         namespace: d1afcdfc-534a-4c20-8e41-8b43fbb03762
         file-extension: yaml
   redis:
-    host: 127.0.0.1
+    host: 192.168.29.200
     port: 6379
+    password: 123456
