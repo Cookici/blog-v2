@@ -65,7 +65,7 @@ public class SubmitOnceAspect {
         if (lock.tryLock()) {
             try {
                 return joinPoint.proceed();
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 throw new RuntimeException(e.getMessage());
             } finally {
                 if (lock.isLocked() && lock.isHeldByCurrentThread()) {
