@@ -37,3 +37,7 @@ spring:
           predicates:
             - Path=/api/oss/file/**
 
+        - id: message
+          uri: lb://blog-message
+          predicates:
+            - Path=/api/message/**

@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lrh.blog.user.constant.DESConstant;
 import com.lrh.blog.user.constant.RedisKeyConstant;
-import com.lrh.blog.user.dao.UserModel;
 import com.lrh.blog.user.dto.cqe.UserLoginQuery;
 import com.lrh.blog.user.dto.cqe.UserRegisterCmd;
 import com.lrh.blog.user.dto.cqe.UserUpdateCmd;
@@ -15,11 +14,13 @@ import com.lrh.blog.user.dto.resp.UserRegisterResp;
 import com.lrh.blog.user.dto.resp.UserUpdateResp;
 import com.lrh.blog.user.dto.vo.UserVO;
 import com.lrh.blog.user.mapper.UserMapper;
+import com.lrh.blog.user.model.UserModel;
 import com.lrh.blog.user.service.UserService;
 import com.lrh.blog.user.util.DESUtil;
 import com.lrh.blog.user.util.LockUtil;
 import com.lrh.common.annotations.ExecutionRecords;
 import com.lrh.common.constant.BusinessConstant;
+import com.lrh.common.util.IdUtil;
 import com.lrh.common.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
@@ -29,7 +30,6 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -107,23 +107,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
     public UserRegisterResp register(UserRegisterCmd cmd) {
         LockUtil lockUtil = new LockUtil(redissonClient);
         return lockUtil.tryLock(String.format(RedisKeyConstant.REGISTER_LOCK_KEY, cmd.getUserPhone()), () -> {
-                    UserModel userModel = new UserModel();
-                    userModel.setUserId(UUID.randomUUID().toString());
-                    userModel.setUserName(cmd.getUserName());
-                    userModel.setUserPassword(cmd.getUserPassword());
-                    userModel.setUserPhone(cmd.getUserPhone());
-                    userModel.setUserBirthday(cmd.getUserBirthday());
-                    userModel.setUserSex(cmd.getUserSex());
-                    userModel.setUserLevel(cmd.getUserLevel());
-                    userModel.setUserIp(cmd.getUserIp());
-                    userModel.setUserEmail(cmd.getUserEmail());
-                    userModel.setRoleName(cmd.getUserRole());
-                    int insert = userMapper.insert(userModel);
-                    if (insert <= 0) {
-                        return null;
-                    }
-                    return new UserRegisterResp().convertedUserModelToUserLoginResp(userModel);
-                });
+            UserModel userModel = new UserModel();
+            userModel.setUserId("user_" + IdUtil.getUuid());
+            userModel.setUserName(cmd.getUserName());
+            userModel.setUserPassword(cmd.getUserPassword());
+            userModel.setUserPhone(cmd.getUserPhone());
+            userModel.setUserBirthday(cmd.getUserBirthday());
+            userModel.setUserSex(cmd.getUserSex());
+            userModel.setUserLevel(cmd.getUserLevel());
+            userModel.setUserIp(cmd.getUserIp());
+            userModel.setUserEmail(cmd.getUserEmail());
+            userModel.setRoleName(cmd.getUserRole());
+            int insert = userMapper.insert(userModel);
+            if (insert <= 0) {
+                return null;
+            }
+            return new UserRegisterResp().convertedUserModelToUserLoginResp(userModel);
+        });
     }
 
     @Override

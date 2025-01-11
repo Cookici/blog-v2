@@ -1,7 +1,7 @@
 package com.lrh.identity.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.lrh.identity.dao.RoleModel;
+import com.lrh.identity.model.RoleModel;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;

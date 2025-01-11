@@ -1,6 +1,6 @@
 package com.lrh.blog.user.dto.resp;
 
-import com.lrh.blog.user.dao.UserModel;
+import com.lrh.blog.user.model.UserModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

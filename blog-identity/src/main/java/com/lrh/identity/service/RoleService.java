@@ -1,7 +1,7 @@
 package com.lrh.identity.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.lrh.identity.dao.RoleModel;
+import com.lrh.identity.model.RoleModel;
 import com.lrh.identity.vo.RoleVO;
 
 import java.util.List;
