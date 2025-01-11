@@ -62,22 +62,18 @@ public class SubmitOnceAspect {
 
         // 获取 Redisson 分布式锁
         RLock lock = redissonClient.getLock(redisKey);
-
-        // 尝试获取锁
-        boolean lockAcquired = false;
-        try {
-            lockAcquired = lock.tryLock(0, submitOnceRecords.expireTime(), TimeUnit.SECONDS);
-            if (!lockAcquired) {
-                throw new RuntimeException("操作正在处理中，请稍后重试！");
+        if (lock.tryLock()) {
+            try {
+                return joinPoint.proceed();
+            } catch (Throwable e) {
+                throw new RuntimeException(e.getMessage());
+            } finally {
+                if (lock.isLocked() && lock.isHeldByCurrentThread()) {
+                    lock.unlock();
+                }
             }
-
-            // 执行目标方法
-            return joinPoint.proceed();
-        } finally {
-            // 确保释放锁
-            if (lockAcquired && lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
+        } else {
+            throw new RuntimeException("操作正在处理中，请稍后重试！");
         }
     }
 }
