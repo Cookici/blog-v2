@@ -10,6 +10,7 @@ package com.lrh.common.constant;
  */
 
 public class BusinessConstant {
+    public static final String UPLOAD_FILE_ERROR = "文件上传失败";
     public final static String VALID_ERROR = "%s，不符合规范";
     public final static String NO_USER = "没有该用户或者账户密码错误";
     public final static String DUP_KEY = "数据已存在";
@@ -21,4 +22,5 @@ public class BusinessConstant {
     public final static String EXECUTION_RECORD_KEY = "execution:record:%s-%s";
     public final static String OPERATOR_MUCH = "操作过于频繁，请稍后再试";
     public final static String UNKNOWN = "unknown";
+    public static final String SUBMIT_ONCE_UPLOAD_LOCK = "submit:once:upload:lock:%s-%s";
 }
