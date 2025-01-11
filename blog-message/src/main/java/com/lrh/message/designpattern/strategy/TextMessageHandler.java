@@ -83,8 +83,6 @@ public class TextMessageHandler extends AbstractMessageHandler implements Abstra
      * ARGV[2]: ZSet 数据 (序列化的 MessageModel)
      * ARGV[3]: 过期时间 (秒)
      *
-     * @param userId       发送者id
-     * @param toUserId     接收者id
      * @param messageModel 消息模型
      */
     @Override
