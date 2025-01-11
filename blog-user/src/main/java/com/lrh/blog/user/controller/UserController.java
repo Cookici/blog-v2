@@ -3,13 +3,16 @@ package com.lrh.blog.user.controller;
 import com.lrh.blog.user.dto.cqe.UserLoginQuery;
 import com.lrh.blog.user.dto.cqe.UserRegisterCmd;
 import com.lrh.blog.user.dto.cqe.UserUpdateCmd;
+import com.lrh.blog.user.dto.req.ImageUploadReq;
 import com.lrh.blog.user.dto.req.UserLoginReq;
 import com.lrh.blog.user.dto.req.UserRegisterReq;
 import com.lrh.blog.user.dto.req.UserUpdateReq;
+import com.lrh.blog.user.dto.resp.FileUploadResp;
 import com.lrh.blog.user.dto.resp.UserLoginResp;
 import com.lrh.blog.user.dto.resp.UserRegisterResp;
 import com.lrh.blog.user.dto.resp.UserUpdateResp;
 import com.lrh.blog.user.dto.vo.UserVO;
+import com.lrh.blog.user.romote.OssClient;
 import com.lrh.blog.user.service.UserService;
 import com.lrh.common.exception.NoUserException;
 import com.lrh.common.result.Result;
@@ -32,10 +35,11 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final OssClient ossClient;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, OssClient ossClient) {
         this.userService = userService;
-
+        this.ossClient = ossClient;
     }
 
     @PostMapping("/login")
@@ -74,4 +78,8 @@ public class UserController {
         return Result.success(userMap);
     }
 
+    @PostMapping("/update_avatar")
+    Result<FileUploadResp> upload(ImageUploadReq req) {
+        return ossClient.upload(req);
+    }
 }
