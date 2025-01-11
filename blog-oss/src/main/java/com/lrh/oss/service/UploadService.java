@@ -1,8 +1,8 @@
 package com.lrh.oss.service;
 
 import com.lrh.oss.dto.cqe.ImageUploadCmd;
-import com.lrh.oss.dto.resp.FIleUploadResp;
+import com.lrh.oss.dto.resp.FileUploadResp;
 
 public interface UploadService {
-    FIleUploadResp upload(ImageUploadCmd uploadFile);
+    FileUploadResp upload(ImageUploadCmd uploadFile);
 }

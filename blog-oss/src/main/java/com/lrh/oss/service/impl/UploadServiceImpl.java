@@ -5,7 +5,7 @@ import com.lrh.common.annotations.SubmitOnceRecords;
 import com.lrh.common.exception.ValidException;
 import com.lrh.oss.config.AliyunConfig;
 import com.lrh.oss.dto.cqe.ImageUploadCmd;
-import com.lrh.oss.dto.resp.FIleUploadResp;
+import com.lrh.oss.dto.resp.FileUploadResp;
 import com.lrh.oss.service.UploadService;
 import com.lrh.oss.util.CommonUtil;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,7 @@ public class UploadServiceImpl implements UploadService {
 
     @Override
     @SubmitOnceRecords(key = "oss-upload", userLabel = "#cmd.ip", expireTime = 30)
-    public FIleUploadResp upload(ImageUploadCmd cmd) {
+    public FileUploadResp upload(ImageUploadCmd cmd) {
         String fileName = UUID.randomUUID() + CommonUtil.getFileSuffix(cmd.getImageFile());
         String filePath = getFilePath(fileName);
         try {
@@ -40,7 +40,7 @@ public class UploadServiceImpl implements UploadService {
             // 上传失败
             throw new ValidException(e.getMessage());
         }
-        return new FIleUploadResp(this.aliyunConfig.getUrlPrefix() + getFilePath(filePath));
+        return new FileUploadResp(this.aliyunConfig.getUrlPrefix() + getFilePath(filePath));
     }
 
     // 创建文件路径
