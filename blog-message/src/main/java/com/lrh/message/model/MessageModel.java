@@ -1,4 +1,4 @@
-package com.lrh.identity.dao;
+package com.lrh.message.model;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -12,25 +12,38 @@ import java.time.LocalDateTime;
 
 /**
  * @ProjectName: blog-ddd
- * @Package: com.lrh.identity.dao
- * @ClassName: RoleModel
+ * @Package: com.lrh.message.model
+ * @ClassName: MessageModel
  * @Author: 63283
  * @Description:
- * @Date: 2024/12/12 20:07
+ * @Date: 2025/1/9 22:45
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("t_role")
-public class RoleModel {
+@TableName("t_message")
+public class MessageModel {
+
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    @TableField("role_name")
-    private String roleName;
+    @TableField("message_id")
+    private String messageId;
 
-    @TableField("role_level")
-    private Integer roleLevel;
+    @TableField("message_type")
+    private String messageType;
+
+    @TableField("message_content")
+    private String messageContent;
+
+    @TableField("user_id")
+    private String userId;
+
+    @TableField("to_user_id")
+    private String toUserId;
+
+    @TableField("timestamp")
+    private Long timestamp;
 
     @TableField("create_time")
     private LocalDateTime createTime;
@@ -40,4 +53,5 @@ public class RoleModel {
 
     @TableField("is_deleted")
     private Integer isDeleted;
+
 }

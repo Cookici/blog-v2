@@ -1,4 +1,4 @@
-package com.lrh.blog.user.dto;
+package com.lrh.blog.user.dto.valid;
 
 import com.lrh.blog.user.constant.UserConstant;
 

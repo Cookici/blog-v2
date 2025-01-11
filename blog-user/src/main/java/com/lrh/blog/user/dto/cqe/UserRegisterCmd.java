@@ -2,7 +2,7 @@ package com.lrh.blog.user.dto.cqe;
 
 import com.lrh.common.constant.BusinessConstant;
 import com.lrh.blog.user.constant.DESConstant;
-import com.lrh.blog.user.dto.UserValid;
+import com.lrh.blog.user.dto.valid.UserValid;
 import com.lrh.blog.user.dto.req.UserRegisterReq;
 import com.lrh.common.exception.ValidException;
 import com.lrh.blog.user.util.DESUtil;
@@ -42,10 +42,10 @@ public class UserRegisterCmd {
 
     public UserRegisterCmd(@NotNull UserRegisterReq req) throws Exception {
         if (UserValid.validUserPassword(req.getUserPassword())) {
-            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "用户名"));
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "密码"));
         }
         if (UserValid.validUserName(req.getUserName())) {
-            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "密码"));
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "用户名"));
         }
         if (UserValid.validUserPhone(req.getUserPhone())) {
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "电话"));

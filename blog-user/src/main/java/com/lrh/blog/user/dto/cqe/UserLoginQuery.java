@@ -1,7 +1,7 @@
 package com.lrh.blog.user.dto.cqe;
 
 import com.lrh.common.constant.BusinessConstant;
-import com.lrh.blog.user.dto.UserValid;
+import com.lrh.blog.user.dto.valid.UserValid;
 import com.lrh.blog.user.dto.req.UserLoginReq;
 import com.lrh.common.exception.ValidException;
 import lombok.Getter;

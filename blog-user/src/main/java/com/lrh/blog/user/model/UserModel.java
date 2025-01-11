@@ -1,4 +1,4 @@
-package com.lrh.blog.user.dao;
+package com.lrh.blog.user.model;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
