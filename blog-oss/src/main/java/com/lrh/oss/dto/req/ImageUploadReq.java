@@ -15,7 +15,9 @@ import org.springframework.web.multipart.MultipartFile;
 @NoArgsConstructor
 public class ImageUploadReq {
 
-    // 图片文件
+    /**
+     * 图片文件
+     */
     private MultipartFile imageFile;
 
     private String ip;

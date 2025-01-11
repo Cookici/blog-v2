@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@RefreshScope  // 添加这个注解，确保配置可以被动态刷新
+@RefreshScope
 @Data
 public class AliyunConfig {
 

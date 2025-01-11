@@ -14,9 +14,11 @@ public class CommonUtil {
     public static String getClientIp(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null || ip.isEmpty()) {
-            ip = request.getRemoteAddr();  // 如果没有代理头，使用直接连接的地址
+            // 如果没有代理头，使用直接连接的地址
+            ip = request.getRemoteAddr();
         } else {
-            ip = ip.split(",")[0].trim();  // 获取第一个IP地址（客户端的真实IP）
+            // 获取第一个IP地址（客户端的真实IP）
+            ip = ip.split(",")[0].trim();
         }
         return ip;
     }
