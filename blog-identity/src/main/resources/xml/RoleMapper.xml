@@ -5,7 +5,7 @@
 
 <mapper namespace="com.lrh.identity.mapper.RoleMapper">
 
-    <select id="selectRoleKinds" resultType="com.lrh.identity.dao.RoleModel">
+    <select id="selectRoleKinds" resultType="com.lrh.identity.model.RoleModel">
         SELECT role_name, role_level
         FROM t_role
         WHERE is_deleted = 0

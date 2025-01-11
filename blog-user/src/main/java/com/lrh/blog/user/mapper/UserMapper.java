@@ -1,7 +1,7 @@
 package com.lrh.blog.user.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.lrh.blog.user.dao.UserModel;
+import com.lrh.blog.user.model.UserModel;
 import org.apache.ibatis.annotations.Mapper;
 
 /**

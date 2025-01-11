@@ -12,6 +12,7 @@ import com.lrh.article.infrastructure.database.convertor.LabelConvertor;
 import com.lrh.article.infrastructure.po.ArticleLabelPO;
 import com.lrh.article.infrastructure.po.ArticlePO;
 import com.lrh.article.infrastructure.po.LabelPO;
+import com.lrh.common.util.IdUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -144,7 +145,7 @@ public class ArticleOperateService {
     @Transactional(rollbackFor = Exception.class)
     public void insertArticle(ArticleInsertCommand command) {
         ArticlePO articlePO = ArticlePO.builder()
-                .articleId(UUID.randomUUID().toString())
+                .articleId("article_" + IdUtil.getUuid())
                 .articleTitle(command.getArticleTitle())
                 .articleContent(command.getArticleContent())
                 .userId(command.getUserId())

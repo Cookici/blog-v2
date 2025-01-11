@@ -1,7 +1,7 @@
 package com.lrh.blog.user.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.lrh.blog.user.dao.UserModel;
+import com.lrh.blog.user.model.UserModel;
 import com.lrh.blog.user.dto.cqe.UserLoginQuery;
 import com.lrh.blog.user.dto.cqe.UserRegisterCmd;
 import com.lrh.blog.user.dto.cqe.UserUpdateCmd;

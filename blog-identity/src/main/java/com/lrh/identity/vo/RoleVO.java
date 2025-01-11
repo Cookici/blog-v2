@@ -1,6 +1,6 @@
 package com.lrh.identity.vo;
 
-import com.lrh.identity.dao.RoleModel;
+import com.lrh.identity.model.RoleModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
