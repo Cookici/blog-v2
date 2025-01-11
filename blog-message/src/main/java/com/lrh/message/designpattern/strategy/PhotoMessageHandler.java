@@ -47,6 +47,7 @@ public class PhotoMessageHandler extends AbstractMessageHandler implements Abstr
     public void processMessage(MessageHandler messageHandler) {
         MessageDTO messageDTO = messageHandler.getMessageDTO();
         WebSocketServer webSocketServer = messageHandler.getSocketMap().get(messageDTO.getToUserId());
+        MessageModel messageModel = convertMessageDTOToMessageModel(messageDTO);
         if (webSocketServer == null) {
             log.info("[WebSocketServer] 用户: {} 不在线", messageDTO.getToUserId());
             return;
@@ -55,20 +56,18 @@ public class PhotoMessageHandler extends AbstractMessageHandler implements Abstr
             MessageVO message = new MessageVO();
             message.setMessageType(messageDTO.getMessageType());
             message.setMessageContent(messageDTO.getMessageContent());
+            setRedis(messageModel);
             webSocketServer.getSession().getBasicRemote().sendText(JSON.toJSONString(message));
         } catch (RuntimeException | IOException e) {
             log.error("[PhotoMessageHandler] processMessage error: {}", e.getMessage());
             throw new RuntimeException(e);
         }
 
-        MessageModel messageModel = convertMessageDTOToMessageModel(messageHandler.getMessageDTO());
-        executorService.execute(() -> {
-            setRedis(messageModel);
-        });
         executorService.execute(() -> {
             messageProducer.syncSendMessage(messageModel);
         });
     }
+
 
     @Override
     public String mark() {
