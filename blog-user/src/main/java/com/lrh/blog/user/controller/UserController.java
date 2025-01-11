@@ -13,6 +13,7 @@ import com.lrh.blog.user.dto.vo.UserVO;
 import com.lrh.blog.user.service.UserService;
 import com.lrh.common.exception.NoUserException;
 import com.lrh.common.result.Result;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,6 +35,7 @@ public class UserController {
 
     public UserController(UserService userService) {
         this.userService = userService;
+
     }
 
     @PostMapping("/login")

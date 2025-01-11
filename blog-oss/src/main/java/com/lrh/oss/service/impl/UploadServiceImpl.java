@@ -5,7 +5,7 @@ import com.lrh.common.annotations.SubmitOnceRecords;
 import com.lrh.common.exception.ValidException;
 import com.lrh.oss.config.AliyunConfig;
 import com.lrh.oss.dto.cqe.ImageUploadCmd;
-import com.lrh.oss.dto.resp.FIleUploadResp;
+import com.lrh.oss.dto.resp.FileUploadResp;
 import com.lrh.oss.service.UploadService;
 import com.lrh.oss.util.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -31,16 +31,16 @@ public class UploadServiceImpl implements UploadService {
 
     @Override
     @SubmitOnceRecords(key = "oss-upload", userLabel = "#cmd.ip")
-    public FIleUploadResp upload(ImageUploadCmd cmd) {
+    public FileUploadResp upload(ImageUploadCmd cmd) {
         String fileName = UUID.randomUUID() + CommonUtil.getFileSuffix(cmd.getImageFile());
         String filePath = getFilePath(fileName);
         try {
             ossClient.putObject(aliyunConfig.getBucketName(), filePath, new ByteArrayInputStream(cmd.getImageFile().getBytes()));
         } catch (Exception e) {
-            log.info("[UploadServiceImpl] FIleUploadResp error: {}", e.getMessage(), e);
+            log.info("[UploadServiceImpl] FileUploadResp error: {}", e.getMessage(), e);
             throw new RuntimeException(e.getMessage());
         }
-        return new FIleUploadResp(this.aliyunConfig.getUrlPrefix() + getFilePath(filePath));
+        return new FileUploadResp(this.aliyunConfig.getUrlPrefix() + getFilePath(filePath));
     }
 
     /**
