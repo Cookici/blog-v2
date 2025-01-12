@@ -32,6 +32,7 @@ spring:
           uri: lb://blog-article
           predicates:
             - Path=/api/article/**,/api/comment/**
+
         - id: oss
           uri: lb://blog-oss
           predicates:
@@ -41,3 +42,13 @@ spring:
           uri: lb://blog-message
           predicates:
             - Path=/api/message/**
+
+        - id: message-netty
+          uri: lb://blog-message-netty
+          predicates:
+            - Path=/api/message-netty/**
+
+        - id: netty
+          uri: lb://blog-netty
+          predicates:
+            - Path=/api/netty

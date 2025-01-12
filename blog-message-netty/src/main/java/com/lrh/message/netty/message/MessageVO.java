@@ -1,4 +1,4 @@
-package com.lrh.message.websocket;
+package com.lrh.message.netty.message;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
