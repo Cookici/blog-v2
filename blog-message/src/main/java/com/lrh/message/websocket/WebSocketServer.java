@@ -134,7 +134,8 @@ public class WebSocketServer {
             if (session.isOpen()) {
                 MessageVO messageVO = new MessageVO();
                 messageVO.setMessageType(MessageTypeEnum.ErrorMessage.getMessageType());
-                messageVO.setMessageContent(messageDTO.getMessageTag());
+                messageVO.setMessageTag(messageDTO.getMessageTag());
+                messageVO.setToUserId(messageDTO.getToUserId());
                 messageVO.setUserId(messageDTO.getUserId());
                 session.getBasicRemote().sendText(JSON.toJSONString(messageVO));
             }
