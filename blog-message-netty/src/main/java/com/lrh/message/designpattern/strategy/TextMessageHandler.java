@@ -1,35 +1,36 @@
 package com.lrh.message.designpattern.strategy;
 
-import com.alibaba.fastjson2.JSON;
 import com.lrh.common.util.IdUtil;
 import com.lrh.message.config.designpattern.strategy.AbstractExecuteStrategy;
 import com.lrh.message.enums.MessageTypeEnum;
 import com.lrh.message.model.MessageModel;
 import com.lrh.message.mq.producer.MessageProducer;
-import com.lrh.message.websocket.MessageDTO;
-import com.lrh.message.websocket.MessageHandler;
-import com.lrh.message.websocket.MessageVO;
-import com.lrh.message.websocket.WebSocketServer;
+import com.lrh.message.netty.ChannelContext;
+import com.lrh.message.netty.message.MessageDTO;
+import com.lrh.message.netty.message.MessageHandler;
+import com.lrh.message.netty.message.MessageVO;
+import com.lrh.message.utils.NettyMessageRespUtil;
+import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 /**
- * @ProjectName: blog-ddd
+ * @ProjectName: blog-v2
  * @Package: com.lrh.message.designpattern.strategy
- * @ClassName: TextMessageProcessHandler
+ * @ClassName: TextMessageHandler
  * @Author: 63283
  * @Description:
- * @Date: 2025/1/10 00:35
+ * @Date: 2025/1/12 19:03
  */
+
 @Slf4j
 @Service
 public class TextMessageHandler extends AbstractMessageHandler implements AbstractExecuteStrategy<MessageHandler, Void> {
@@ -46,8 +47,8 @@ public class TextMessageHandler extends AbstractMessageHandler implements Abstra
     @Override
     public void processMessage(MessageHandler messageHandler) {
         MessageDTO messageDTO = messageHandler.getMessageDTO();
-        WebSocketServer webSocketServer = messageHandler.getSocketMap().get(messageDTO.getToUserId());
-        if (webSocketServer == null) {
+        Channel channel = ChannelContext.getChannel(messageDTO.getToUserId());
+        if (channel == null) {
             log.info("[WebSocketServer] 用户: {} 不在线", messageDTO.getToUserId());
             return;
         }
@@ -57,9 +58,9 @@ public class TextMessageHandler extends AbstractMessageHandler implements Abstra
             message.setMessageType(messageDTO.getMessageType());
             message.setMessageContent(messageDTO.getMessageContent());
             message.setUserId(messageDTO.getUserId());
-            setRedis(messageModel);
-            webSocketServer.getSession().getBasicRemote().sendText(JSON.toJSONString(message));
-        } catch (RuntimeException | IOException e) {
+            setCache(messageModel);
+            channel.writeAndFlush(NettyMessageRespUtil.getMessageToWebSocketFrame(channel,message));
+        } catch (RuntimeException e) {
             log.error("[TextMessageProcessHandler] processMessage error: {}", e.getMessage());
             throw new RuntimeException(e);
         }
@@ -87,7 +88,7 @@ public class TextMessageHandler extends AbstractMessageHandler implements Abstra
      * @param messageModel 消息模型
      */
     @Override
-    protected void setRedis(MessageModel messageModel) {
+    protected void setCache(MessageModel messageModel) {
         String redisKey = IdUtil.getMessageOneToOneRedisKey(messageModel.getUserId(), messageModel.getToUserId());
         String luaScript =
                 "redis.call('ZADD', KEYS[1], ARGV[1], ARGV[2]) " +

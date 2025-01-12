@@ -65,15 +65,18 @@ public class WebSocketServer {
     @OnMessage
     public void onMessage(Session session, String message) {
         log.info("[WebSocketServer] 收到用户ID: {} 的消息: {},开始处理", this.userId, message);
-        MessageDTO messageDTO = getMessageModel(message);
-        if (messageDTO == null) {
-            return;
-        }
+        MessageDTO messageDTO = null;
         try {
+            messageDTO = getMessageDTO(message);
+            if (messageDTO == null) {
+                return;
+            }
             handlerMessage(messageDTO);
         } catch (Exception e) {
-            log.error("[WebSocketServer] 处理消息时发生错误: {}, 消息内容: {}", e.getMessage(), message, e);
-            handlerError(session, messageDTO);
+            if (messageDTO != null) {
+                log.error("[WebSocketServer] 处理消息时发生错误: {}, 消息内容: {}", e.getMessage(), message, e);
+                handlerError(session,messageDTO);
+            }
             throw new RuntimeException(e);
         }
     }
@@ -101,7 +104,7 @@ public class WebSocketServer {
      * @param message 原始消息
      * @return 可操作消息
      */
-    private MessageDTO getMessageModel(String message) {
+    private MessageDTO getMessageDTO(String message) {
         if (message == null || message.isEmpty()) {
             log.warn("[WebSocketServer] 收到空消息，忽略处理。");
             return null;
@@ -126,12 +129,13 @@ public class WebSocketServer {
     }
 
 
-    private void handlerError(Session session,MessageDTO messageDTO) {
+    private void handlerError(Session session, MessageDTO messageDTO) {
         try {
             if (session.isOpen()) {
                 MessageVO messageVO = new MessageVO();
                 messageVO.setMessageType(MessageTypeEnum.ErrorMessage.getMessageType());
                 messageVO.setMessageContent(messageDTO.getMessageTag());
+                messageVO.setUserId(messageDTO.getUserId());
                 session.getBasicRemote().sendText(JSON.toJSONString(messageVO));
             }
         } catch (IOException e) {
