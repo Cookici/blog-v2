@@ -1,5 +1,5 @@
 server:
-  port: 6002
+  port: 6005
 
 spring:
   application:
@@ -43,10 +43,17 @@ rocketmq:
     retry-times-when-send-failed: 3
     #异步消息发送失败重试的次数
     retry-times-when-send-async-failed: 3
+  consumer:
+    group: message-group
+    topic: message-topic
+  remote:
+    consumer:
+      topic: remote-topic
+      group: remote-group
 
 netty:
   # Netty端口
-  port: 6003
+  port: 6006
   application:
     # Netty应用名称
     name: blog-netty

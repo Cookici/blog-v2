@@ -3,13 +3,15 @@ package com.lrh.message.netty.handler;
 import com.alibaba.fastjson2.JSONObject;
 import com.lrh.message.config.NettyConfig;
 import com.lrh.message.config.designpattern.strategy.AbstractStrategyChoose;
+import com.lrh.message.constants.RedisKeyConstant;
 import com.lrh.message.enums.MessageTypeEnum;
+import com.lrh.message.mq.producer.MessageProducer;
 import com.lrh.message.netty.Attributes;
 import com.lrh.message.netty.ChannelContext;
 import com.lrh.message.netty.message.MessageDTO;
 import com.lrh.message.netty.message.MessageHandler;
 import com.lrh.message.netty.message.MessageVO;
-import com.lrh.message.utils.NettyMessageRespUtil;
+import com.lrh.message.utils.MessageUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -18,6 +20,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
@@ -38,9 +41,16 @@ public class WebSocketRequestHandler extends SimpleChannelInboundHandler<TextWeb
 
     private final AbstractStrategyChoose abstractStrategyChoose;
 
-    public WebSocketRequestHandler(AbstractStrategyChoose abstractStrategyChoose) {
+    private final MessageProducer messageProducer;
+
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    public WebSocketRequestHandler(AbstractStrategyChoose abstractStrategyChoose, MessageProducer messageProducer, RedisTemplate<String, Object> redisTemplate) {
         this.abstractStrategyChoose = abstractStrategyChoose;
+        this.messageProducer = messageProducer;
+        this.redisTemplate = redisTemplate;
     }
+
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame msg) throws Exception {
@@ -66,7 +76,7 @@ public class WebSocketRequestHandler extends SimpleChannelInboundHandler<TextWeb
             messageVO.setMessageTag(messageDTO.getMessageTag());
             messageVO.setToUserId(messageDTO.getToUserId());
             messageVO.setUserId(messageDTO.getUserId());
-            channel.writeAndFlush(NettyMessageRespUtil.getMessageToWebSocketFrame(channel, messageVO));
+            channel.writeAndFlush(MessageUtil.getMessageToWebSocketFrame(channel, messageVO));
         }
     }
 
@@ -77,6 +87,10 @@ public class WebSocketRequestHandler extends SimpleChannelInboundHandler<TextWeb
      * @param messageDTO 可操作消息
      */
     private void handlerMessage(MessageDTO messageDTO, Channel channel) {
+        if (ChannelContext.getChannel(messageDTO.getToUserId()) == null) {
+            messageProducer.syncRemoteMessage(messageDTO);
+            return;
+        }
         MessageHandler messageHandler = new MessageHandler(messageDTO, channel);
         abstractStrategyChoose.chooseAndExecute(messageDTO.getMessageType(), messageHandler);
     }
@@ -119,6 +133,7 @@ public class WebSocketRequestHandler extends SimpleChannelInboundHandler<TextWeb
         }
         ChannelContext.removeChannel(ctx.channel());
         NettyConfig.group.remove(ctx.channel());
+        redisTemplate.opsForHash().delete(RedisKeyConstant.USERID_NETTY_HASH_KEY, userId);
         log.info("[WebSocketServer] channelInactive 断开连接:{}", userId);
     }
 
