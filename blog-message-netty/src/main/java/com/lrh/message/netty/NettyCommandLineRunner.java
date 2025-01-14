@@ -1,5 +1,6 @@
 package com.lrh.message.netty;
 
+import io.netty.channel.ChannelFuture;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -27,6 +28,12 @@ public class NettyCommandLineRunner implements CommandLineRunner {
     @Override
     @Async
     public void run(String... args) throws Exception {
-        nettyServer.run();
+        ChannelFuture future = nettyServer.run();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            nettyServer.destroy();
+            nettyServer.removeFromRedis();
+        }));
+
+        future.channel().closeFuture().syncUninterruptibly();
     }
 }

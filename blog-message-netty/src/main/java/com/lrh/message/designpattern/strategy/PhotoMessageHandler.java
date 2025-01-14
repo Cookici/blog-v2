@@ -9,7 +9,8 @@ import com.lrh.message.netty.ChannelContext;
 import com.lrh.message.netty.message.MessageDTO;
 import com.lrh.message.netty.message.MessageHandler;
 import com.lrh.message.netty.message.MessageVO;
-import com.lrh.message.utils.NettyMessageRespUtil;
+import com.lrh.message.service.impl.ThreadPoolService;
+import com.lrh.message.utils.MessageUtil;
 import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -34,13 +35,16 @@ import java.util.List;
 @Slf4j
 @Service
 public class PhotoMessageHandler extends AbstractMessageHandler implements AbstractExecuteStrategy<MessageHandler, Void> {
+
     private final MessageProducer messageProducer;
+
+    private final ThreadPoolService threadPoolService;
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-
-    public PhotoMessageHandler(MessageProducer messageProducer, RedisTemplate<String, Object> redisTemplate) {
+    public PhotoMessageHandler(MessageProducer messageProducer, ThreadPoolService threadPoolService, RedisTemplate<String, Object> redisTemplate) {
         this.messageProducer = messageProducer;
+        this.threadPoolService = threadPoolService;
         this.redisTemplate = redisTemplate;
     }
 
@@ -50,22 +54,20 @@ public class PhotoMessageHandler extends AbstractMessageHandler implements Abstr
         Channel channel = ChannelContext.getChannel(messageDTO.getToUserId());
         if (channel == null) {
             log.info("[WebSocketServer] 用户: {} 不在线", messageDTO.getToUserId());
+            threadPoolService.setNoOnlineMessageCache(MessageUtil.convertMessageDTOToMessageModel(messageDTO));
             return;
         }
-        MessageModel messageModel = convertMessageDTOToMessageModel(messageDTO);
+        MessageModel messageModel = MessageUtil.convertMessageDTOToMessageModel(messageDTO);
         try {
-            MessageVO message = new MessageVO();
-            message.setMessageType(messageDTO.getMessageType());
-            message.setMessageContent(messageDTO.getMessageContent());
-            message.setUserId(messageDTO.getUserId());
+            MessageVO message = MessageUtil.convertMessageDTOToMessageVO(messageDTO);
             setCache(messageModel);
-            channel.writeAndFlush(NettyMessageRespUtil.getMessageToWebSocketFrame(channel,message));
+            channel.writeAndFlush(MessageUtil.getMessageToWebSocketFrame(channel, message));
         } catch (RuntimeException e) {
             log.error("[PhotoMessageHandler] processMessage error: {}", e.getMessage());
             throw new RuntimeException(e);
         }
 
-        executorService.execute(() -> {
+        threadPoolService.submitTask(() -> {
             messageProducer.syncSendMessage(messageModel);
         });
     }
@@ -105,17 +107,6 @@ public class PhotoMessageHandler extends AbstractMessageHandler implements Abstr
         RedisScript<Void> redisScript = new DefaultRedisScript<>(luaScript, Void.class);
         redisTemplate.execute(redisScript, keys, args.toArray());
         log.info("[PhotoMessageHandler] setRedis {},redis缓存成功", messageModel);
-    }
-
-    private MessageModel convertMessageDTOToMessageModel(MessageDTO messageDTO) {
-        MessageModel messageModel = new MessageModel();
-        messageModel.setMessageContent(messageDTO.getMessageContent());
-        messageModel.setMessageType(messageDTO.getMessageType());
-        messageModel.setUserId(messageDTO.getUserId());
-        messageModel.setToUserId(messageDTO.getToUserId());
-        messageModel.setTimestamp(messageDTO.getTimestamp());
-        messageModel.setMessageId("message_" + IdUtil.getUuid());
-        return messageModel;
     }
 
 
