@@ -3,15 +3,13 @@ package com.lrh.article.domain.service;
 import com.lrh.article.application.cqe.article.*;
 import com.lrh.article.domain.entity.ArticleEntity;
 import com.lrh.article.domain.entity.LabelEntity;
-import com.lrh.article.domain.repository.ArticleLabelOperateRepository;
-import com.lrh.article.domain.repository.ArticleOperateRepository;
-import com.lrh.article.domain.repository.CommentOperateRepository;
-import com.lrh.article.domain.repository.LabelOperateRepository;
+import com.lrh.article.domain.repository.*;
 import com.lrh.article.infrastructure.database.convertor.ArticleConvertor;
 import com.lrh.article.infrastructure.database.convertor.LabelConvertor;
 import com.lrh.article.infrastructure.po.ArticleLabelPO;
 import com.lrh.article.infrastructure.po.ArticlePO;
 import com.lrh.article.infrastructure.po.LabelPO;
+import com.lrh.common.context.UserContext;
 import com.lrh.common.util.IdUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,13 +31,15 @@ public class ArticleOperateService {
     private final ArticleLabelOperateRepository articleLabelOperateRepository;
     private final LabelOperateRepository labelOperateRepository;
     private final CommentOperateRepository commentOperateRepository;
+    private final ArticleCacheRepository articleCacheRepository;
 
     public ArticleOperateService(ArticleOperateRepository articleRepository, ArticleLabelOperateRepository articleLabelOperateRepository,
-                                 LabelOperateRepository labelOperateRepository, CommentOperateRepository commentOperateRepository) {
+                                 LabelOperateRepository labelOperateRepository, CommentOperateRepository commentOperateRepository, ArticleCacheRepository articleCacheRepository) {
         this.articleRepository = articleRepository;
         this.articleLabelOperateRepository = articleLabelOperateRepository;
         this.labelOperateRepository = labelOperateRepository;
         this.commentOperateRepository = commentOperateRepository;
+        this.articleCacheRepository = articleCacheRepository;
     }
 
 
@@ -155,5 +155,9 @@ public class ArticleOperateService {
             return;
         }
         articleLabelOperateRepository.upsertLabelForArticle(articlePO.getArticleId(), command.getLabelIdList());
+    }
+
+    public void articleViewIncrement(ArticleViewCommand command) {
+        articleCacheRepository.incrArticleViewCount(command.getArticleId(), UserContext.getUserId());
     }
 }

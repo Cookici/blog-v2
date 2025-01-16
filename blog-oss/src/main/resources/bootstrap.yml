@@ -12,6 +12,6 @@ spring:
         namespace: 1aae6af7-a418-4ff0-9967-c35349cd15ab
         file-extension: yaml
   redis:
-    host: 106.53.50.195
-    port: 6379
+    host: cd-crs-0q0ceb8t.sql.tencentcdb.com
+    port: 29577
     password: lrh,903.520hhhh

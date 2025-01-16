@@ -21,8 +21,6 @@ public class MessageVO {
 
     private String messageContent;
 
-    private String messageTag;
-
     private String toUserId;
 
     private String userId;

@@ -73,7 +73,6 @@ public class WebSocketRequestHandler extends SimpleChannelInboundHandler<TextWeb
         if (channel.isOpen()) {
             MessageVO messageVO = new MessageVO();
             messageVO.setMessageType(MessageTypeEnum.ErrorMessage.getMessageType());
-            messageVO.setMessageTag(messageDTO.getMessageTag());
             messageVO.setToUserId(messageDTO.getToUserId());
             messageVO.setUserId(messageDTO.getUserId());
             channel.writeAndFlush(MessageUtil.getMessageToWebSocketFrame(channel, messageVO));
