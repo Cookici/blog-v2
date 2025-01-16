@@ -11,4 +11,5 @@ package com.lrh.article.constants;
 
 public class RedisConstant {
     public static final String PARENT_COMMENT_ID_OPERATOR_LOCK = "lock:article:operator:parent_comment_id:%s";
+    public static final String ARTICLE_VIEW = "article:view:%s";
 }

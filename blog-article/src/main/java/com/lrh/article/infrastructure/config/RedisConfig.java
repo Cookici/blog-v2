@@ -1,4 +1,4 @@
-package com.lrh.article.infrastructure.cache;
+package com.lrh.article.infrastructure.config;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;

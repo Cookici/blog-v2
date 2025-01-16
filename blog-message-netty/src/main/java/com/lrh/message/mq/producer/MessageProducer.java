@@ -56,6 +56,7 @@ public class MessageProducer {
                 .get(RedisKeyConstant.USERID_NETTY_HASH_KEY, messageDTO.getToUserId());
         if (address == null || address.isEmpty()) {
             log.info("[MessageProducer] 用户不在线");
+            threadPoolService.setNoOnlineMessageCache(MessageUtil.convertMessageDTOToMessageModel(messageDTO));
             return;
         }
         if (Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(RedisKeyConstant.NETTY_SERVER_SET_KEY, address))) {

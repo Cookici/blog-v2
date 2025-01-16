@@ -5,8 +5,8 @@ spring:
   application:
     name: blog-gateway
   redis:
-    host: 106.53.50.195
-    port: 6379
+    host: cd-crs-0q0ceb8t.sql.tencentcdb.com
+    port: 29577
     password: lrh,903.520hhhh
   cloud:
     nacos:

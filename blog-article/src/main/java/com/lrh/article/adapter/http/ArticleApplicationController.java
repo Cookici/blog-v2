@@ -57,4 +57,10 @@ public class ArticleApplicationController {
         return Result.success();
     }
 
+    @PostMapping("/view")
+    public Result<Object> articleViewIncrement(@RequestBody ArticleViewCommand command) {
+        articleApplicationService.articleViewIncrement(command);
+        return Result.success();
+    }
+
 }

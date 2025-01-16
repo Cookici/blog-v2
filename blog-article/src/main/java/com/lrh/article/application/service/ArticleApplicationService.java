@@ -97,4 +97,9 @@ public class ArticleApplicationService {
         command.valid();
         articleOperateService.insertArticle(command);
     }
+
+    public void articleViewIncrement(ArticleViewCommand command) {
+        command.valid();
+        articleOperateService.articleViewIncrement(command);
+    }
 }
