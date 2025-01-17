@@ -27,4 +27,9 @@ public class RedisRepository implements ArticleCacheRepository {
         //只需要统计人数 浏览次数后续可以用来做推荐
         redisTemplate.opsForHash().increment(String.format(RedisConstant.ARTICLE_VIEW, articleId), ukId, 1);
     }
+
+    @Override
+    public void incrArticleLikeCount(String articleId, String ukId) {
+        redisTemplate.opsForHash().increment(String.format(RedisConstant.ARTICLE_LIKE, articleId), ukId, 1);
+    }
 }

@@ -22,10 +22,4 @@ public class IdUtil {
         return UUID.randomUUID().toString().replace("-", "").toLowerCase();
     }
 
-    public static String getMessageOneToOneRedisKey(String userId, String toUserId) {
-        userId = userId.contains("_") ? userId.split("_", 2)[1] : userId;
-        toUserId = toUserId.contains("_") ? toUserId.split("_", 2)[1] : toUserId;
-        return userId.compareTo(toUserId) >= 0 ? userId + "-" + toUserId : toUserId + "-" + userId;
-    }
-
 }

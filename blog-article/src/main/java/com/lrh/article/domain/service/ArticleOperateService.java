@@ -160,4 +160,16 @@ public class ArticleOperateService {
     public void articleViewIncrement(ArticleViewCommand command) {
         articleCacheRepository.incrArticleViewCount(command.getArticleId(), UserContext.getUserId());
     }
+
+    public void articleLikeIncrement(ArticleLikeCommand command) {
+        articleCacheRepository.incrArticleLikeCount(command.getArticleId(), UserContext.getUserId());
+    }
+
+    public void articleNoLoginViewIncrement(ArticleNoLoginViewCommand command) {
+        articleCacheRepository.incrArticleViewCount(command.getArticleId(),command.getIp());
+    }
+
+    public void articleNoLoginLikeIncrement(ArticleNoLoginLikeCommand command) {
+        articleCacheRepository.incrArticleLikeCount(command.getArticleId(), command.getIp());
+    }
 }

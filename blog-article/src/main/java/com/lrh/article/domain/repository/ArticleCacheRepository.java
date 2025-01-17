@@ -13,4 +13,5 @@ public interface ArticleCacheRepository {
 
     void incrArticleViewCount(String articleId,String ukId);
 
+    void incrArticleLikeCount(String articleId, String ukId);
 }

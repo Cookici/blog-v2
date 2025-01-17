@@ -1,5 +1,9 @@
 package com.lrh.message.utils;
 
+import com.lrh.message.enums.MessageTypeEnum;
+import com.lrh.message.netty.message.MessageDTO;
+import com.lrh.message.netty.message.MessageVO;
+import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetAddress;
@@ -16,6 +20,16 @@ import java.util.Enumeration;
  */
 @Slf4j
 public class NettyUtil {
+
+    public static void handlerError(Channel channel, MessageDTO messageDTO) {
+        if (channel.isOpen()) {
+            MessageVO messageVO = new MessageVO();
+            messageVO.setMessageType(MessageTypeEnum.ErrorMessage.getMessageType());
+            messageVO.setToUserId(messageDTO.getToUserId());
+            messageVO.setUserId(messageDTO.getUserId());
+            channel.writeAndFlush(MessageUtil.getMessageToWebSocketFrame(channel, messageVO));
+        }
+    }
 
     public static String getDynamicTopic(String remoteTopic,String nettyPort) {
         String host = getLocalHostExactAddress().getHostAddress() + ":"+nettyPort;

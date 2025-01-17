@@ -1,6 +1,5 @@
 package com.lrh.message.designpattern.strategy;
 
-import com.lrh.common.util.IdUtil;
 import com.lrh.message.config.designpattern.strategy.AbstractExecuteStrategy;
 import com.lrh.message.enums.MessageTypeEnum;
 import com.lrh.message.model.MessageModel;
@@ -11,6 +10,7 @@ import com.lrh.message.netty.message.MessageHandler;
 import com.lrh.message.netty.message.MessageVO;
 import com.lrh.message.service.impl.ThreadPoolService;
 import com.lrh.message.utils.MessageUtil;
+import com.lrh.message.utils.RedisKeyUtil;
 import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -91,7 +91,7 @@ public class TextMessageHandler extends AbstractMessageHandler implements Abstra
      */
     @Override
     protected void setCache(MessageModel messageModel) {
-        String redisKey = IdUtil.getMessageOneToOneRedisKey(messageModel.getUserId(), messageModel.getToUserId());
+        String redisKey = RedisKeyUtil.getMessageOneToOneRedisKey(messageModel.getUserId(), messageModel.getToUserId());
         String luaScript =
                 "redis.call('ZADD', KEYS[1], ARGV[1], ARGV[2]) " +
                         "redis.call('EXPIRE', KEYS[1], ARGV[3])";

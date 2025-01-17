@@ -3,20 +3,14 @@ package com.lrh.blog.user.controller;
 import com.lrh.blog.user.dto.cqe.UserLoginQuery;
 import com.lrh.blog.user.dto.cqe.UserRegisterCmd;
 import com.lrh.blog.user.dto.cqe.UserUpdateCmd;
-import com.lrh.blog.user.dto.req.ImageUploadReq;
-import com.lrh.blog.user.dto.req.UserLoginReq;
-import com.lrh.blog.user.dto.req.UserRegisterReq;
-import com.lrh.blog.user.dto.req.UserUpdateReq;
-import com.lrh.blog.user.dto.resp.FileUploadResp;
-import com.lrh.blog.user.dto.resp.UserLoginResp;
-import com.lrh.blog.user.dto.resp.UserRegisterResp;
-import com.lrh.blog.user.dto.resp.UserUpdateResp;
+import com.lrh.blog.user.dto.cqe.UserUpdatePasswordCmd;
+import com.lrh.blog.user.dto.req.*;
+import com.lrh.blog.user.dto.resp.*;
 import com.lrh.blog.user.dto.vo.UserVO;
 import com.lrh.blog.user.romote.OssClient;
 import com.lrh.blog.user.service.UserService;
 import com.lrh.common.exception.NoUserException;
 import com.lrh.common.result.Result;
-
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -66,7 +60,17 @@ public class UserController {
     public Result<UserUpdateResp> updateUserInfo(@RequestBody UserUpdateReq req) {
         UserUpdateCmd cmd = new UserUpdateCmd(req);
         UserUpdateResp resp = userService.updateUserInfo(cmd);
-        if (resp.getUpdate() <= 0) {
+        if (resp == null) {
+            return Result.fail();
+        }
+        return Result.success();
+    }
+
+    @PostMapping("/update/password")
+    public Result<UserUpdateResp> updatePassword(@RequestBody UserUpdatePasswordReq req) throws Exception {
+        UserUpdatePasswordCmd cmd = new UserUpdatePasswordCmd(req);
+        UserUpdatePasswordResp resp = userService.updateUserPassword(cmd);
+        if (resp == null) {
             return Result.fail();
         }
         return Result.success();
