@@ -102,4 +102,19 @@ public class ArticleApplicationService {
         command.valid();
         articleOperateService.articleViewIncrement(command);
     }
+
+    public void articleLikeIncrement(ArticleLikeCommand command) {
+        command.valid();
+        articleOperateService.articleLikeIncrement(command);
+    }
+
+    public void articleNoLoginViewIncrement(ArticleNoLoginViewCommand command) {
+        command.valid();
+        articleOperateService.articleNoLoginViewIncrement(command);
+    }
+
+    public void articleNoLoginLikeIncrement(ArticleNoLoginLikeCommand command) {
+        command.valid();
+        articleOperateService.articleNoLoginLikeIncrement(command);
+    }
 }

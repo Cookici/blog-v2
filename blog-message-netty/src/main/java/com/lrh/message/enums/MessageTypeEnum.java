@@ -31,12 +31,7 @@ public enum MessageTypeEnum {
     /**
      * 注册消息
      */
-    RegisterMessage(3, "register", "注册消息"),
-
-    /**
-     * 远程错误消息
-     */
-    RemoteErrorMessage(4, "remoteError", "远程错误消息");
+    RegisterMessage(3, "register", "注册消息");
 
 
     private final Integer code;

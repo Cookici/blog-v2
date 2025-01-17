@@ -78,7 +78,6 @@ public class RemoteMessageConsumer implements CommandLineRunner {
                             new MessageHandler(messageDTO, channel));
                 } catch (Exception e) {
                     log.info("[RemoteMessageConsumer] 消息处理失败");
-                    //TODO remoteErrorMessageHandler
                 }
             }
             return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;

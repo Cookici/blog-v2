@@ -7,6 +7,8 @@ import com.lrh.article.application.service.ArticleApplicationService;
 import com.lrh.common.result.Result;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * @ProjectName: blog-ddd
  * @Package: com.lrh.article.adapter.http
@@ -60,6 +62,26 @@ public class ArticleApplicationController {
     @PostMapping("/view")
     public Result<Object> articleViewIncrement(@RequestBody ArticleViewCommand command) {
         articleApplicationService.articleViewIncrement(command);
+        return Result.success();
+    }
+
+    @PostMapping("/like")
+    public Result<Object> articleLikeIncrement(@RequestBody ArticleLikeCommand command) {
+        articleApplicationService.articleLikeIncrement(command);
+        return Result.success();
+    }
+
+    @PostMapping("/view/no_login")
+    public Result<Object> articleNoLoginViewIncrement(@RequestBody ArticleNoLoginViewCommand command, HttpServletRequest request) {
+        command.setHttpServletRequest(request);
+        articleApplicationService.articleNoLoginViewIncrement(command);
+        return Result.success();
+    }
+
+    @PostMapping("/like/no_login")
+    public Result<Object> articleNoLoginLikeIncrement(@RequestBody ArticleNoLoginLikeCommand command, HttpServletRequest request) {
+        command.setHttpServletRequest(request);
+        articleApplicationService.articleNoLoginLikeIncrement(command);
         return Result.success();
     }
 

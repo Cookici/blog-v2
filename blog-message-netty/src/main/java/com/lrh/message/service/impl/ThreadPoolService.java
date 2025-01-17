@@ -1,8 +1,8 @@
 package com.lrh.message.service.impl;
 
-import com.lrh.common.util.IdUtil;
 import com.lrh.message.constants.RedisKeyConstant;
 import com.lrh.message.model.MessageModel;
+import com.lrh.message.utils.RedisKeyUtil;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -39,7 +39,7 @@ public class ThreadPoolService {
     public void setNoOnlineMessageCache(MessageModel messageModel){
         submitTask(() -> {
             redisTemplate.opsForZSet().add(RedisKeyConstant.NO_ONLINE_MESSAGE_PREFIX +
-                            IdUtil.getMessageOneToOneRedisKey(messageModel.getUserId(), messageModel.getToUserId()),
+                            RedisKeyUtil.getMessageOneToOneRedisKey(messageModel.getUserId(), messageModel.getToUserId()),
                     messageModel, messageModel.getTimestamp());
         });
     }

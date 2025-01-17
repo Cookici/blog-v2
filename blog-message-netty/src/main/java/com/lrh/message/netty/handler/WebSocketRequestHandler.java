@@ -4,14 +4,11 @@ import com.alibaba.fastjson2.JSONObject;
 import com.lrh.message.config.NettyConfig;
 import com.lrh.message.config.designpattern.strategy.AbstractStrategyChoose;
 import com.lrh.message.constants.RedisKeyConstant;
-import com.lrh.message.enums.MessageTypeEnum;
 import com.lrh.message.mq.producer.MessageProducer;
 import com.lrh.message.netty.Attributes;
 import com.lrh.message.netty.ChannelContext;
 import com.lrh.message.netty.message.MessageDTO;
 import com.lrh.message.netty.message.MessageHandler;
-import com.lrh.message.netty.message.MessageVO;
-import com.lrh.message.utils.MessageUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -62,20 +59,7 @@ public class WebSocketRequestHandler extends SimpleChannelInboundHandler<TextWeb
             }
             handlerMessage(messageDTO, ctx.channel());
         } catch (Exception e) {
-            if (messageDTO != null) {
-                handlerError(ctx.channel(), messageDTO);
-            }
             throw new RuntimeException(e);
-        }
-    }
-
-    private void handlerError(Channel channel, MessageDTO messageDTO) {
-        if (channel.isOpen()) {
-            MessageVO messageVO = new MessageVO();
-            messageVO.setMessageType(MessageTypeEnum.ErrorMessage.getMessageType());
-            messageVO.setToUserId(messageDTO.getToUserId());
-            messageVO.setUserId(messageDTO.getUserId());
-            channel.writeAndFlush(MessageUtil.getMessageToWebSocketFrame(channel, messageVO));
         }
     }
 
