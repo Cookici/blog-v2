@@ -13,10 +13,11 @@ import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.domain.PageImpl;  // 用来转换成 Page
+import org.springframework.stereotype.Repository;
 
 import java.util.stream.Collectors;
 
-@Mapper
+@Repository
 public class ArticleEsDao {
 
     private final ElasticsearchRestTemplate elasticsearchRestTemplate;
