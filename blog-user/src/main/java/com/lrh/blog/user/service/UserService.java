@@ -1,6 +1,8 @@
 package com.lrh.blog.user.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.lrh.blog.user.dto.cqe.UserUpdatePasswordCmd;
+import com.lrh.blog.user.dto.resp.UserUpdatePasswordResp;
 import com.lrh.blog.user.model.UserModel;
 import com.lrh.blog.user.dto.cqe.UserLoginQuery;
 import com.lrh.blog.user.dto.cqe.UserRegisterCmd;
@@ -31,4 +33,6 @@ public interface UserService extends IService<UserModel> {
     UserUpdateResp updateUserInfo(UserUpdateCmd cmd);
 
     Map<String, UserVO> getUserByIds(List<String> userIds);
+
+    UserUpdatePasswordResp updateUserPassword(UserUpdatePasswordCmd cmd);
 }

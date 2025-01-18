@@ -15,8 +15,8 @@ spring:
     password: lrh,903.520hhhh
     url: jdbc:mysql://sh-cdb-pezvivda.sql.tencentcdb.com:63950/article?characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
   redis:
-    host: 106.53.50.195
-    port: 6379
+    host: cd-crs-0q0ceb8t.sql.tencentcdb.com
+    port: 29577
     password: lrh,903.520hhhh
   cloud:
     nacos:
@@ -24,6 +24,7 @@ spring:
         server-addr: 106.53.50.195:8848
         username: nacos
         password: nacos
+
 mybatis-plus:
   mapper-locations: classpath*:xml/*.xml
   configuration:

@@ -44,6 +44,12 @@ public class UserRegisterCmd {
         if (UserValid.validUserPassword(req.getUserPassword())) {
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "密码"));
         }
+        if (UserValid.validUserPassword(req.getUserPasswordAgain())) {
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "密码"));
+        }
+        if(!req.getUserPasswordAgain().equals(req.getUserPassword())){
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "两次密码不一致"));
+        }
         if (UserValid.validUserName(req.getUserName())) {
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "用户名"));
         }

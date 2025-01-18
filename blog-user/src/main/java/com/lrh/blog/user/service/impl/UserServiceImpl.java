@@ -9,8 +9,10 @@ import com.lrh.blog.user.constant.RedisKeyConstant;
 import com.lrh.blog.user.dto.cqe.UserLoginQuery;
 import com.lrh.blog.user.dto.cqe.UserRegisterCmd;
 import com.lrh.blog.user.dto.cqe.UserUpdateCmd;
+import com.lrh.blog.user.dto.cqe.UserUpdatePasswordCmd;
 import com.lrh.blog.user.dto.resp.UserLoginResp;
 import com.lrh.blog.user.dto.resp.UserRegisterResp;
+import com.lrh.blog.user.dto.resp.UserUpdatePasswordResp;
 import com.lrh.blog.user.dto.resp.UserUpdateResp;
 import com.lrh.blog.user.dto.vo.UserVO;
 import com.lrh.blog.user.mapper.UserMapper;
@@ -144,7 +146,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
     @Override
     public Map<String, UserVO> getUserByIds(List<String> userIds) {
         LambdaQueryWrapper<UserModel> queryWrapper = Wrappers.lambdaQuery(UserModel.class)
-                .in(UserModel::getUserId, userIds);
+                .in(UserModel::getUserId, userIds)
+                .eq(UserModel::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
 
         List<UserModel> userModelList = userMapper.selectList(queryWrapper);
 
@@ -155,6 +158,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
                         userModel.getUserName(),
                         userModel.getUserLevel())
         ));
+    }
+
+    @Override
+    public UserUpdatePasswordResp updateUserPassword(UserUpdatePasswordCmd cmd) {
+        LambdaUpdateWrapper<UserModel> updateWrapper = Wrappers.lambdaUpdate(UserModel.class)
+                .eq(UserModel::getUserId, cmd.getUserId())
+                .eq(UserModel::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
+                .eq(UserModel::getUserPassword, cmd.getUserPassword())
+                .set(UserModel::getUserPassword, cmd.getNewUserPassword());
+        int update = userMapper.update(updateWrapper);
+        if (update <= 0) {
+            return null;
+        }
+        return new UserUpdatePasswordResp(update);
     }
 
 }

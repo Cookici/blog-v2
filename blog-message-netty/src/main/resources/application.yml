@@ -1,0 +1,53 @@
+server:
+  port: 6005
+
+spring:
+  application:
+    name: blog-message-netty
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    username: root
+    password: lrh,903.520hhhh
+    url: jdbc:mysql://sh-cdb-pezvivda.sql.tencentcdb.com:63950/user?characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+  redis:
+    host: cd-crs-0q0ceb8t.sql.tencentcdb.com
+    port: 29577
+    password: lrh,903.520hhhh
+
+mybatis-plus:
+  mapper-locations: classpath*:xml/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      logic-delete-field: is_deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+rocketmq:
+  name-server: localhost:9876
+  producer:
+    #生产者组名
+    group: message-group
+    #消息发送的超时时间，毫米级别，默认为3S
+    send-message-timeout: 3000
+    #最大的消息限制 默认为128K
+    max-message-size: 4194304
+    #同步消息发送失败重试次数
+    retry-times-when-send-failed: 3
+    #异步消息发送失败重试的次数
+    retry-times-when-send-async-failed: 3
+  consumer:
+    group: message-group
+    topic: message-topic
+  remote:
+    consumer:
+      topic: remote-topic
+      group: remote-group
+
+netty:
+  # Netty端口
+  port: 6006
+  application:
+    # Netty应用名称
+    name: blog-netty

@@ -19,9 +19,12 @@ public class MessageVO {
 
     private String messageType;
 
-    /**
-     * 错误的消息类型内容为messageTag
-     */
     private String messageContent;
+
+    private String messageTag;
+
+    private String toUserId;
+
+    private String userId;
 
 }

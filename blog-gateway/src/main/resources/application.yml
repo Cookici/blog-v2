@@ -5,15 +5,10 @@ spring:
   application:
     name: blog-gateway
   redis:
-    host: 106.53.50.195
-    port: 6379
+    host: cd-crs-0q0ceb8t.sql.tencentcdb.com
+    port: 29577
     password: lrh,903.520hhhh
   cloud:
-    nacos:
-      discovery:
-        server-addr: 106.53.50.195:8848
-        username: nacos
-        password: nacos
     gateway:
       default-filters:
         - AddRequestHeader=gateway-env, blog-gateway
@@ -32,6 +27,7 @@ spring:
           uri: lb://blog-article
           predicates:
             - Path=/api/article/**,/api/comment/**
+
         - id: oss
           uri: lb://blog-oss
           predicates:
@@ -41,3 +37,13 @@ spring:
           uri: lb://blog-message
           predicates:
             - Path=/api/message/**
+
+        - id: message-netty
+          uri: lb://blog-message-netty
+          predicates:
+            - Path=/api/message-netty/**
+
+        - id: netty
+          uri: lb://blog-netty
+          predicates:
+            - Path=/api/netty

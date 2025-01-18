@@ -24,6 +24,8 @@ public class UserRegisterReq {
 
     private String userPassword;
 
+    private String userPasswordAgain;
+
     private String userPhone;
 
     private Integer userLevel;
