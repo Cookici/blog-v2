@@ -2,9 +2,13 @@ package com.lrh.article.infrastructure.database.repository;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import org.springframework.data.domain.Page;
+import com.lrh.article.application.cqe.article.ArticleListQuery;
 import com.lrh.article.domain.repository.ArticleLabelOperateRepository;
 import com.lrh.article.infrastructure.database.convertor.ArticleLabelConvertor;
+import com.lrh.article.infrastructure.database.esDao.ArticleEsDao;
 import com.lrh.article.infrastructure.database.mapper.ArticleLabelMapper;
+import com.lrh.article.infrastructure.doc.ArticleDO;
 import com.lrh.article.infrastructure.po.ArticleLabelPO;
 import com.lrh.common.constant.BusinessConstant;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +29,9 @@ public class ArticleLabelRepositoryImpl implements ArticleLabelOperateRepository
 
     @Autowired
     private ArticleLabelMapper articleLabelMapper;
+
+    @Autowired
+    private ArticleEsDao articleEsDao;
 
     @Override
     public List<ArticleLabelPO> getArticleLabelListByArticles(List<String> articleIdList) {
@@ -50,7 +57,12 @@ public class ArticleLabelRepositoryImpl implements ArticleLabelOperateRepository
 
     @Override
     public void restoreDeletedArticleLabel(String articleId, List<String> labelIdList) {
-        articleLabelMapper.restoreDeleted(articleId,labelIdList);
+        articleLabelMapper.restoreDeleted(articleId, labelIdList);
+    }
+
+    @Override
+    public Page<ArticleDO> findArticleListByQuery(ArticleListQuery query){
+        return articleEsDao.searchArticles(query);
     }
 
 }

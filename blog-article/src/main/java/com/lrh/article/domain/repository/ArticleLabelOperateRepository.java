@@ -1,6 +1,9 @@
 package com.lrh.article.domain.repository;
 
+import com.lrh.article.application.cqe.article.ArticleListQuery;
+import com.lrh.article.infrastructure.doc.ArticleDO;
 import com.lrh.article.infrastructure.po.ArticleLabelPO;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -22,4 +25,7 @@ public interface ArticleLabelOperateRepository {
     void restoreDeletedArticleLabel(String articleId, List<String> labelIdList);
 
     List<ArticleLabelPO> getArticleLabelListByArticles(List<String> articleIdList);
+
+    // 通过ES模糊查询(标签，正文，标题)博客
+    Page<ArticleDO> findArticleListByQuery(ArticleListQuery query);
 }

@@ -10,7 +10,7 @@ package com.lrh.common.constant;
  */
 
 public class BusinessConstant {
-    public static final String UPLOAD_FILE_ERROR = "文件上传失败";
+    public final static String IMAGE_SIZE_ERROR = "图片超过%dM";
     public final static String VALID_ERROR = "%s，不符合规范";
     public final static String NO_USER = "没有该用户或者账户密码错误";
     public final static String DUP_KEY = "数据已存在";

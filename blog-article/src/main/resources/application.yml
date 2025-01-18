@@ -19,7 +19,11 @@ spring:
         server-addr: 106.53.50.195:8848
         username: nacos
         password: nacos
-
+  elasticsearch:
+    host: 127.0.0.1
+    port: 9200
+    username: elastic  # Elasticsearch 用户名
+    password: 20030706  # Elasticsearch 密码
 mybatis-plus:
   mapper-locations: classpath*:xml/*.xml
   configuration:

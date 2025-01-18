@@ -24,6 +24,9 @@ public class ImageUploadReq {
 
 
     public void valid() {
+        if (imageFile.getSize() > OssConstant.IMAGES_SIZE) {
+            throw new ValidException(String.format(BusinessConstant.IMAGE_SIZE_ERROR, OssConstant.IMAGES_SIZE));
+        }
         if (imageFile == null) {
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
         }
