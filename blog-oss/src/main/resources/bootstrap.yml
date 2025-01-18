@@ -3,10 +3,6 @@ spring:
     name: blog-oss
   cloud:
     nacos:
-      discovery:
-        server-addr: 106.53.50.195:8848
-        username: nacos
-        password: nacos
       config:
         server-addr: 106.53.50.195:8848
         namespace: 1aae6af7-a418-4ff0-9967-c35349cd15ab

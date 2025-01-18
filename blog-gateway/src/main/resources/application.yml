@@ -9,11 +9,6 @@ spring:
     port: 29577
     password: lrh,903.520hhhh
   cloud:
-    nacos:
-      discovery:
-        server-addr: 106.53.50.195:8848
-        username: nacos
-        password: nacos
     gateway:
       default-filters:
         - AddRequestHeader=gateway-env, blog-gateway
