@@ -35,9 +35,5 @@ public class UserRegisterReq {
 
     private String userSex;
 
-    private String roleName;
-
     private String userEmail;
-
-    private String userIp;
 }

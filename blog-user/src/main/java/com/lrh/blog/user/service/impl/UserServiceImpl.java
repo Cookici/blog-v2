@@ -6,22 +6,24 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lrh.blog.user.constant.DESConstant;
 import com.lrh.blog.user.constant.RedisKeyConstant;
+import com.lrh.blog.user.constant.UserConstant;
 import com.lrh.blog.user.dto.cqe.UserLoginQuery;
 import com.lrh.blog.user.dto.cqe.UserRegisterCmd;
 import com.lrh.blog.user.dto.cqe.UserUpdateCmd;
 import com.lrh.blog.user.dto.cqe.UserUpdatePasswordCmd;
-import com.lrh.blog.user.dto.resp.UserLoginResp;
-import com.lrh.blog.user.dto.resp.UserRegisterResp;
-import com.lrh.blog.user.dto.resp.UserUpdatePasswordResp;
-import com.lrh.blog.user.dto.resp.UserUpdateResp;
+import com.lrh.blog.user.dto.req.ImageUploadReq;
+import com.lrh.blog.user.dto.resp.*;
 import com.lrh.blog.user.dto.vo.UserVO;
 import com.lrh.blog.user.mapper.UserMapper;
 import com.lrh.blog.user.model.UserModel;
+import com.lrh.blog.user.romote.OssClient;
 import com.lrh.blog.user.service.UserService;
 import com.lrh.blog.user.util.DESUtil;
 import com.lrh.blog.user.util.LockUtil;
 import com.lrh.common.annotations.ExecutionRecords;
 import com.lrh.common.constant.BusinessConstant;
+import com.lrh.common.context.UserContext;
+import com.lrh.common.result.Result;
 import com.lrh.common.util.IdUtil;
 import com.lrh.common.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -53,10 +55,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
 
     private final RedissonClient redissonClient;
 
-    public UserServiceImpl(UserMapper userMapper, RedisTemplate<String, Object> redisTemplate, RedissonClient redissonClient) {
+    private final OssClient ossClient;
+
+    public UserServiceImpl(UserMapper userMapper, RedisTemplate<String, Object> redisTemplate, RedissonClient redissonClient, OssClient ossClient) {
         this.userMapper = userMapper;
         this.redisTemplate = redisTemplate;
         this.redissonClient = redissonClient;
+        this.ossClient = ossClient;
     }
 
     @Override
@@ -116,10 +121,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
             userModel.setUserPhone(cmd.getUserPhone());
             userModel.setUserBirthday(cmd.getUserBirthday());
             userModel.setUserSex(cmd.getUserSex());
-            userModel.setUserLevel(cmd.getUserLevel());
+            userModel.setUserLevel(UserConstant.DEFAULT_LEVEL);
             userModel.setUserIp(cmd.getUserIp());
             userModel.setUserEmail(cmd.getUserEmail());
-            userModel.setRoleName(cmd.getUserRole());
+            userModel.setRoleName(UserConstant.LOGIN_ROLE);
             int insert = userMapper.insert(userModel);
             if (insert <= 0) {
                 return null;
@@ -154,8 +159,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
         return userModelList.stream().collect(Collectors.toMap(
                 UserModel::getUserId,
                 userModel -> new UserVO(userModel.getUserId(),
-                        userModel.getUserPhoto(),
                         userModel.getUserName(),
+                        userModel.getUserPhoto(),
                         userModel.getUserLevel())
         ));
     }
@@ -172,6 +177,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
             return null;
         }
         return new UserUpdatePasswordResp(update);
+    }
+
+    @Override
+    public FileUploadResp uploadAvatar(ImageUploadReq req) {
+        Result<FileUploadResp> upload = ossClient.upload(req);
+        FileUploadResp data = upload.getData();
+        String fileUrl = data.getFileUrl();
+        LambdaUpdateWrapper<UserModel> updateWrapper = Wrappers.lambdaUpdate(UserModel.class)
+               .eq(UserModel::getUserId, UserContext.getUserId())
+               .eq(UserModel::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
+               .set(UserModel::getUserPhoto, fileUrl);
+        userMapper.update(updateWrapper);
+        return data;
     }
 
 }

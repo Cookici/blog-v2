@@ -14,4 +14,9 @@
           AND al.is_deleted = 0
     </select>
 
+    <select id="getLabelKinds" resultType="com.lrh.article.infrastructure.po.LabelPO">
+        SELECT *
+        FROM t_label
+        WHERE is_deleted = 0
+    </select>
 </mapper>
