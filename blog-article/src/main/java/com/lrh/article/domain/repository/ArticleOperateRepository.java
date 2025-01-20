@@ -1,7 +1,10 @@
 package com.lrh.article.domain.repository;
 
+import com.lrh.article.application.cqe.article.ArticleListQuery;
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
+import com.lrh.article.infrastructure.doc.ArticleDO;
 import com.lrh.article.infrastructure.po.ArticlePO;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -26,4 +29,7 @@ public interface ArticleOperateRepository {
     void updateArticleById(String articleId, String articleTitle, String articleContent);
 
     void insertArticle(ArticlePO articlePO);
+
+    Page<ArticleDO> findArticleListByQuery(ArticleListQuery query);
+
 }

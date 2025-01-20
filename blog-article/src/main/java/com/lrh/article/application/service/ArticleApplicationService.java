@@ -3,12 +3,14 @@ package com.lrh.article.application.service;
 import com.lrh.article.application.cqe.article.*;
 import com.lrh.article.application.dto.PageDTO;
 import com.lrh.article.application.dto.article.ArticleDTO;
+import com.lrh.article.application.dto.label.LabelDTO;
 import com.lrh.article.domain.entity.ArticleEntity;
 import com.lrh.article.domain.service.ArticleOperateService;
 import com.lrh.article.domain.vo.UserVO;
 import com.lrh.article.infrastructure.client.UserClient;
 import com.lrh.common.result.Result;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -51,19 +53,31 @@ public class ArticleApplicationService {
 
         List<ArticleDTO> articleDTOList = new ArrayList<>();
         articleEntityList.forEach(articleEntity -> {
-                    UserVO userVO = userIdForUser.get(articleEntity.getUserId());
-                    if (userVO != null) {
-                        articleDTOList.add(ArticleDTO.fromEntity(articleEntity, userVO));
-                    }
-                }
-        );
+            UserVO userVO = userIdForUser.get(articleEntity.getUserId());
+            if (userVO != null) {
+                articleDTOList.add(ArticleDTO.fromEntity(articleEntity, userVO));
+            }
+        });
 
-        return PageDTO.<ArticleDTO>builder()
-                .page(query.getPage())
-                .total(total)
-                .pageSize(query.getPageSize())
-                .data(articleDTOList).
-                build();
+        return PageDTO.<ArticleDTO>builder().page(query.getPage()).total(total).pageSize(query.getPageSize()).data(articleDTOList).build();
+    }
+
+    public PageDTO<ArticleDTO> queryListArticles(ArticleListQuery query) {
+        query.valid();
+        Page<ArticleEntity> articleEntityPage = articleOperateService.queryListArticle(query);
+        List<ArticleDTO> articelDTOlist = new ArrayList<>();
+        for (ArticleEntity articleEntity : articleEntityPage) {
+            ArticleDTO articleDTO= new ArticleDTO();
+            articleDTO.setArticleContent(articleEntity.getArticleContent());
+            articleDTO.setArticleTitle(articleEntity.getArticleTitle());
+            articleDTO.setArticleId(articleEntity.getArticleId());
+            articleDTO.setLabels(LabelDTO.fromEntityList(articleEntity.getLabelEntityList()));
+            articleDTO.setCreateTime(articleEntity.getCreateTime());
+            articleDTO.setUpdateTime(articleEntity.getUpdateTime());
+            articelDTOlist.add(articleDTO);
+        }
+
+        return PageDTO.<ArticleDTO>builder().page(query.getPage()).total(articleEntityPage.getTotalElements()).pageSize(query.getPageSize()).data(articelDTOlist).build();
     }
 
     public ArticleDTO getArticleById(ArticleQuery query) {

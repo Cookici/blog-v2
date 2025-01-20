@@ -41,6 +41,12 @@ public class ArticleApplicationController {
         return Result.success(resp);
     }
 
+    @GetMapping("/list")
+    public Result<Object> queryListArticle(ArticleListQuery query) {
+        PageDTO<ArticleDTO> resp = articleApplicationService.queryListArticles(query);
+        return Result.success(resp);
+    }
+
     @PostMapping("/delete")
     public Result<Object> deleteArticle(@RequestBody ArticleDeleteCommand command) {
         articleApplicationService.deleteArticleById(command);
@@ -84,5 +90,6 @@ public class ArticleApplicationController {
         articleApplicationService.articleNoLoginLikeIncrement(command);
         return Result.success();
     }
+
 
 }

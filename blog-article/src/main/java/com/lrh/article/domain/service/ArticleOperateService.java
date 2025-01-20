@@ -6,11 +6,14 @@ import com.lrh.article.domain.entity.LabelEntity;
 import com.lrh.article.domain.repository.*;
 import com.lrh.article.infrastructure.database.convertor.ArticleConvertor;
 import com.lrh.article.infrastructure.database.convertor.LabelConvertor;
+import com.lrh.article.infrastructure.doc.ArticleDO;
 import com.lrh.article.infrastructure.po.ArticleLabelPO;
 import com.lrh.article.infrastructure.po.ArticlePO;
 import com.lrh.article.infrastructure.po.LabelPO;
 import com.lrh.common.context.UserContext;
 import com.lrh.common.util.IdUtil;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,11 +62,29 @@ public class ArticleOperateService {
         return articleEntityList;
     }
 
+    public Page<ArticleEntity> queryListArticle(ArticleListQuery query) {
+        // 查询文章列表并返回分页结果
+        Page<ArticleDO> articleDOPage = articleRepository.findArticleListByQuery(query);
+
+        // 将 ArticleDO 转换为 ArticleEntity
+        List<ArticleEntity> articleEntityList = articleDOPage.getContent().stream()
+                                                             .map(ArticleDO::toArticleEntity)  // 使用 map 进行转换
+                                                             .collect(Collectors.toList());   // 收集成 List
+
+        // 创建 PageImpl 并传递原始的 Pageable 和总数
+        return  new PageImpl<>(
+                articleEntityList,
+                articleDOPage.getPageable(),  // 传递分页信息
+                articleDOPage.getTotalElements()  // 传递总元素数量
+        );
+
+    }
+
     private void setLabelListForArticleEntityList(List<ArticleEntity> articleEntityList) {
         // 提取文章 ID 列表
         List<String> articleIdList = articleEntityList.stream()
-                .map(ArticleEntity::getArticleId)
-                .collect(Collectors.toList());
+                                                      .map(ArticleEntity::getArticleId)
+                                                      .collect(Collectors.toList());
 
         // 获取文章与标签 ID 的映射关系
         List<ArticleLabelPO> articleLabelPOList = articleLabelOperateRepository.getArticleLabelListByArticles(articleIdList);
@@ -75,24 +96,24 @@ public class ArticleOperateService {
         // 获取标签详细信息
         List<LabelPO> labelPOList = labelOperateRepository.getLabelListByIds(
                 articleIdToLabelIdsMap.values().stream()
-                        .flatMap(Collection::stream)
-                        .distinct()
-                        .collect(Collectors.toList())
+                                      .flatMap(Collection::stream)
+                                      .distinct()
+                                      .collect(Collectors.toList())
         );
 
         List<LabelEntity> labelEntityList = LabelConvertor.toListLabelEntityConvertor(labelPOList);
 
         // 构建标签 ID 到标签实体的映射
         Map<String, LabelEntity> labelIdToLabelEntityMap = labelEntityList.stream()
-                .collect(Collectors.toMap(LabelEntity::getLabelId, label -> label));
+                                                                          .collect(Collectors.toMap(LabelEntity::getLabelId, label -> label));
 
         // 为每篇文章设置对应的标签列表
         articleEntityList.forEach(articleEntity -> {
             List<String> labelIds = articleIdToLabelIdsMap.getOrDefault(articleEntity.getArticleId(), Collections.emptyList());
             List<LabelEntity> labels = labelIds.stream()
-                    .map(labelIdToLabelEntityMap::get)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
+                                               .map(labelIdToLabelEntityMap::get)
+                                               .filter(Objects::nonNull)
+                                               .collect(Collectors.toList());
             articleEntity.setLabelEntityList(labels);
         });
     }
@@ -145,11 +166,11 @@ public class ArticleOperateService {
     @Transactional(rollbackFor = Exception.class)
     public void insertArticle(ArticleInsertCommand command) {
         ArticlePO articlePO = ArticlePO.builder()
-                .articleId("article_" + IdUtil.getUuid())
-                .articleTitle(command.getArticleTitle())
-                .articleContent(command.getArticleContent())
-                .userId(command.getUserId())
-                .build();
+                                       .articleId("article_" + IdUtil.getUuid())
+                                       .articleTitle(command.getArticleTitle())
+                                       .articleContent(command.getArticleContent())
+                                       .userId(command.getUserId())
+                                       .build();
         articleRepository.insertArticle(articlePO);
         if (command.getLabelIdList().isEmpty()) {
             return;
@@ -166,7 +187,7 @@ public class ArticleOperateService {
     }
 
     public void articleNoLoginViewIncrement(ArticleNoLoginViewCommand command) {
-        articleCacheRepository.incrArticleViewCount(command.getArticleId(),command.getIp());
+        articleCacheRepository.incrArticleViewCount(command.getArticleId(), command.getIp());
     }
 
     public void articleNoLoginLikeIncrement(ArticleNoLoginLikeCommand command) {
