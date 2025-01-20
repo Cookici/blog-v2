@@ -2,7 +2,6 @@ package com.lrh.article.infrastructure.database.esDao;
 
 import com.lrh.article.application.cqe.article.ArticleListQuery;
 import com.lrh.article.infrastructure.doc.ArticleDO;
-import org.apache.ibatis.annotations.Mapper;
 import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -31,8 +30,8 @@ public class ArticleEsDao {
     public Page<ArticleDO> searchArticles(ArticleListQuery query) {
         // 多字段模糊查询，查询标题、正文
         QueryBuilder searchQuery = QueryBuilders.multiMatchQuery(query.getElement(), "articleTitle", "articleContent")  // 多字段模糊查询
-                                .fuzziness("AUTO")  // 自动模糊度，适应不同的单词长度
-                                .operator(Operator.OR);  // 设置查询操作符，使用“或”操作符
+                                                .fuzziness("AUTO")  // 自动模糊度，适应不同的单词长度
+                                                .operator(Operator.OR);  // 设置查询操作符，使用“或”操作符
 
         // 标签模糊查询
         QueryBuilder labelSearchQuery = QueryBuilders.wildcardQuery("labels", "*" + query.getElement() + "*");  // 标签字段模糊查询
@@ -53,5 +52,13 @@ public class ArticleEsDao {
 
         // 将 SearchHits 转换为 Page
         return new PageImpl<>(searchHits.getSearchHits().stream().map(hit -> hit.getContent()).collect(Collectors.toList()), pageable, searchHits.getTotalHits());
+    }
+
+    public void saveArticleDo(ArticleDO article) {
+        elasticsearchRestTemplate.save(article);
+    }
+
+    public void deleteArticleDo(ArticleDO article) {
+        elasticsearchRestTemplate.delete(article);
     }
 }

@@ -18,12 +18,6 @@ spring:
     host: cd-crs-0q0ceb8t.sql.tencentcdb.com
     port: 29577
     password: lrh,903.520hhhh
-  cloud:
-    nacos:
-      discovery:
-        server-addr: 106.53.50.195:8848
-        username: nacos
-        password: nacos
 
 mybatis-plus:
   mapper-locations: classpath*:xml/*.xml
