@@ -129,6 +129,7 @@ public class ArticleOperateService {
             return;
         }
         commentOperateRepository.deleteCommentsByArticle(command.getArticleId());
+        articleCacheRepository.deleteArticleCache(command.getArticleId());
     }
 
     @Transactional(rollbackFor = Exception.class)

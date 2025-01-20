@@ -18,4 +18,6 @@ import java.util.List;
 public interface LabelMapper extends BaseMapper<LabelPO> {
 
     List<LabelPO> selectLabelsByArticleId(String articleId);
+
+    List<LabelPO> getLabelKinds();
 }

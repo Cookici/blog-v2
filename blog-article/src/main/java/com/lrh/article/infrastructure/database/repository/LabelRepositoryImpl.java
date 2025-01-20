@@ -40,4 +40,9 @@ public class LabelRepositoryImpl implements LabelOperateRepository {
         List<LabelPO> labelPOList = labelMapper.selectLabelsByArticleId(articleId);
         return labelPOList;
     }
+
+    @Override
+    public List<LabelPO> getLabelKinds() {
+        return labelMapper.getLabelKinds();
+    }
 }

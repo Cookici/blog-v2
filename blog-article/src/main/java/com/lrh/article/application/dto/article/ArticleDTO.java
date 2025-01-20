@@ -37,6 +37,12 @@ public class ArticleDTO {
 
     private List<LabelDTO> labels;
 
+    private Long commentCount;
+
+    private Long likeCount;
+
+    private Long viewCount;
+
     public static ArticleDTO fromEntity(ArticleEntity articleEntity, UserVO userVO) {
         return ArticleDTO.builder()
                 .articleId(articleEntity.getArticleId())

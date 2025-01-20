@@ -18,13 +18,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserRegisterResp {
-    private String userName;
+    private String userPhone;
 
     public UserRegisterResp convertedUserModelToUserLoginResp(UserModel userModel){
         if (userModel == null) {
             return null;
         }
-        this.userName = userModel.getUserName();
+        this.userPhone = userModel.getUserPhone();
         return this;
     }
 }

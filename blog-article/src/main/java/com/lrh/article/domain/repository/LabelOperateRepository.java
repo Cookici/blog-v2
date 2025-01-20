@@ -17,4 +17,6 @@ public interface LabelOperateRepository {
     List<LabelPO> getLabelListByIds(List<String> labelIds);
 
     List<LabelPO> selectLabelsByArticleId(String articleId);
+
+    List<LabelPO> getLabelKinds();
 }

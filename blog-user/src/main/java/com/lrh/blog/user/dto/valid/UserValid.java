@@ -37,7 +37,7 @@ public class UserValid {
     }
 
     public static boolean validUserSex(String userSex){
-        return userSex == null || (!Objects.equals(userSex, UserConstant.SEX_MAN) && !Objects.equals(userSex, UserConstant.SEX_WOMAN));
+        return userSex == null || (!Objects.equals(userSex, UserConstant.SEX_MAN) && !Objects.equals(userSex, UserConstant.SEX_WOMAN) && !Objects.equals(userSex, UserConstant.SEX_PRIVATE));
     }
 
     public static boolean validUserBirthday(LocalDateTime userBirthday){

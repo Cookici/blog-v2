@@ -60,7 +60,7 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
 
     @Override
     public void updateArticleById(String articleId, String articleTitle, String articleContent) {
-        if(articleTitle == null && articleContent == null){
+        if (articleTitle == null && articleContent == null) {
             return;
         }
         LambdaUpdateWrapper<ArticlePO> updateWrapper = Wrappers.lambdaUpdate(ArticlePO.class)
@@ -78,5 +78,13 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
     @Override
     public void insertArticle(ArticlePO articlePO) {
         articleMapper.insert(articlePO);
+    }
+
+    @Override
+    public Long countArticlesByUserId(String userId) {
+        LambdaQueryWrapper<ArticlePO> queryWrapper = Wrappers.lambdaQuery(ArticlePO.class)
+                .eq(ArticlePO::getUserId, userId)
+                .eq(ArticlePO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
+        return articleMapper.selectCount(queryWrapper);
     }
 }

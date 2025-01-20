@@ -15,7 +15,8 @@ import java.util.UUID;
 
 public class IdUtil {
     public static String getUserId(String userId) {
-        return userId == null || userId.isEmpty() ? UserContext.getUserId() : userId;
+        return UserContext.getUserId() == null ||
+                UserContext.getUserId().isEmpty() ? userId : UserContext.getUserId();
     }
 
     public static String getUuid() {

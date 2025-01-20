@@ -2,6 +2,7 @@ package com.lrh.article.application.cqe.article;
 
 import com.lrh.common.constant.BusinessConstant;
 import com.lrh.common.exception.ValidException;
+import com.lrh.common.util.IdUtil;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -34,9 +35,14 @@ public class ArticleInsertCommand {
 
 
     public void valid() {
-        if (userId == null) {
+        String realUserId = IdUtil.getUserId(userId);
+        if (realUserId == null || realUserId.isEmpty()) {
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
         }
+        if (realUserId.length() > BusinessConstant.ID_MAX_LENGTH) {
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
+        }
+        this.userId = realUserId;
         if (labelIdList == null) {
             labelIdList = new ArrayList<>();
         }

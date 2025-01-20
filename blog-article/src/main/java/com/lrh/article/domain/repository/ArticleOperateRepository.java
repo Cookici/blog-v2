@@ -26,4 +26,6 @@ public interface ArticleOperateRepository {
     void updateArticleById(String articleId, String articleTitle, String articleContent);
 
     void insertArticle(ArticlePO articlePO);
+
+    Long countArticlesByUserId(String userId);
 }

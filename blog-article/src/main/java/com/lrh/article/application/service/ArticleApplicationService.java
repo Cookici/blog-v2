@@ -4,6 +4,7 @@ import com.lrh.article.application.cqe.article.*;
 import com.lrh.article.application.dto.PageDTO;
 import com.lrh.article.application.dto.article.ArticleDTO;
 import com.lrh.article.domain.entity.ArticleEntity;
+import com.lrh.article.domain.repository.ArticleCacheRepository;
 import com.lrh.article.domain.service.ArticleOperateService;
 import com.lrh.article.domain.vo.UserVO;
 import com.lrh.article.infrastructure.client.UserClient;
@@ -29,11 +30,12 @@ import java.util.stream.Collectors;
 @Service
 public class ArticleApplicationService {
     private final ArticleOperateService articleOperateService;
-
+    private final ArticleCacheRepository articleCacheRepository;
     private final UserClient userClient;
 
-    public ArticleApplicationService(ArticleOperateService articleOperateService, UserClient userClient) {
+    public ArticleApplicationService(ArticleOperateService articleOperateService, ArticleCacheRepository articleCacheRepository, UserClient userClient) {
         this.articleOperateService = articleOperateService;
+        this.articleCacheRepository = articleCacheRepository;
         this.userClient = userClient;
     }
 
@@ -41,7 +43,7 @@ public class ArticleApplicationService {
         query.valid();
         Long total = articleOperateService.countArticlesPage(query);
         if (total == null || total == 0) {
-            return null;
+            return new PageDTO<>();
         }
         List<ArticleEntity> articleEntityList = articleOperateService.getArticlesPage(query);
         List<String> userIds = articleEntityList.stream().map(ArticleEntity::getUserId).collect(Collectors.toList());
@@ -57,6 +59,18 @@ public class ArticleApplicationService {
                     }
                 }
         );
+
+        List<String> articleIds = articleEntityList.stream().map(ArticleEntity::getArticleId).collect(Collectors.toList());
+        Map<String, Long> articleLikeCountBatch = articleCacheRepository.getArticleLikeCountBatch(articleIds);
+        Map<String, Long> articleViewCountBatch = articleCacheRepository.getArticleViewCountBatch(articleIds);
+
+        articleDTOList.forEach(articleDTO -> {
+            Long likeCount = articleLikeCountBatch.getOrDefault(articleDTO.getArticleId(), 0L);
+            Long viewCount = articleViewCountBatch.getOrDefault(articleDTO.getArticleId(), 0L);
+            articleDTO.setLikeCount(likeCount);
+            articleDTO.setViewCount(viewCount);
+        });
+
 
         return PageDTO.<ArticleDTO>builder()
                 .page(query.getPage())
@@ -80,7 +94,15 @@ public class ArticleApplicationService {
         if (userInfo == null) {
             userInfo = new UserVO();
         }
-        return ArticleDTO.fromEntity(articleEntity, userInfo);
+
+        ArticleDTO articleDTO = ArticleDTO.fromEntity(articleEntity, userInfo);
+
+        Long articleViewCount = articleCacheRepository.getArticleViewCount(articleDTO.getArticleId());
+        Long articleLikeCount = articleCacheRepository.getArticleLikeCount(articleDTO.getArticleId());
+        articleDTO.setLikeCount(articleLikeCount);
+        articleDTO.setViewCount(articleViewCount);
+
+        return articleDTO;
     }
 
     public void deleteArticleById(ArticleDeleteCommand command) {

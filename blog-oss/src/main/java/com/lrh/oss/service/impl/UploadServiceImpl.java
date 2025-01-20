@@ -2,7 +2,6 @@ package com.lrh.oss.service.impl;
 
 import com.aliyun.oss.OSS;
 import com.lrh.common.annotations.SubmitOnceRecords;
-import com.lrh.common.exception.ValidException;
 import com.lrh.oss.config.AliyunConfig;
 import com.lrh.oss.dto.cqe.ImageUploadCmd;
 import com.lrh.oss.dto.resp.FileUploadResp;
@@ -11,8 +10,8 @@ import com.lrh.oss.util.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.io.ByteArrayInputStream;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Slf4j
@@ -40,7 +39,7 @@ public class UploadServiceImpl implements UploadService {
             log.info("[UploadServiceImpl] FileUploadResp error: {}", e.getMessage(), e);
             throw new RuntimeException(e.getMessage());
         }
-        return new FileUploadResp(this.aliyunConfig.getUrlPrefix() + getFilePath(filePath));
+        return new FileUploadResp(this.aliyunConfig.getUrlPrefix() + filePath);
     }
 
     /**
