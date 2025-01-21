@@ -3,6 +3,7 @@ package com.lrh.article.domain.service;
 import com.lrh.article.application.cqe.article.*;
 import com.lrh.article.domain.entity.ArticleEntity;
 import com.lrh.article.domain.entity.LabelEntity;
+import com.lrh.article.domain.entity.UserArticleDataEntity;
 import com.lrh.article.domain.repository.*;
 import com.lrh.article.infrastructure.database.convertor.ArticleConvertor;
 import com.lrh.article.infrastructure.database.convertor.LabelConvertor;
@@ -123,6 +124,7 @@ public class ArticleOperateService {
 
     @Transactional(rollbackFor = Exception.class)
     public void deleteArticleById(ArticleDeleteCommand command) {
+        validExceptionOperate(command.getArticleId(), command.getUserId());
         articleLabelOperateRepository.deleteLabelForArticle(command.getArticleId());
         Integer update = articleRepository.deleteArticleById(command.getArticleId());
         if (update == null || update == 0) {
@@ -132,8 +134,16 @@ public class ArticleOperateService {
         articleCacheRepository.deleteArticleCache(command.getArticleId());
     }
 
+    private void validExceptionOperate(String articleId, String userId) {
+        ArticlePO articlePO = articleRepository.getArticlesById(articleId);
+        if (articlePO == null || !Objects.equals(articlePO.getUserId(), userId)) {
+            throw new RuntimeException("非法操作");
+        }
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public void updateArticleById(ArticleUpdateCommand command) {
+        validExceptionOperate(command.getArticleId(), command.getUserId());
         articleRepository.updateArticleById(command.getArticleId(), command.getArticleTitle(), command.getArticleContent());
         if (command.getLabelIdList().isEmpty()) {
             return;
@@ -167,10 +177,49 @@ public class ArticleOperateService {
     }
 
     public void articleNoLoginViewIncrement(ArticleNoLoginViewCommand command) {
-        articleCacheRepository.incrArticleViewCount(command.getArticleId(),command.getIp());
+        articleCacheRepository.incrArticleViewCount(command.getArticleId(), command.getIp());
     }
 
     public void articleNoLoginLikeIncrement(ArticleNoLoginLikeCommand command) {
         articleCacheRepository.incrArticleLikeCount(command.getArticleId(), command.getIp());
+    }
+
+    public UserArticleDataEntity articlesDataByUserId(String userId) {
+        List<ArticlePO> articlePOList = articleRepository.countArticlesByUserId(userId);
+        List<String> articleIds = articlePOList.stream()
+                .map(ArticlePO::getArticleId)
+                .collect(Collectors.toList());
+        Long articleCount = (long) articlePOList.size();
+        Map<String, Long> articleLikeCountBatch =
+                articleCacheRepository.getArticleLikeCountBatch(articleIds);
+        Long likeCount = articleLikeCountBatch.values().stream()
+                .filter(count -> count > 0)
+                .count();
+        Map<String, Long> articleViewCountBatch =
+                articleCacheRepository.getArticleViewCountBatch(articleIds);
+        Long viewCount = articleViewCountBatch.values().stream()
+                .filter(count -> count > 0)
+                .count();
+        return new UserArticleDataEntity(articleCount, likeCount, viewCount);
+    }
+
+    public Long countUserArticlesPage(ArticleUserPageQuery query) {
+        return articleRepository.countUserArticlesPage(query);
+    }
+
+    public List<ArticleEntity> getUserArticlesPage(ArticleUserPageQuery query) {
+        List<ArticlePO> articlePOList = articleRepository.getUserArticlesPage(query,
+                query.getOffset(), query.getLimit());
+        if (articlePOList == null) {
+            return new ArrayList<>();
+        }
+
+        List<ArticleEntity> articleEntityList = ArticleConvertor.toArticleEntityListConvertor(articlePOList);
+
+        // 为每篇文章设置对应的标签列表
+        setLabelListForArticleEntityList(articleEntityList);
+
+        // 返回分页结果
+        return articleEntityList;
     }
 }

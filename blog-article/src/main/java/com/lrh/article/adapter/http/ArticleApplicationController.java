@@ -2,6 +2,7 @@ package com.lrh.article.adapter.http;
 
 import com.lrh.article.application.cqe.article.*;
 import com.lrh.article.application.dto.PageDTO;
+import com.lrh.article.application.dto.UserDataDTO;
 import com.lrh.article.application.dto.article.ArticleDTO;
 import com.lrh.article.application.service.ArticleApplicationService;
 import com.lrh.common.result.Result;
@@ -84,5 +85,19 @@ public class ArticleApplicationController {
         articleApplicationService.articleNoLoginLikeIncrement(command);
         return Result.success();
     }
+
+    @GetMapping("/userArticleData")
+    public Result<UserDataDTO> getUserArticleData() {
+        UserDataDTO userArticleDataDTO =
+                articleApplicationService.articlesDataByUserId();
+        return Result.success(userArticleDataDTO);
+    }
+
+    @GetMapping("/user/page")
+    public Result<PageDTO<ArticleDTO>> pageUserArticle(ArticleUserPageQuery query) {
+        PageDTO<ArticleDTO> resp = articleApplicationService.pageUserArticles(query);
+        return Result.success(resp);
+    }
+
 
 }

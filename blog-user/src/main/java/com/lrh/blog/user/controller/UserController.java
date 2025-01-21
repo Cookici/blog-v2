@@ -85,4 +85,10 @@ public class UserController {
         FileUploadResp fileUploadResp = userService.uploadAvatar(req);
         return Result.success(fileUploadResp);
     }
+
+    @PostMapping("/logout")
+    Result<Object> logout() {
+        userService.logout();
+        return Result.success();
+    }
 }

@@ -1,6 +1,7 @@
 package com.lrh.article.domain.repository;
 
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
+import com.lrh.article.application.cqe.article.ArticleUserPageQuery;
 import com.lrh.article.infrastructure.po.ArticlePO;
 
 import java.util.List;
@@ -27,5 +28,9 @@ public interface ArticleOperateRepository {
 
     void insertArticle(ArticlePO articlePO);
 
-    Long countArticlesByUserId(String userId);
+    List<ArticlePO> countArticlesByUserId(String userId);
+
+    Long countUserArticlesPage(ArticleUserPageQuery query);
+
+    List<ArticlePO> getUserArticlesPage(ArticleUserPageQuery query, Long offset, Long limit);
 }

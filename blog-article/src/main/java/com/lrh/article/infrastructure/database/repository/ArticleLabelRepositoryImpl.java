@@ -50,7 +50,7 @@ public class ArticleLabelRepositoryImpl implements ArticleLabelOperateRepository
 
     @Override
     public void restoreDeletedArticleLabel(String articleId, List<String> labelIdList) {
-        articleLabelMapper.restoreDeleted(articleId,labelIdList);
+        articleLabelMapper.restoreDeleted(articleId, labelIdList);
     }
 
 }

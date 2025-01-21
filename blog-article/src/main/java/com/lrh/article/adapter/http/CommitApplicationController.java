@@ -8,10 +8,7 @@ import com.lrh.article.application.dto.PageDTO;
 import com.lrh.article.application.dto.comment.CommentDTO;
 import com.lrh.article.application.service.CommentApplicationService;
 import com.lrh.common.result.Result;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @ProjectName: blog-ddd
@@ -44,13 +41,13 @@ public class CommitApplicationController {
     }
 
     @PostMapping("/insert")
-    public Result<Object> insertComment(CommentInsertCommand command) {
+    public Result<Object> insertComment(@RequestBody CommentInsertCommand command) {
         commentApplicationService.insertComment(command);
         return Result.success();
     }
 
     @PostMapping("/delete")
-    public Result<Object> deletedComment(CommentDeleteCommand command) {
+    public Result<Object> deletedComment(@RequestBody CommentDeleteCommand command) {
         commentApplicationService.deleteComment(command);
         return Result.success();
     }

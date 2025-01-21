@@ -185,11 +185,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
         FileUploadResp data = upload.getData();
         String fileUrl = data.getFileUrl();
         LambdaUpdateWrapper<UserModel> updateWrapper = Wrappers.lambdaUpdate(UserModel.class)
-               .eq(UserModel::getUserId, UserContext.getUserId())
-               .eq(UserModel::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
-               .set(UserModel::getUserPhoto, fileUrl);
+                .eq(UserModel::getUserId, UserContext.getUserId())
+                .eq(UserModel::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
+                .set(UserModel::getUserPhoto, fileUrl);
         userMapper.update(updateWrapper);
         return data;
+    }
+
+    @Override
+    public void logout() {
+        if (UserContext.getUserId() == null || UserContext.getUserId().isEmpty()) {
+            return;
+        }
+        if (redisTemplate.hasKey(RedisKeyConstant.LOGIN_HASH_KEY)) {
+            redisTemplate.opsForHash().delete(RedisKeyConstant.LOGIN_HASH_KEY, UserContext.getUserId());
+        }
     }
 
 }

@@ -2,6 +2,7 @@ package com.lrh.article.application.cqe.comment;
 
 import com.lrh.common.constant.BusinessConstant;
 import com.lrh.common.exception.ValidException;
+import com.lrh.common.util.IdUtil;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -47,12 +48,14 @@ public class CommentInsertCommand {
         if(parentCommentId != null && parentCommentId.length() > BusinessConstant.ID_MAX_LENGTH){
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR,"校验失败"));
         }
-        if(userId == null){
-            throw new ValidException(String.format(BusinessConstant.VALID_ERROR,"校验失败"));
+        String realUserId = IdUtil.getUserId(userId);
+        if (realUserId == null || realUserId.isEmpty()) {
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
         }
-        if(userId.length() > BusinessConstant.ID_MAX_LENGTH){
-            throw new ValidException(String.format(BusinessConstant.VALID_ERROR,"校验失败"));
+        if (realUserId.length() > BusinessConstant.ID_MAX_LENGTH) {
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
         }
+        this.userId = realUserId;
         if(articleId == null){
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR,"校验失败"));
         }
