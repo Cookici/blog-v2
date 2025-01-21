@@ -6,6 +6,8 @@ spring:
     name: blog-user
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      max-lifetime: 1800000
     username: root
     password: lrh,903.520hhhh
     url: jdbc:mysql://sh-cdb-pezvivda.sql.tencentcdb.com:63950/user?characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true

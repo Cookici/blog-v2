@@ -2,6 +2,7 @@ package com.lrh.article.infrastructure.database.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
+import com.lrh.article.application.cqe.article.ArticleUserPageQuery;
 import com.lrh.article.infrastructure.po.ArticlePO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -21,6 +22,12 @@ public interface ArticleMapper extends BaseMapper<ArticlePO> {
     Long selectCountPage(@Param("query") ArticlePageQuery query);
 
     List<ArticlePO> selectPageArticle(@Param("query") ArticlePageQuery query,
+                                      @Param("offset") Long offset,
+                                      @Param("limit") Long limit);
+
+    Long selectUserCountPage(@Param("query") ArticleUserPageQuery query);
+
+    List<ArticlePO> selectUserPageArticle(@Param("query") ArticleUserPageQuery query,
                                           @Param("offset") Long offset,
                                           @Param("limit") Long limit);
 }

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
+import com.lrh.article.application.cqe.article.ArticleUserPageQuery;
 import com.lrh.article.domain.repository.ArticleOperateRepository;
 import com.lrh.article.infrastructure.database.mapper.ArticleMapper;
 import com.lrh.article.infrastructure.po.ArticlePO;
@@ -81,10 +82,20 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
     }
 
     @Override
-    public Long countArticlesByUserId(String userId) {
+    public List<ArticlePO> countArticlesByUserId(String userId) {
         LambdaQueryWrapper<ArticlePO> queryWrapper = Wrappers.lambdaQuery(ArticlePO.class)
                 .eq(ArticlePO::getUserId, userId)
                 .eq(ArticlePO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
-        return articleMapper.selectCount(queryWrapper);
+        return articleMapper.selectList(queryWrapper);
+    }
+
+    @Override
+    public Long countUserArticlesPage(ArticleUserPageQuery query) {
+        return articleMapper.selectUserCountPage(query);
+    }
+
+    @Override
+    public List<ArticlePO> getUserArticlesPage(ArticleUserPageQuery query, Long offset, Long limit) {
+        return articleMapper.selectUserPageArticle(query, offset, limit);
     }
 }

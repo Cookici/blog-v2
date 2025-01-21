@@ -104,4 +104,21 @@ public class CommentRepositoryImpl implements CommentOperateRepository {
         commentMapper.update(updateWrapper);
     }
 
+    @Override
+    public Long getUserCommentAsTo(String userId) {
+        LambdaQueryWrapper<CommentPO> queryWrapper = Wrappers.lambdaQuery(CommentPO.class)
+                .eq(CommentPO::getToUserId, userId)
+                .ne(CommentPO::getUserId, userId)
+                .eq(CommentPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
+        return commentMapper.selectCount(queryWrapper);
+    }
+
+    @Override
+    public CommentPO getCommentByCommentId(String commentId) {
+        LambdaQueryWrapper<CommentPO> queryWrapper = Wrappers.lambdaQuery(CommentPO.class)
+               .eq(CommentPO::getCommentId, commentId)
+               .eq(CommentPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
+        return commentMapper.selectOne(queryWrapper);
+    }
+
 }

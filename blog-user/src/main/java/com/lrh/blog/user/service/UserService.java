@@ -35,4 +35,7 @@ public interface UserService extends IService<UserModel> {
     UserUpdatePasswordResp updateUserPassword(UserUpdatePasswordCmd cmd);
 
     FileUploadResp uploadAvatar(ImageUploadReq req);
+
+    void logout();
+
 }
