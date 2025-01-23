@@ -26,7 +26,7 @@ spring:
         - id: article
           uri: lb://blog-article
           predicates:
-            - Path=/api/article/**,/api/comment/**
+            - Path=/api/article/**,/api/comment/**,/api/label/**
 
         - id: oss
           uri: lb://blog-oss

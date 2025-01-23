@@ -8,7 +8,7 @@
 
     <!-- 查询语句 -->
     <select id="selectPageArticle" resultType="com.lrh.article.infrastructure.po.ArticlePO">
-        SELECT
+        SELECT DISTINCT
         a.*
         FROM
         t_article a
@@ -79,5 +79,81 @@
             )
         </if>
     </select>
+
+    <!-- 查询符合条件的条数 -->
+    <select id="selectUserCountPage" parameterType="map" resultType="java.lang.Long">
+        SELECT
+        COUNT(DISTINCT a.article_id)
+        FROM
+        t_article a
+        LEFT JOIN
+        t_article_label al
+        ON
+        a.article_id = al.article_id
+        LEFT JOIN
+        t_label l
+        ON
+        al.label_id = l.label_id
+        WHERE
+        a.is_deleted = 0
+        AND al.is_deleted = 0
+        AND l.is_deleted = 0
+        AND a.user_id = #{query.userId}
+        <if test="query.articleTitle != null and query.articleTitle.trim() != ''">
+            AND a.article_title LIKE CONCAT('%', #{query.articleTitle}, '%')
+        </if>
+        <if test="query.articleContent != null and query.articleContent.trim() != ''">
+            AND a.article_content LIKE CONCAT('%', #{query.articleContent}, '%')
+        </if>
+        <if test="query.labelNameList != null and query.labelNameList.size() > 0">
+            AND (
+            <foreach collection="query.labelNameList" item="labelName" separator="OR">
+                <if test="labelName != null and labelName.trim() != ''">
+                    l.label_name = #{labelName}
+                </if>
+            </foreach>
+            )
+        </if>
+    </select>
+
+    <!-- 查询语句 -->
+    <select id="selectUserPageArticle" resultType="com.lrh.article.infrastructure.po.ArticlePO">
+        SELECT DISTINCT
+        a.*
+        FROM
+        t_article a
+        LEFT JOIN
+        t_article_label al
+        ON
+        a.article_id = al.article_id
+        LEFT JOIN
+        t_label l
+        ON
+        al.label_id = l.label_id
+        WHERE
+        a.is_deleted = 0
+        AND al.is_deleted = 0
+        AND l.is_deleted = 0
+        AND a.user_id = #{query.userId}
+        <if test="query.articleTitle != null and query.articleTitle.trim() != ''">
+            AND a.article_title LIKE CONCAT('%', #{query.articleTitle}, '%')
+        </if>
+        <if test="query.articleContent != null and query.articleContent.trim() != ''">
+            AND a.article_content LIKE CONCAT('%', #{query.articleContent}, '%')
+        </if>
+        <if test="query.labelNameList != null and query.labelNameList.size() > 0">
+            AND (
+            <foreach collection="query.labelNameList" item="labelName" separator="OR">
+                <if test="labelName != null and labelName.trim() != ''">
+                    l.label_name = #{labelName}
+                </if>
+            </foreach>
+            )
+        </if>
+        ORDER BY
+        a.update_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
 
 </mapper>

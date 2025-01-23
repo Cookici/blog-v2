@@ -7,12 +7,12 @@ import com.lrh.blog.user.dto.cqe.UserUpdatePasswordCmd;
 import com.lrh.blog.user.dto.req.*;
 import com.lrh.blog.user.dto.resp.*;
 import com.lrh.blog.user.dto.vo.UserVO;
-import com.lrh.blog.user.romote.OssClient;
 import com.lrh.blog.user.service.UserService;
 import com.lrh.common.exception.NoUserException;
 import com.lrh.common.result.Result;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 
@@ -29,11 +29,9 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
-    private final OssClient ossClient;
 
-    public UserController(UserService userService, OssClient ossClient) {
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.ossClient = ossClient;
     }
 
     @PostMapping("/login")
@@ -47,8 +45,8 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public Result<UserRegisterResp> register(@RequestBody UserRegisterReq req) throws Exception {
-        UserRegisterCmd cmd = new UserRegisterCmd(req);
+    public Result<UserRegisterResp> register(@RequestBody UserRegisterReq req, HttpServletRequest httpServletRequest) throws Exception {
+        UserRegisterCmd cmd = new UserRegisterCmd(req, httpServletRequest);
         UserRegisterResp resp = userService.register(cmd);
         if (resp == null) {
             return Result.fail();
@@ -84,6 +82,13 @@ public class UserController {
 
     @PostMapping("/update_avatar")
     Result<FileUploadResp> upload(ImageUploadReq req) {
-        return ossClient.upload(req);
+        FileUploadResp fileUploadResp = userService.uploadAvatar(req);
+        return Result.success(fileUploadResp);
+    }
+
+    @PostMapping("/logout")
+    Result<Object> logout() {
+        userService.logout();
+        return Result.success();
     }
 }

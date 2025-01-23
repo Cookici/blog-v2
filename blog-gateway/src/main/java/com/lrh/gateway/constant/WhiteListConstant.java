@@ -15,5 +15,9 @@ public class WhiteListConstant {
             "/api/user/register",
             "/api/role/all_kinds",
             "/api/oss/file/upload",
+            "/api/article/page",
+            "/api/article/get",
+            "/api/label/kinds",
+            "/api/user/logout"
     };
 }

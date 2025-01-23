@@ -32,4 +32,8 @@ public interface CommentOperateRepository {
     void deleteComment(String articleId, String parentCommentId, String commentId);
 
     void deleteCommentsByArticle(String articleId);
+
+    Long getUserCommentAsTo(String userId);
+
+    CommentPO getCommentByCommentId(String commentId);
 }

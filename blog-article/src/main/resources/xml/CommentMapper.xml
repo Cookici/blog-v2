@@ -9,7 +9,7 @@
         SELECT *
         FROM t_comment
         WHERE article_id = #{articleId}
-          AND parent_comment_id = 0
+          AND parent_comment_id = '0'
           AND is_deleted = 0
         Order By create_time
                 DESC

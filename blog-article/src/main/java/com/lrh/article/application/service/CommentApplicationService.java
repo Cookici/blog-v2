@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -51,9 +52,14 @@ public class CommentApplicationService {
 
         List<CommentDTO> commentDTOList = getFullCommentList(commentEntityList);
 
+        List<CommentDTO> results = commentDTOList.stream().
+                filter(commentDTO -> Objects.equals(commentDTO.getParentCommentId(), "0"))
+                .sorted((o1, o2) -> o2.getCreateTime().compareTo(o1.getCreateTime()))
+                .collect(Collectors.toList());
+
         return PageDTO.<CommentDTO>builder()
                 .total(total)
-                .data(commentDTOList)
+                .data(results)
                 .page(query.getPage())
                 .pageSize(query.getPageSize())
                 .build();

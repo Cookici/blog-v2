@@ -1,10 +1,10 @@
 package com.lrh.article.application.cqe.article;
 
+import com.lrh.article.application.cqe.PageQuery;
 import com.lrh.common.constant.BusinessConstant;
 import com.lrh.common.exception.ValidException;
 import com.lrh.common.util.IdUtil;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,26 +12,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @ProjectName: blog-ddd
+ * @ProjectName: blog-v2
  * @Package: com.lrh.article.application.cqe.article
- * @ClassName: ArticleInsertCommand
+ * @ClassName: ArticleUserPageQuery
  * @Author: 63283
  * @Description:
- * @Date: 2024/12/16 11:45
+ * @Date: 2025/1/21 00:30
  */
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-public class ArticleInsertCommand {
+public class ArticleUserPageQuery extends PageQuery {
 
     private String userId;
-
-    private List<String> labelIdList;
 
     private String articleTitle;
 
     private String articleContent;
+
+    private List<String> labelNameList;
 
 
     public void valid() {
@@ -43,18 +43,20 @@ public class ArticleInsertCommand {
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));
         }
         this.userId = realUserId;
-        if (labelIdList == null) {
-            labelIdList = new ArrayList<>();
-        }
-        if (articleTitle == null) {
+        if (articleTitle != null && articleTitle.length() > BusinessConstant.ID_MAX_LENGTH) {
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "文章标题"));
         }
-        if (articleTitle.length() > BusinessConstant.ID_MAX_LENGTH) {
-            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "文章标题"));
+        if (labelNameList == null) {
+            labelNameList = new ArrayList<>();
         }
-        if (articleContent == null) {
-            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "文章内容"));
+        for (String label : labelNameList) {
+            if (label == null || label.trim().isEmpty()) {
+                throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "标签信息"));
+            }
+            if (label.length() > 64) {
+                throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "标签信息"));
+            }
         }
-
     }
+
 }

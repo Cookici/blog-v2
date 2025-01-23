@@ -3,6 +3,7 @@ package com.lrh.common.util;
 import com.lrh.common.constant.BusinessConstant;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.regex.Pattern;
 
 /**
  * @ProjectName: blog-ddd
@@ -11,6 +12,11 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class HostUtil {
 
+
+    public static Boolean judgeIp(String ip) {
+        return Pattern.matches("^([1-9]|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])(\\.(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])){3}$"
+                , ip);
+    }
 
     /**
      * 获取用户真实IP

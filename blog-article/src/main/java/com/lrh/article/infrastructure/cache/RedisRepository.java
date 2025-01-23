@@ -2,8 +2,13 @@ package com.lrh.article.infrastructure.cache;
 
 import com.lrh.article.constants.RedisConstant;
 import com.lrh.article.domain.repository.ArticleCacheRepository;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @ProjectName: blog-v2
@@ -31,5 +36,59 @@ public class RedisRepository implements ArticleCacheRepository {
     @Override
     public void incrArticleLikeCount(String articleId, String ukId) {
         redisTemplate.opsForHash().increment(String.format(RedisConstant.ARTICLE_LIKE, articleId), ukId, 1);
+    }
+
+    @Override
+    public Long getArticleLikeCount(String articleId) {
+        return redisTemplate.opsForHash().size(String.format(RedisConstant.ARTICLE_LIKE, articleId));
+    }
+
+    @Override
+    public Long getArticleViewCount(String articleId) {
+        return redisTemplate.opsForHash().size(String.format(RedisConstant.ARTICLE_VIEW, articleId));
+    }
+
+    @Override
+    public Map<String, Long> getArticleLikeCountBatch(List<String> articleIds) {
+        List<Object> results = redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+            for (String articleId : articleIds) {
+                String key = String.format(RedisConstant.ARTICLE_LIKE, articleId);
+                connection.hLen(key.getBytes());
+            }
+            return null; // The return value is ignored
+        });
+
+        Map<String, Long> result = new HashMap<>();
+        for (int i = 0; i < articleIds.size(); i++) {
+            String articleId = articleIds.get(i);
+            Long count = (Long) results.get(i);
+            result.put(articleId, count);
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String, Long> getArticleViewCountBatch(List<String> articleIds) {
+        List<Object> results = redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+            for (String articleId : articleIds) {
+                String key = String.format(RedisConstant.ARTICLE_VIEW, articleId);
+                connection.hLen(key.getBytes());
+            }
+            return null; // The return value is ignored
+        });
+
+        Map<String, Long> result = new HashMap<>();
+        for (int i = 0; i < articleIds.size(); i++) {
+            String articleId = articleIds.get(i);
+            Long count = (Long) results.get(i);
+            result.put(articleId, count);
+        }
+        return result;
+    }
+
+    @Override
+    public void deleteArticleCache(String articleId) {
+        redisTemplate.delete(String.format(RedisConstant.ARTICLE_VIEW, articleId));
+        redisTemplate.delete(String.format(RedisConstant.ARTICLE_LIKE, articleId));
     }
 }

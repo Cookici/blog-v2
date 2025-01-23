@@ -2,14 +2,12 @@ package com.lrh.blog.user.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.lrh.blog.user.dto.cqe.UserUpdatePasswordCmd;
-import com.lrh.blog.user.dto.resp.UserUpdatePasswordResp;
+import com.lrh.blog.user.dto.req.ImageUploadReq;
+import com.lrh.blog.user.dto.resp.*;
 import com.lrh.blog.user.model.UserModel;
 import com.lrh.blog.user.dto.cqe.UserLoginQuery;
 import com.lrh.blog.user.dto.cqe.UserRegisterCmd;
 import com.lrh.blog.user.dto.cqe.UserUpdateCmd;
-import com.lrh.blog.user.dto.resp.UserLoginResp;
-import com.lrh.blog.user.dto.resp.UserRegisterResp;
-import com.lrh.blog.user.dto.resp.UserUpdateResp;
 import com.lrh.blog.user.dto.vo.UserVO;
 
 import java.util.List;
@@ -35,4 +33,9 @@ public interface UserService extends IService<UserModel> {
     Map<String, UserVO> getUserByIds(List<String> userIds);
 
     UserUpdatePasswordResp updateUserPassword(UserUpdatePasswordCmd cmd);
+
+    FileUploadResp uploadAvatar(ImageUploadReq req);
+
+    void logout();
+
 }

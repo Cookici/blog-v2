@@ -5,8 +5,8 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.lrh.article.application.cqe.article.ArticleListQuery;
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
+import com.lrh.article.application.cqe.article.ArticleUserPageQuery;
 import com.lrh.article.domain.repository.ArticleOperateRepository;
-import com.lrh.article.infrastructure.database.esDao.ArticleEsDao;
 import com.lrh.article.infrastructure.database.mapper.ArticleMapper;
 import com.lrh.article.infrastructure.doc.ArticleDO;
 import com.lrh.article.infrastructure.po.ArticlePO;
@@ -30,10 +30,8 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
 
     private final ArticleMapper articleMapper;
 
-    private final ArticleEsDao articleEsDao;
-    public ArticleRepositoryImpl(ArticleMapper articleMapper, ArticleEsDao articleEsDao) {
+    public ArticleRepositoryImpl(ArticleMapper articleMapper) {
         this.articleMapper = articleMapper;
-        this.articleEsDao = articleEsDao;
     }
 
 
@@ -85,9 +83,25 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
     public void insertArticle(ArticlePO articlePO) {
         articleMapper.insert(articlePO);
     }
-
     @Override
     public Page<ArticleDO> findArticleListByQuery(ArticleListQuery query){
         return articleEsDao.searchArticles(query);
+    }
+    @Override
+    public List<ArticlePO> countArticlesByUserId(String userId) {
+        LambdaQueryWrapper<ArticlePO> queryWrapper = Wrappers.lambdaQuery(ArticlePO.class)
+                                                             .eq(ArticlePO::getUserId, userId)
+                                                             .eq(ArticlePO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
+        return articleMapper.selectList(queryWrapper);
+    }
+
+    @Override
+    public Long countUserArticlesPage(ArticleUserPageQuery query) {
+        return articleMapper.selectUserCountPage(query);
+    }
+
+    @Override
+    public List<ArticlePO> getUserArticlesPage(ArticleUserPageQuery query, Long offset, Long limit) {
+        return articleMapper.selectUserPageArticle(query, offset, limit);
     }
 }

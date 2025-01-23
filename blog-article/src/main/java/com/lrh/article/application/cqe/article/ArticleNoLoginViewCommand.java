@@ -1,8 +1,8 @@
 package com.lrh.article.application.cqe.article;
 
-import com.lrh.article.util.CommonUtil;
 import com.lrh.common.constant.BusinessConstant;
 import com.lrh.common.exception.ValidException;
+import com.lrh.common.util.HostUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -38,12 +38,12 @@ public class ArticleNoLoginViewCommand {
             throw new ValidException("校验失败");
         }
 
-        String remoteAddr = httpServletRequest.getRemoteAddr();
+        String remoteAddr = HostUtil.getActualIp(httpServletRequest);
         if (remoteAddr == null) {
             throw new ValidException("校验失败");
         }
 
-        if (!CommonUtil.judgeIp(remoteAddr)) {
+        if (!HostUtil.judgeIp(remoteAddr)) {
             throw new ValidException("校验失败");
         }
         this.ip = remoteAddr;

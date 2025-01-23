@@ -89,6 +89,7 @@ public class CommentOperateService {
 
     @Transactional(rollbackFor = Exception.class)
     public void deleteComment(CommentDeleteCommand command) {
+        validExceptionOperate(command.getCommentId(), command.getUserId());
         if (command.getParentCommentId().equals(CommentConstant.TOP_COMMENT_PARENT_ID)) {
             LockUtil lockUtil = new LockUtil(redissonClient);
             lockUtil.tryLock(String.format(RedisConstant.PARENT_COMMENT_ID_OPERATOR_LOCK, command.getCommentId()), () -> {
@@ -98,5 +99,16 @@ public class CommentOperateService {
         } else {
             commentOperateRepository.deleteComment(command.getArticleId(), command.getParentCommentId(), command.getCommentId());
         }
+    }
+
+    private void validExceptionOperate(String commentId,String userId) {
+        CommentPO commentPO = commentOperateRepository.getCommentByCommentId(commentId);
+        if (commentPO == null || !Objects.equals(commentPO.getUserId(), userId)) {
+            throw new RuntimeException("非法操作");
+        }
+    }
+
+    public Long getUserCommentAsTo(String userId) {
+        return commentOperateRepository.getUserCommentAsTo(userId);
     }
 }
