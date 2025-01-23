@@ -1,5 +1,6 @@
 package com.lrh.article.domain.service;
 
+
 import com.lrh.article.application.cqe.article.*;
 import com.lrh.article.domain.entity.ArticleEntity;
 import com.lrh.article.domain.entity.LabelEntity;
@@ -7,11 +8,14 @@ import com.lrh.article.domain.entity.UserArticleDataEntity;
 import com.lrh.article.domain.repository.*;
 import com.lrh.article.infrastructure.database.convertor.ArticleConvertor;
 import com.lrh.article.infrastructure.database.convertor.LabelConvertor;
+import com.lrh.article.infrastructure.doc.ArticleDO;
 import com.lrh.article.infrastructure.po.ArticleLabelPO;
 import com.lrh.article.infrastructure.po.ArticlePO;
 import com.lrh.article.infrastructure.po.LabelPO;
 import com.lrh.common.context.UserContext;
 import com.lrh.common.util.IdUtil;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -207,6 +211,23 @@ public class ArticleOperateService {
         return articleRepository.countUserArticlesPage(query);
     }
 
+    public Page<ArticleEntity> queryListArticle(ArticleListQuery query) {
+        // 查询文章列表并返回分页结果
+        Page<ArticleDO> articleDOPage = articleRepository.findArticleListByQuery(query);
+
+        // 将 ArticleDO 转换为 ArticleEntity
+        List<ArticleEntity> articleEntityList = articleDOPage.getContent().stream()
+                                                             .map(ArticleDO::toArticleEntity)  // 使用 map 进行转换
+                                                             .collect(Collectors.toList());   // 收集成 List
+
+        // 创建 PageImpl 并传递原始的 Pageable 和总数
+        return  new PageImpl<>(
+                articleEntityList,
+                articleDOPage.getPageable(),  // 传递分页信息
+                articleDOPage.getTotalElements()  // 传递总元素数量
+        );
+
+    }
     public List<ArticleEntity> getUserArticlesPage(ArticleUserPageQuery query) {
         List<ArticlePO> articlePOList = articleRepository.getUserArticlesPage(query,
                 query.getOffset(), query.getLimit());

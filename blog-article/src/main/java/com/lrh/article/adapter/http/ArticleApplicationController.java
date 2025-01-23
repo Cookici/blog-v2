@@ -99,5 +99,11 @@ public class ArticleApplicationController {
         return Result.success(resp);
     }
 
+    @GetMapping("/list")
+    public Result<Object> listQueryArticle(ArticleListQuery query) {
+        PageDTO<ArticleDTO> resp = articleApplicationService.listQueryArticles(query);
+        return Result.success(resp);
+    }
+
 
 }
