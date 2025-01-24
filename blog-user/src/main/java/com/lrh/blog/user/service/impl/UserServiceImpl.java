@@ -1,5 +1,7 @@
 package com.lrh.blog.user.service.impl;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -7,10 +9,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lrh.blog.user.constant.DESConstant;
 import com.lrh.blog.user.constant.RedisKeyConstant;
 import com.lrh.blog.user.constant.UserConstant;
-import com.lrh.blog.user.dto.cqe.UserLoginQuery;
-import com.lrh.blog.user.dto.cqe.UserRegisterCmd;
-import com.lrh.blog.user.dto.cqe.UserUpdateCmd;
-import com.lrh.blog.user.dto.cqe.UserUpdatePasswordCmd;
+import com.lrh.blog.user.dto.cqe.*;
 import com.lrh.blog.user.dto.req.ImageUploadReq;
 import com.lrh.blog.user.dto.resp.*;
 import com.lrh.blog.user.dto.vo.UserVO;
@@ -24,16 +23,25 @@ import com.lrh.common.annotations.ExecutionRecords;
 import com.lrh.common.constant.BusinessConstant;
 import com.lrh.common.context.UserContext;
 import com.lrh.common.result.Result;
+import com.lrh.common.util.HostUtil;
 import com.lrh.common.util.IdUtil;
 import com.lrh.common.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -48,6 +56,12 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implements UserService {
+
+    @Value("${ip-key}")
+    private String ipKey;
+
+    @Value("${ip-url}")
+    private String ipUrl;
 
     private final UserMapper userMapper;
 
@@ -200,6 +214,94 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
         if (redisTemplate.hasKey(RedisKeyConstant.LOGIN_HASH_KEY)) {
             redisTemplate.opsForHash().delete(RedisKeyConstant.LOGIN_HASH_KEY, UserContext.getUserId());
         }
+    }
+
+    @Override
+    public String updateIp(UserUpdateIpCmd req) {
+        LambdaUpdateWrapper<UserModel> updateWrapper = Wrappers.lambdaUpdate(UserModel.class)
+                .eq(UserModel::getUserId, UserContext.getUserId())
+                .eq(UserModel::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
+                .set(UserModel::getUserIp, req.getUserIp());
+        userMapper.update(updateWrapper);
+        return req.getUserIp();
+    }
+
+    @Override
+    public PageDTO<UserVO> searchPage(UserSearchPageCmd cmd) {
+
+        LambdaQueryWrapper<UserModel> queryWrapper = Wrappers.lambdaQuery(UserModel.class)
+                .eq(UserModel::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
+                .and(wrapper ->
+                        wrapper.like(UserModel::getUserName, cmd.getKeyword())
+                                .or()
+                                .like(UserModel::getUserPhone, cmd.getKeyword())
+                );
+
+        Long total = userMapper.selectCount(queryWrapper);
+        if(total == null || total == 0L){
+            return new PageDTO<>();
+        }
+
+        queryWrapper.last("limit " + (cmd.getPageNum() - 1) * cmd.getPageSize() + "," + cmd.getPageSize());
+        List<UserModel> userModels = userMapper.selectList(queryWrapper);
+        List<UserVO> userVOList = userModels.stream().map(userModel -> new UserVO(userModel.getUserId(),
+                userModel.getUserName(),
+                userModel.getUserPhoto(),
+                userModel.getUserLevel())).collect(Collectors.toList());
+
+        return PageDTO.<UserVO>builder()
+                .total(total)
+                .page(cmd.getPageNum())
+                .pageSize(cmd.getPageSize())
+                .data(userVOList)
+                .build();
+    }
+
+    @Override
+    public String parseIp(String ip) {
+        Boolean isIp = HostUtil.judgeIp(ip);
+        if (!isIp) {
+            return "unknown";
+        }
+        return doParseIp(ip);
+    }
+
+    private String doParseIp(String ip) {
+        String apiUrl = ipUrl + "?key=" + ipKey + "&ip=" + ip + "&coordsys=WGS84";
+        HttpURLConnection connection = null;
+        BufferedReader reader = null;
+        String line = null;
+        StringBuilder result = new StringBuilder();
+        try {
+            URL url = new URL(apiUrl);
+            connection =
+                    (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.connect();
+            reader = new BufferedReader(
+                    new InputStreamReader(
+                            connection.getInputStream(), StandardCharsets.UTF_8));
+            while ((line = reader.readLine()) != null) {
+                result.append(line);
+            }
+        } catch (Exception e) {
+            log.info("[UserServiceImpl] doParseIp 解析失败");
+            return "unknown";
+        } finally {
+            try {
+                if (reader != null) {
+                    reader.close();
+                }
+            } catch (IOException e) {
+                log.info("[UserServiceImpl] doParseIp 关闭失败");
+            }
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+        JSONObject jsonObject = JSON.parseObject(result.toString());
+        JSONObject data = jsonObject.getJSONObject("data");
+        return Objects.equals(data.getString("prov"), "") ? "unknown" : data.getString("prov");
     }
 
 }

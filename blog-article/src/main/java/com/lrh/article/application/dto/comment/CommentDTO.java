@@ -8,7 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * @ProjectName: blog-ddd
@@ -31,8 +30,6 @@ public class CommentDTO {
     private String commentImg;
 
     private String parentCommentId;
-
-    private List<CommentDTO> commentList;
 
     private String userId;
 

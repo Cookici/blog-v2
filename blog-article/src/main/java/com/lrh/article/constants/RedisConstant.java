@@ -13,4 +13,5 @@ public class RedisConstant {
     public static final String PARENT_COMMENT_ID_OPERATOR_LOCK = "lock:article:operator:parent_comment_id_%s";
     public static final String ARTICLE_VIEW = "article:view:article_%s";
     public static final String ARTICLE_LIKE = "article:like:article_%s";
+    public static final String ARTICLE_LOCK = "lock:article:operator:article_%s";
 }

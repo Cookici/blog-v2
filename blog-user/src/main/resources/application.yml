@@ -1,27 +1,2 @@
 server:
   port: 9000
-
-spring:
-  application:
-    name: blog-user
-  datasource:
-    type: com.zaxxer.hikari.HikariDataSource
-    hikari:
-      max-lifetime: 1800000
-    username: root
-    password: lrh,903.520hhhh
-    url: jdbc:mysql://sh-cdb-pezvivda.sql.tencentcdb.com:63950/user?characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-  redis:
-    host: cd-crs-0q0ceb8t.sql.tencentcdb.com
-    port: 29577
-    password: lrh,903.520hhhh
-
-mybatis-plus:
-  mapper-locations: classpath*:xml/*.xml
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-  global-config:
-    db-config:
-      logic-delete-field: is_deleted
-      logic-delete-value: 1
-      logic-not-delete-value: 0

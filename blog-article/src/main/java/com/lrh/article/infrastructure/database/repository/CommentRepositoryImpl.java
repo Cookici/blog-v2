@@ -116,8 +116,34 @@ public class CommentRepositoryImpl implements CommentOperateRepository {
     @Override
     public CommentPO getCommentByCommentId(String commentId) {
         LambdaQueryWrapper<CommentPO> queryWrapper = Wrappers.lambdaQuery(CommentPO.class)
-               .eq(CommentPO::getCommentId, commentId)
-               .eq(CommentPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
+                .eq(CommentPO::getCommentId, commentId)
+                .eq(CommentPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
+        return commentMapper.selectOne(queryWrapper);
+    }
+
+    @Override
+    public Long countUserCommentsPage(String userId) {
+        LambdaQueryWrapper<CommentPO> queryWrapper = Wrappers.lambdaQuery(CommentPO.class)
+                .eq(CommentPO::getUserId, userId)
+                .eq(CommentPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
+        return commentMapper.selectCount(queryWrapper);
+    }
+
+    @Override
+    public List<CommentPO> getUserCommentPage(String userId, Long offset, Long limit) {
+        LambdaQueryWrapper<CommentPO> queryWrapper = Wrappers.lambdaQuery(CommentPO.class)
+                .eq(CommentPO::getUserId, userId)
+                .eq(CommentPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
+                .orderByDesc(CommentPO::getCreateTime)
+                .last("limit " + offset + "," + limit);
+        return commentMapper.selectList(queryWrapper);
+    }
+
+    @Override
+    public CommentPO selectParentCommentByCommentId(String commentId) {
+        LambdaQueryWrapper<CommentPO> queryWrapper = Wrappers.lambdaQuery(CommentPO.class)
+                .eq(CommentPO::getCommentId, commentId)
+                .eq(CommentPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
         return commentMapper.selectOne(queryWrapper);
     }
 

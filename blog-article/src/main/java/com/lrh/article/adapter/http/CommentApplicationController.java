@@ -1,11 +1,9 @@
 package com.lrh.article.adapter.http;
 
-import com.lrh.article.application.cqe.comment.CommentChildPageQuery;
-import com.lrh.article.application.cqe.comment.CommentDeleteCommand;
-import com.lrh.article.application.cqe.comment.CommentInsertCommand;
-import com.lrh.article.application.cqe.comment.CommentPageQuery;
+import com.lrh.article.application.cqe.comment.*;
 import com.lrh.article.application.dto.PageDTO;
 import com.lrh.article.application.dto.comment.CommentDTO;
+import com.lrh.article.application.dto.comment.CommentUserDTO;
 import com.lrh.article.application.service.CommentApplicationService;
 import com.lrh.common.result.Result;
 import org.springframework.web.bind.annotation.*;
@@ -20,11 +18,11 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/comment")
-public class CommitApplicationController {
+public class CommentApplicationController {
 
     private final CommentApplicationService commentApplicationService;
 
-    public CommitApplicationController(CommentApplicationService commentApplicationService) {
+    public CommentApplicationController(CommentApplicationService commentApplicationService) {
         this.commentApplicationService = commentApplicationService;
     }
 
@@ -52,5 +50,10 @@ public class CommitApplicationController {
         return Result.success();
     }
 
+    @GetMapping("/user/page")
+    public Result<PageDTO<CommentUserDTO>> getUserCommentPage(CommentUserPageQuery query) {
+        PageDTO<CommentUserDTO> resp = commentApplicationService.userComment(query);
+        return Result.success(resp);
+    }
 
 }

@@ -36,4 +36,10 @@ public interface CommentOperateRepository {
     Long getUserCommentAsTo(String userId);
 
     CommentPO getCommentByCommentId(String commentId);
+
+    Long countUserCommentsPage(String userId);
+
+    List<CommentPO> getUserCommentPage(String userId, Long offset, Long limit);
+
+    CommentPO selectParentCommentByCommentId(String commentId);
 }

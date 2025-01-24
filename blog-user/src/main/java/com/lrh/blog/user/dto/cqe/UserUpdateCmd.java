@@ -3,11 +3,13 @@ package com.lrh.blog.user.dto.cqe;
 import com.lrh.common.constant.BusinessConstant;
 import com.lrh.blog.user.dto.valid.UserValid;
 import com.lrh.blog.user.dto.req.UserUpdateReq;
+import com.lrh.common.context.UserContext;
 import com.lrh.common.exception.ValidException;
 import lombok.Getter;
 
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 /**
  * @ProjectName: blog-ddd
@@ -29,6 +31,9 @@ public class UserUpdateCmd {
     private final LocalDateTime userBirthday;
 
     public UserUpdateCmd(@NotNull UserUpdateReq req) throws ValidException {
+        if(!Objects.equals(UserContext.getUserId(), req.getUserId())){
+            throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "非法操作"));
+        }
         if(UserValid.validUserId(req.getUserId())){
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验错误"));
         }

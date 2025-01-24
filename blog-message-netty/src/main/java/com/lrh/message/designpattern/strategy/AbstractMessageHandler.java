@@ -1,6 +1,5 @@
 package com.lrh.message.designpattern.strategy;
 
-import com.lrh.message.model.MessageModel;
 import com.lrh.message.netty.message.MessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,13 +13,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public abstract class AbstractMessageHandler {
-
-    /**
-     * 设置Cache
-     *
-     * @param messageModel 消息模型
-     */
-    protected abstract void setCache(MessageModel messageModel);
 
     /**
      * 处理消息抽象接口

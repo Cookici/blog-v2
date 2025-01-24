@@ -18,6 +18,5 @@ public class WhiteListConstant {
             "/api/article/page",
             "/api/article/get",
             "/api/label/kinds",
-            "/api/user/logout"
     };
 }

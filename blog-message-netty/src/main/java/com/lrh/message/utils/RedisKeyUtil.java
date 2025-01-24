@@ -19,4 +19,5 @@ public class RedisKeyUtil {
         return RedisKeyConstant.USER_MESSAGE_PREFIX + (userId.compareTo(toUserId) >= 0 ? userId + "-" + toUserId : toUserId + "-" + userId);
     }
 
+
 }

@@ -1,9 +1,6 @@
 package com.lrh.blog.user.controller;
 
-import com.lrh.blog.user.dto.cqe.UserLoginQuery;
-import com.lrh.blog.user.dto.cqe.UserRegisterCmd;
-import com.lrh.blog.user.dto.cqe.UserUpdateCmd;
-import com.lrh.blog.user.dto.cqe.UserUpdatePasswordCmd;
+import com.lrh.blog.user.dto.cqe.*;
 import com.lrh.blog.user.dto.req.*;
 import com.lrh.blog.user.dto.resp.*;
 import com.lrh.blog.user.dto.vo.UserVO;
@@ -91,4 +88,24 @@ public class UserController {
         userService.logout();
         return Result.success();
     }
+
+    @GetMapping("/parseIp")
+    Result<String> parseIp(@RequestParam("ip") String ip) {
+        return Result.success(userService.parseIp(ip));
+    }
+
+    @PostMapping("/update_ip")
+    Result<Object> updateIp(@RequestBody UserUpdateIpReq req,HttpServletRequest httpServletRequest) {
+        UserUpdateIpCmd cmd = new UserUpdateIpCmd(req,httpServletRequest);
+        String ip = userService.updateIp(cmd);
+        return Result.success(ip);
+    }
+
+    @GetMapping("/search")
+    Result<PageDTO<UserVO>> search(UserSearchPageReq req) {
+        UserSearchPageCmd cmd = new UserSearchPageCmd(req);
+        PageDTO<UserVO> userVOList = userService.searchPage(cmd);
+        return Result.success(userVOList);
+    }
+
 }

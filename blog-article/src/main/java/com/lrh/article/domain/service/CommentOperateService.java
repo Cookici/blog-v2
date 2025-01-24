@@ -1,9 +1,6 @@
 package com.lrh.article.domain.service;
 
-import com.lrh.article.application.cqe.comment.CommentChildPageQuery;
-import com.lrh.article.application.cqe.comment.CommentDeleteCommand;
-import com.lrh.article.application.cqe.comment.CommentInsertCommand;
-import com.lrh.article.application.cqe.comment.CommentPageQuery;
+import com.lrh.article.application.cqe.comment.*;
 import com.lrh.article.constants.CommentConstant;
 import com.lrh.article.constants.RedisConstant;
 import com.lrh.article.domain.entity.CommentEntity;
@@ -63,18 +60,23 @@ public class CommentOperateService {
 
     public void insertComment(CommentInsertCommand command) {
         if (!Objects.equals(command.getParentCommentId(), CommentConstant.TOP_COMMENT_PARENT_ID)) {
-            insertChildCommentWithLock(command);
+            LockUtil lockUtil = new LockUtil(redissonClient);
+            lockUtil.tryLock(String.format(RedisConstant.PARENT_COMMENT_ID_OPERATOR_LOCK, command.getParentCommentId()), () -> {
+                CommentPO commentParentPO =
+                        commentOperateRepository.selectParentCommentByCommentId(command.getParentCommentId());
+                if (commentParentPO == null) {
+                    throw new RuntimeException("评论已经删除");
+                }
+                CommentPO commentPO = getCommentPO(command);
+                commentOperateRepository.insertComment(commentPO);
+            });
         } else {
-            insertCommentWithoutLock(command);
+            CommentPO commentPO = getCommentPO(command);
+            commentOperateRepository.insertComment(commentPO);
         }
     }
 
-    private void insertChildCommentWithLock(CommentInsertCommand command) {
-        LockUtil lockUtil = new LockUtil(redissonClient);
-        lockUtil.tryLock(String.format(RedisConstant.PARENT_COMMENT_ID_OPERATOR_LOCK, command.getParentCommentId()), () -> insertCommentWithoutLock(command));
-    }
-
-    private void insertCommentWithoutLock(CommentInsertCommand command) {
+    private static CommentPO getCommentPO(CommentInsertCommand command) {
         CommentPO commentPO = CommentPO.builder()
                 .commentId("comment_" + IdUtil.getUuid())
                 .commentContent(command.getCommentContent())
@@ -84,8 +86,9 @@ public class CommentOperateService {
                 .toUserId(command.getToUserId())
                 .articleId(command.getArticleId())
                 .build();
-        commentOperateRepository.insertComment(commentPO);
+        return commentPO;
     }
+
 
     @Transactional(rollbackFor = Exception.class)
     public void deleteComment(CommentDeleteCommand command) {
@@ -101,7 +104,7 @@ public class CommentOperateService {
         }
     }
 
-    private void validExceptionOperate(String commentId,String userId) {
+    private void validExceptionOperate(String commentId, String userId) {
         CommentPO commentPO = commentOperateRepository.getCommentByCommentId(commentId);
         if (commentPO == null || !Objects.equals(commentPO.getUserId(), userId)) {
             throw new RuntimeException("非法操作");
@@ -110,5 +113,15 @@ public class CommentOperateService {
 
     public Long getUserCommentAsTo(String userId) {
         return commentOperateRepository.getUserCommentAsTo(userId);
+    }
+
+    public Long countUserCommentsPage(CommentUserPageQuery query) {
+        return commentOperateRepository.countUserCommentsPage(query.getUserId());
+    }
+
+    public List<CommentEntity> getUserComment(CommentUserPageQuery query) {
+        List<CommentPO> commentPOList =
+                commentOperateRepository.getUserCommentPage(query.getUserId(), query.getOffset(), query.getLimit());
+        return CommentConvertor.toCommentEntityListConvertor(commentPOList);
     }
 }

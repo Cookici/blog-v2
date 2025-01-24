@@ -17,6 +17,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class MessageVO {
 
+    private String messageId;
+
     private String messageType;
 
     private String messageContent;
@@ -24,5 +26,9 @@ public class MessageVO {
     private String toUserId;
 
     private String userId;
+
+    private String messageStatus;
+
+    private Long timestamp;
 
 }

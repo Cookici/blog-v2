@@ -34,7 +34,7 @@ public class CustomChannelInitializer extends ChannelInitializer<SocketChannel> 
 
     private final WebSocketRequestHandler webSocketRequestHandler;
 
-    public CustomChannelInitializer(HttpRequestHandler httpRequestHandler,WebSocketRequestHandler webSocketRequestHandler) {
+    public CustomChannelInitializer(HttpRequestHandler httpRequestHandler, WebSocketRequestHandler webSocketRequestHandler) {
         this.httpRequestHandler = httpRequestHandler;
         this.webSocketRequestHandler = webSocketRequestHandler;
     }
@@ -53,7 +53,8 @@ public class CustomChannelInitializer extends ChannelInitializer<SocketChannel> 
                 // 空闲状态处理器
                 .addLast("idleStateHandler", new IdleStateHandler(30, 30, 60, TimeUnit.MINUTES))
                 // WebSocket 协议处理器，升级到 WebSocket
-                .addLast("webSocketServerProtocolHandler", new WebSocketServerProtocolHandler("/api/netty"))
+                .addLast("webSocketServerProtocolHandler", new WebSocketServerProtocolHandler("/api/netty",
+                        null, true, 65536 * 10, false, true))
                 // WebSocket 处理器，传递获取的 header 信息
                 .addLast("webSocketHandler", webSocketRequestHandler);
 

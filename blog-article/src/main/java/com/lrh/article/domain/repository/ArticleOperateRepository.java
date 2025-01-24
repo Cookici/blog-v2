@@ -33,4 +33,6 @@ public interface ArticleOperateRepository {
     Long countUserArticlesPage(ArticleUserPageQuery query);
 
     List<ArticlePO> getUserArticlesPage(ArticleUserPageQuery query, Long offset, Long limit);
+
+    List<ArticlePO> getArticleByIds(List<String> articleIdList);
 }

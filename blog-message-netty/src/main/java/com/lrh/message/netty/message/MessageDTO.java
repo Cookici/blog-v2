@@ -17,6 +17,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class MessageDTO {
 
+    private String messageId;
+
     private String messageTag;
 
     private String messageType;

@@ -1,14 +1,11 @@
 package com.lrh.blog.user.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.lrh.blog.user.dto.cqe.UserUpdatePasswordCmd;
+import com.lrh.blog.user.dto.cqe.*;
 import com.lrh.blog.user.dto.req.ImageUploadReq;
 import com.lrh.blog.user.dto.resp.*;
-import com.lrh.blog.user.model.UserModel;
-import com.lrh.blog.user.dto.cqe.UserLoginQuery;
-import com.lrh.blog.user.dto.cqe.UserRegisterCmd;
-import com.lrh.blog.user.dto.cqe.UserUpdateCmd;
 import com.lrh.blog.user.dto.vo.UserVO;
+import com.lrh.blog.user.model.UserModel;
 
 import java.util.List;
 import java.util.Map;
@@ -38,4 +35,9 @@ public interface UserService extends IService<UserModel> {
 
     void logout();
 
+    String parseIp(String ip);
+
+    String updateIp(UserUpdateIpCmd cmd);
+
+    PageDTO<UserVO> searchPage(UserSearchPageCmd cmd);
 }

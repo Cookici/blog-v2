@@ -49,7 +49,7 @@ public class CustomGlobeFilter implements GlobalFilter {
 
         String userId = exchange.getRequest().getHeaders().getFirst(PasswordKeyConstant.HEADER_USER_ID);
 
-        if(userId == null){
+        if (userId == null) {
             DataBuffer dataBuffer = getFailDataBuffer(exchange);
             return exchange.getResponse().writeWith(Mono.just(dataBuffer));
         }
@@ -68,7 +68,7 @@ public class CustomGlobeFilter implements GlobalFilter {
                     .build();
         } catch (Exception e) {
             log.error("[CustomGlobeFilter] filter error : {}", e.getMessage());
-            redisTemplate.opsForValue().getAndDelete(userId);
+            redisTemplate.opsForHash().delete(PasswordKeyConstant.LOGIN_HASH_KEY, userId);
             DataBuffer dataBuffer = getFailDataBuffer(exchange);
             return exchange.getResponse().writeWith(Mono.just(dataBuffer));
         }

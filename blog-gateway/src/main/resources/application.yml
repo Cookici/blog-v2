@@ -41,9 +41,9 @@ spring:
         - id: message-netty
           uri: lb://blog-message-netty
           predicates:
-            - Path=/api/message-netty/**
+            - Path=/api/message-netty/**,/api/friend/**,/api/friend-apply/**
 
         - id: netty
           uri: lb://blog-netty
           predicates:
-            - Path=/api/netty
+            - Path=/api/netty/**

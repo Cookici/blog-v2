@@ -10,6 +10,7 @@ import com.lrh.article.domain.repository.ArticleCacheRepository;
 import com.lrh.article.domain.service.ArticleOperateService;
 import com.lrh.article.domain.service.CommentOperateService;
 import com.lrh.article.domain.vo.UserVO;
+import com.lrh.article.infrastructure.client.MessageNettyClient;
 import com.lrh.article.infrastructure.client.UserClient;
 import com.lrh.common.context.UserContext;
 import com.lrh.common.result.Result;
@@ -37,13 +38,16 @@ public class ArticleApplicationService {
     private final ArticleCacheRepository articleCacheRepository;
     private final CommentOperateService commentOperateService;
     private final UserClient userClient;
+    private final MessageNettyClient messageNettyClient;
 
     public ArticleApplicationService(ArticleOperateService articleOperateService, ArticleCacheRepository articleCacheRepository,
-                                     CommentOperateService commentOperateService, UserClient userClient) {
+                                     CommentOperateService commentOperateService, UserClient userClient,
+                                     MessageNettyClient messageNettyClient) {
         this.articleOperateService = articleOperateService;
         this.articleCacheRepository = articleCacheRepository;
         this.commentOperateService = commentOperateService;
         this.userClient = userClient;
+        this.messageNettyClient = messageNettyClient;
     }
 
     public PageDTO<ArticleDTO> pageArticles(ArticlePageQuery query) {
@@ -152,7 +156,9 @@ public class ArticleApplicationService {
         UserArticleDataEntity userArticleData =
                 articleOperateService.articlesDataByUserId(userId);
         Long commentCount = commentOperateService.getUserCommentAsTo(userId);
-        return UserDataDTO.fromEntity(userArticleData, commentCount);
+        Result<Long> friendApplyCountResult = messageNettyClient.getFriendApplyCount(userId);
+        Long friendApplyCount = friendApplyCountResult.getData();
+        return UserDataDTO.fromEntity(userArticleData, commentCount, friendApplyCount);
     }
 
 

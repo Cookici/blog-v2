@@ -29,9 +29,14 @@ public enum MessageTypeEnum {
     ErrorMessage(2, "error", "发送失败"),
 
     /**
-     * 注册消息
+     * ping消息
      */
-    RegisterMessage(3, "register", "注册消息");
+    PingMessage(4, "ping", "ping消息"),
+
+    /**
+     * 不是好友多发消息
+     */
+    NotFriendMessage(5, "not_friend", "不是好友多发消息"),;
 
 
     private final Integer code;

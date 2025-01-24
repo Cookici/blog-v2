@@ -1,6 +1,5 @@
 package com.lrh.message.netty.handler;
 
-import com.lrh.common.constant.PasswordKeyConstant;
 import com.lrh.common.util.JwtUtil;
 import com.lrh.message.config.NettyConfig;
 import com.lrh.message.constants.RedisKeyConstant;
@@ -43,8 +42,9 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, FullHttpRequest msg) throws Exception {
         // 获取 HTTP 请求头信息
-        String userId = msg.headers().get(PasswordKeyConstant.HEADER_USER_ID);
-        if (userId == null) {
+        String uri = msg.uri();
+        String userId = extractUserId(uri);
+        if (userId == null || userId.isEmpty()) {
             log.info("[HttpRequestHandler] error userId is null");
             throw new RuntimeException(HttpStatus.UNAUTHORIZED.getReasonPhrase());
         }
@@ -63,8 +63,32 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         channelHandlerContext.channel().attr(Attributes.USERID).set(userId);
         ChannelContext.addChannel(userId, channelHandlerContext.channel());
         redisTemplate.opsForHash().put(RedisKeyConstant.USERID_NETTY_HASH_KEY, userId,
-                NettyUtil.getLocalHostExactAddress().getHostAddress()+":"+nettyPort);
+                NettyUtil.getLocalHostExactAddress().getHostAddress() + ":" + nettyPort);
         log.info("[WebSocketServer] 连接:{}", userId);
+        channelHandlerContext.pipeline().remove(this);
         channelHandlerContext.fireChannelRead(msg.retain());
     }
+
+
+    private String extractUserId(String uri) {
+        try {
+            String[] parts = uri.split("\\?");
+            if (parts.length != 2) {
+                return null;
+            }
+            String queryString = parts[1];
+            String[] params = queryString.split("&");
+            for (String param : params) {
+                String[] keyValue = param.split("=");
+                if (keyValue.length == 2 && "userId".equals(keyValue[0])) {
+                    return keyValue[1];
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            log.error("[HttpRequestHandler] extractUserId 解析userId失败", e);
+            return null;
+        }
+    }
+
 }

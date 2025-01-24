@@ -36,6 +36,9 @@ public class MessageModel {
     @TableField("message_content")
     private String messageContent;
 
+    @TableField("message_status")
+    private String messageStatus;
+
     @TableField("user_id")
     private String userId;
 

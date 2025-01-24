@@ -1,6 +1,7 @@
 package com.lrh.article.domain.service;
 
 import com.lrh.article.application.cqe.article.*;
+import com.lrh.article.constants.RedisConstant;
 import com.lrh.article.domain.entity.ArticleEntity;
 import com.lrh.article.domain.entity.LabelEntity;
 import com.lrh.article.domain.entity.UserArticleDataEntity;
@@ -10,8 +11,10 @@ import com.lrh.article.infrastructure.database.convertor.LabelConvertor;
 import com.lrh.article.infrastructure.po.ArticleLabelPO;
 import com.lrh.article.infrastructure.po.ArticlePO;
 import com.lrh.article.infrastructure.po.LabelPO;
+import com.lrh.article.util.LockUtil;
 import com.lrh.common.context.UserContext;
 import com.lrh.common.util.IdUtil;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,14 +36,16 @@ public class ArticleOperateService {
     private final LabelOperateRepository labelOperateRepository;
     private final CommentOperateRepository commentOperateRepository;
     private final ArticleCacheRepository articleCacheRepository;
+    private final RedissonClient redissonClient;
 
     public ArticleOperateService(ArticleOperateRepository articleRepository, ArticleLabelOperateRepository articleLabelOperateRepository,
-                                 LabelOperateRepository labelOperateRepository, CommentOperateRepository commentOperateRepository, ArticleCacheRepository articleCacheRepository) {
+                                 LabelOperateRepository labelOperateRepository, CommentOperateRepository commentOperateRepository, ArticleCacheRepository articleCacheRepository, RedissonClient redissonClient) {
         this.articleRepository = articleRepository;
         this.articleLabelOperateRepository = articleLabelOperateRepository;
         this.labelOperateRepository = labelOperateRepository;
         this.commentOperateRepository = commentOperateRepository;
         this.articleCacheRepository = articleCacheRepository;
+        this.redissonClient = redissonClient;
     }
 
 
@@ -108,30 +113,36 @@ public class ArticleOperateService {
     }
 
     public ArticleEntity getArticleById(ArticleQuery articleQuery) {
-        ArticlePO articlePO = articleRepository.getArticlesById(articleQuery.getArticleId());
-        if (articlePO == null) {
-            return null;
-        }
-        ArticleEntity articleEntity = ArticleEntity.fromPO(articlePO);
-        List<LabelPO> articleIdList = labelOperateRepository.selectLabelsByArticleId(articleQuery.getArticleId());
-        if (articleIdList == null) {
-            articleEntity.setLabelEntityList(new ArrayList<>());
-        } else {
-            articleEntity.setLabelEntityList(LabelConvertor.toListLabelEntityConvertor(articleIdList));
-        }
-        return articleEntity;
+        LockUtil lockUtil = new LockUtil(redissonClient);
+        return lockUtil.tryReadLock(String.format(RedisConstant.ARTICLE_LOCK, articleQuery.getArticleId()), () -> {
+            ArticlePO articlePO = articleRepository.getArticlesById(articleQuery.getArticleId());
+            if (articlePO == null) {
+                return null;
+            }
+            ArticleEntity articleEntity = ArticleEntity.fromPO(articlePO);
+            List<LabelPO> articleIdList = labelOperateRepository.selectLabelsByArticleId(articleQuery.getArticleId());
+            if (articleIdList == null) {
+                articleEntity.setLabelEntityList(new ArrayList<>());
+            } else {
+                articleEntity.setLabelEntityList(LabelConvertor.toListLabelEntityConvertor(articleIdList));
+            }
+            return articleEntity;
+        });
     }
 
     @Transactional(rollbackFor = Exception.class)
     public void deleteArticleById(ArticleDeleteCommand command) {
         validExceptionOperate(command.getArticleId(), command.getUserId());
-        articleLabelOperateRepository.deleteLabelForArticle(command.getArticleId());
-        Integer update = articleRepository.deleteArticleById(command.getArticleId());
-        if (update == null || update == 0) {
-            return;
-        }
-        commentOperateRepository.deleteCommentsByArticle(command.getArticleId());
-        articleCacheRepository.deleteArticleCache(command.getArticleId());
+        LockUtil lockUtil = new LockUtil(redissonClient);
+        lockUtil.tryWriteLock(String.format(RedisConstant.ARTICLE_LOCK, command.getArticleId()), () -> {
+            articleLabelOperateRepository.deleteLabelForArticle(command.getArticleId());
+            Integer update = articleRepository.deleteArticleById(command.getArticleId());
+            if (update == null || update == 0) {
+                return;
+            }
+            commentOperateRepository.deleteCommentsByArticle(command.getArticleId());
+            articleCacheRepository.deleteArticleCache(command.getArticleId());
+        });
     }
 
     private void validExceptionOperate(String articleId, String userId) {
@@ -144,13 +155,16 @@ public class ArticleOperateService {
     @Transactional(rollbackFor = Exception.class)
     public void updateArticleById(ArticleUpdateCommand command) {
         validExceptionOperate(command.getArticleId(), command.getUserId());
-        articleRepository.updateArticleById(command.getArticleId(), command.getArticleTitle(), command.getArticleContent());
-        if (command.getLabelIdList().isEmpty()) {
-            return;
-        }
-        articleLabelOperateRepository.deleteLabelForArticle(command.getArticleId());
-        articleLabelOperateRepository.restoreDeletedArticleLabel(command.getArticleId(), command.getLabelIdList());
-        articleLabelOperateRepository.upsertLabelForArticle(command.getArticleId(), command.getLabelIdList());
+        LockUtil lockUtil = new LockUtil(redissonClient);
+        lockUtil.tryWriteLock(String.format(RedisConstant.ARTICLE_LOCK, command.getArticleId()), () -> {
+            articleRepository.updateArticleById(command.getArticleId(), command.getArticleTitle(), command.getArticleContent());
+            if (command.getLabelIdList().isEmpty()) {
+                return;
+            }
+            articleLabelOperateRepository.deleteLabelForArticle(command.getArticleId());
+            articleLabelOperateRepository.restoreDeletedArticleLabel(command.getArticleId(), command.getLabelIdList());
+            articleLabelOperateRepository.upsertLabelForArticle(command.getArticleId(), command.getLabelIdList());
+        });
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -193,13 +207,13 @@ public class ArticleOperateService {
         Map<String, Long> articleLikeCountBatch =
                 articleCacheRepository.getArticleLikeCountBatch(articleIds);
         Long likeCount = articleLikeCountBatch.values().stream()
-                .filter(count -> count > 0)
-                .count();
+                .mapToLong(Long::longValue)
+                .sum();
         Map<String, Long> articleViewCountBatch =
                 articleCacheRepository.getArticleViewCountBatch(articleIds);
         Long viewCount = articleViewCountBatch.values().stream()
-                .filter(count -> count > 0)
-                .count();
+                .mapToLong(Long::longValue)
+                .sum();
         return new UserArticleDataEntity(articleCount, likeCount, viewCount);
     }
 
@@ -222,4 +236,15 @@ public class ArticleOperateService {
         // 返回分页结果
         return articleEntityList;
     }
+
+    public Map<String, ArticleEntity> getArticleByIds(List<String> articleIdList) {
+        List<ArticlePO> articlePOList = articleRepository.getArticleByIds(articleIdList);
+        Map<String, ArticleEntity> articleMap = new HashMap<>();
+        for (ArticlePO articlePO : articlePOList) {
+            ArticleEntity articleEntity = ArticleEntity.fromPO(articlePO);
+            articleMap.put(articleEntity.getArticleId(), articleEntity);
+        }
+        return articleMap;
+    }
+
 }

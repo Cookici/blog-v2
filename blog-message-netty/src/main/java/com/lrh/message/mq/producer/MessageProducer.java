@@ -1,9 +1,11 @@
 package com.lrh.message.mq.producer;
 
+import com.lrh.message.constants.MessageConstant;
 import com.lrh.message.constants.RedisKeyConstant;
 import com.lrh.message.model.MessageModel;
 import com.lrh.message.netty.message.MessageDTO;
-import com.lrh.message.service.impl.ThreadPoolService;
+import com.lrh.message.netty.message.MessageVO;
+import com.lrh.message.service.MessageService;
 import com.lrh.message.utils.MessageUtil;
 import com.lrh.message.utils.NettyUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -30,14 +32,14 @@ public class MessageProducer {
     @Value("${rocketmq.consumer.topic}")
     private String messageTopic;
 
-    private final ThreadPoolService threadPoolService;
+    private final MessageService messageService;
 
     private final RocketMQTemplate rocketMQTemplate;
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-    public MessageProducer(ThreadPoolService threadPoolService, RocketMQTemplate rocketMQTemplate, RedisTemplate<String, Object> redisTemplate) {
-        this.threadPoolService = threadPoolService;
+    public MessageProducer(MessageService messageService, RocketMQTemplate rocketMQTemplate, RedisTemplate<String, Object> redisTemplate) {
+        this.messageService = messageService;
         this.rocketMQTemplate = rocketMQTemplate;
         this.redisTemplate = redisTemplate;
     }
@@ -56,16 +58,18 @@ public class MessageProducer {
                 .get(RedisKeyConstant.USERID_NETTY_HASH_KEY, messageDTO.getToUserId());
         if (address == null || address.isEmpty()) {
             log.info("[MessageProducer] 用户不在线");
-            threadPoolService.setNoOnlineMessageCache(MessageUtil.convertMessageDTOToMessageModel(messageDTO));
+            MessageVO messageVO = MessageUtil.convertMessageDTOToMessageVO(messageDTO, MessageConstant.STATUS_OFFLINE);
+            messageService.setCache(messageVO);
             return;
         }
         if (Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(RedisKeyConstant.NETTY_SERVER_SET_KEY, address))) {
             String destTopic = NettyUtil.getDestTopic(address, remoteTopic);
-            rocketMQTemplate.syncSend(destTopic, messageDTO);
+            rocketMQTemplate.syncSendOrderly(destTopic, messageDTO, messageDTO.getToUserId());
             log.info("[MessageProducer] 成功发送消息到 Topic: {}, 消息: {}", destTopic, messageDTO);
         } else {
-            threadPoolService.setNoOnlineMessageCache(MessageUtil.convertMessageDTOToMessageModel(messageDTO));
             log.info("[MessageProducer] 用户不在线:{}", messageDTO.getToUserId());
+            MessageVO messageVO = MessageUtil.convertMessageDTOToMessageVO(messageDTO, MessageConstant.STATUS_OFFLINE);
+            messageService.setCache(messageVO);
         }
     }
 

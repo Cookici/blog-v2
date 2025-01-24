@@ -98,4 +98,12 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
     public List<ArticlePO> getUserArticlesPage(ArticleUserPageQuery query, Long offset, Long limit) {
         return articleMapper.selectUserPageArticle(query, offset, limit);
     }
+
+    @Override
+    public List<ArticlePO> getArticleByIds(List<String> articleIdList) {
+        LambdaQueryWrapper<ArticlePO> queryWrapper = Wrappers.lambdaQuery(ArticlePO.class)
+               .in(ArticlePO::getArticleId, articleIdList)
+               .eq(ArticlePO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
+        return articleMapper.selectList(queryWrapper);
+    }
 }

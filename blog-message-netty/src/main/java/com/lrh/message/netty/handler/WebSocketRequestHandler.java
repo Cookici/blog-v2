@@ -1,14 +1,18 @@
 package com.lrh.message.netty.handler;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.lrh.common.util.IdUtil;
 import com.lrh.message.config.NettyConfig;
 import com.lrh.message.config.designpattern.strategy.AbstractStrategyChoose;
 import com.lrh.message.constants.RedisKeyConstant;
+import com.lrh.message.enums.MessageTypeEnum;
 import com.lrh.message.mq.producer.MessageProducer;
 import com.lrh.message.netty.Attributes;
 import com.lrh.message.netty.ChannelContext;
 import com.lrh.message.netty.message.MessageDTO;
 import com.lrh.message.netty.message.MessageHandler;
+import com.lrh.message.service.FriendService;
+import com.lrh.message.service.MessageService;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -22,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 /**
  * @ProjectName: blog-v2
@@ -42,10 +47,18 @@ public class WebSocketRequestHandler extends SimpleChannelInboundHandler<TextWeb
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-    public WebSocketRequestHandler(AbstractStrategyChoose abstractStrategyChoose, MessageProducer messageProducer, RedisTemplate<String, Object> redisTemplate) {
+    private final FriendService friendService;
+
+    private final MessageService messageService;
+
+    public WebSocketRequestHandler(AbstractStrategyChoose abstractStrategyChoose, MessageProducer messageProducer,
+                                   RedisTemplate<String, Object> redisTemplate,
+                                   FriendService friendService, MessageService messageService) {
         this.abstractStrategyChoose = abstractStrategyChoose;
         this.messageProducer = messageProducer;
         this.redisTemplate = redisTemplate;
+        this.friendService = friendService;
+        this.messageService = messageService;
     }
 
 
@@ -70,12 +83,25 @@ public class WebSocketRequestHandler extends SimpleChannelInboundHandler<TextWeb
      * @param messageDTO 可操作消息
      */
     private void handlerMessage(MessageDTO messageDTO, Channel channel) {
+        judgeFriendMessageSend(messageDTO);
+
         if (ChannelContext.getChannel(messageDTO.getToUserId()) == null) {
             messageProducer.syncRemoteMessage(messageDTO);
             return;
         }
         MessageHandler messageHandler = new MessageHandler(messageDTO, channel);
         abstractStrategyChoose.chooseAndExecute(messageDTO.getMessageType(), messageHandler);
+    }
+
+    private void judgeFriendMessageSend(MessageDTO messageDTO) {
+        if(Objects.equals(messageDTO.getMessageType(), MessageTypeEnum.PingMessage.getMessageType())){
+            return;
+        }
+        Boolean isFriend = friendService.selectIsFirend(messageDTO.getUserId(), messageDTO.getToUserId());
+        if (!isFriend) {
+            messageDTO.setMessageType(MessageTypeEnum.NotFriendMessage.getMessageType());
+            messageDTO.setMessageContent("成为好友后发送消息");
+        }
     }
 
 
@@ -101,6 +127,7 @@ public class WebSocketRequestHandler extends SimpleChannelInboundHandler<TextWeb
         if (userId == null) {
             throw new RuntimeException();
         }
+        messageDTO.setMessageId("message_" + IdUtil.getUuid());
         messageDTO.setUserId(userId);
         return messageDTO;
     }

@@ -1,7 +1,11 @@
 package com.lrh.message.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.lrh.message.dto.PageDTO;
+import com.lrh.message.dto.req.MessageChangeStatusReq;
+import com.lrh.message.dto.req.MessagePageReq;
 import com.lrh.message.model.MessageModel;
+import com.lrh.message.netty.message.MessageVO;
 
 /**
  * @ProjectName: blog-ddd
@@ -14,4 +18,11 @@ import com.lrh.message.model.MessageModel;
 
 public interface MessageService extends IService<MessageModel> {
 
+    PageDTO<MessageVO> getMessagePage(MessagePageReq req);
+
+    void setCache(MessageVO messageVO);
+
+    MessageVO getLastMessage(String userId, String toUserId);
+
+    void changeStatus(MessageChangeStatusReq req);
 }
