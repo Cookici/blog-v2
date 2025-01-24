@@ -4,6 +4,7 @@ import com.lrh.article.application.cqe.article.*;
 import com.lrh.article.application.dto.PageDTO;
 import com.lrh.article.application.dto.UserDataDTO;
 import com.lrh.article.application.dto.article.ArticleDTO;
+import com.lrh.article.constants.RedisConstant;
 import com.lrh.article.domain.entity.ArticleEntity;
 import com.lrh.article.domain.entity.UserArticleDataEntity;
 import com.lrh.article.domain.repository.ArticleCacheRepository;
@@ -12,9 +13,11 @@ import com.lrh.article.domain.service.CommentOperateService;
 import com.lrh.article.domain.vo.UserVO;
 import com.lrh.article.infrastructure.client.MessageNettyClient;
 import com.lrh.article.infrastructure.client.UserClient;
+import com.lrh.article.util.LockUtil;
 import com.lrh.common.context.UserContext;
 import com.lrh.common.result.Result;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -39,6 +42,7 @@ public class ArticleApplicationService {
     private final CommentOperateService commentOperateService;
     private final UserClient userClient;
     private final MessageNettyClient messageNettyClient;
+    private RedissonClient redissonClient;
 
     public ArticleApplicationService(ArticleOperateService articleOperateService, ArticleCacheRepository articleCacheRepository,
                                      CommentOperateService commentOperateService, UserClient userClient,
@@ -93,27 +97,30 @@ public class ArticleApplicationService {
 
     public ArticleDTO getArticleById(ArticleQuery query) {
         query.valid();
-        ArticleEntity articleEntity = articleOperateService.getArticleById(query);
-        if (articleEntity == null) {
-            return null;
-        }
-        List<String> userIdList = new ArrayList<>();
-        userIdList.add(articleEntity.getUserId());
-        Result<Map<String, UserVO>> userList = userClient.getByIds(userIdList);
-        Map<String, UserVO> userIdForUser = userList.getData();
-        UserVO userInfo = userIdForUser.get(articleEntity.getUserId());
-        if (userInfo == null) {
-            userInfo = new UserVO();
-        }
+        LockUtil lockUtil = new LockUtil(redissonClient);
+        return lockUtil.tryReadLock(String.format(RedisConstant.ARTICLE_LOCK, query.getArticleId()), () -> {
+            ArticleEntity articleEntity = articleOperateService.getArticleById(query);
+            if (articleEntity == null) {
+                return new ArticleDTO();
+            }
+            List<String> userIdList = new ArrayList<>();
+            userIdList.add(articleEntity.getUserId());
+            Result<Map<String, UserVO>> userList = userClient.getByIds(userIdList);
+            Map<String, UserVO> userIdForUser = userList.getData();
+            UserVO userInfo = userIdForUser.get(articleEntity.getUserId());
+            if (userInfo == null) {
+                userInfo = new UserVO();
+            }
 
-        ArticleDTO articleDTO = ArticleDTO.fromEntity(articleEntity, userInfo);
+            ArticleDTO articleDTO = ArticleDTO.fromEntity(articleEntity, userInfo);
 
-        Long articleViewCount = articleCacheRepository.getArticleViewCount(articleDTO.getArticleId());
-        Long articleLikeCount = articleCacheRepository.getArticleLikeCount(articleDTO.getArticleId());
-        articleDTO.setLikeCount(articleLikeCount);
-        articleDTO.setViewCount(articleViewCount);
+            Long articleViewCount = articleCacheRepository.getArticleViewCount(articleDTO.getArticleId());
+            Long articleLikeCount = articleCacheRepository.getArticleLikeCount(articleDTO.getArticleId());
+            articleDTO.setLikeCount(articleLikeCount);
+            articleDTO.setViewCount(articleViewCount);
 
-        return articleDTO;
+            return articleDTO;
+        });
     }
 
     public void deleteArticleById(ArticleDeleteCommand command) {

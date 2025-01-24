@@ -4,13 +4,16 @@ import com.alibaba.fastjson2.JSON;
 import com.lrh.message.config.RocketMQRemoteConfig;
 import com.lrh.message.config.designpattern.strategy.AbstractStrategyChoose;
 import com.lrh.message.constants.MessageConstant;
+import com.lrh.message.model.MessageModel;
+import com.lrh.message.mq.producer.MessageProducer;
 import com.lrh.message.netty.ChannelContext;
 import com.lrh.message.netty.message.MessageDTO;
 import com.lrh.message.netty.message.MessageHandler;
 import com.lrh.message.netty.message.MessageVO;
+import com.lrh.message.service.MessageService;
+import com.lrh.message.service.impl.ThreadPoolService;
 import com.lrh.message.utils.MessageUtil;
 import com.lrh.message.utils.NettyUtil;
-import com.lrh.message.utils.RedisKeyUtil;
 import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
@@ -19,16 +22,8 @@ import org.apache.rocketmq.client.consumer.listener.MessageListenerOrderly;
 import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * @ProjectName: blog-v2
@@ -46,12 +41,20 @@ public class RemoteMessageConsumer implements CommandLineRunner {
 
     private final AbstractStrategyChoose abstractStrategyChoose;
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final ThreadPoolService threadPoolService;
 
-    public RemoteMessageConsumer(RocketMQRemoteConfig rocketMQConfig, AbstractStrategyChoose abstractStrategyChoose, RedisTemplate<String, Object> redisTemplate) {
+    private final MessageProducer messageProducer;
+
+    private final MessageService messageService;
+
+    public RemoteMessageConsumer(RocketMQRemoteConfig rocketMQConfig, AbstractStrategyChoose abstractStrategyChoose,
+                                 ThreadPoolService threadPoolService, MessageProducer messageProducer,
+                                 MessageService messageService) {
         this.rocketMQConfig = rocketMQConfig;
         this.abstractStrategyChoose = abstractStrategyChoose;
-        this.redisTemplate = redisTemplate;
+        this.threadPoolService = threadPoolService;
+        this.messageProducer = messageProducer;
+        this.messageService = messageService;
     }
 
     @Override
@@ -77,7 +80,11 @@ public class RemoteMessageConsumer implements CommandLineRunner {
                     if (channel == null) {
                         log.info("[RemoteMessageConsumer] 用户不在线");
                         MessageVO message = MessageUtil.convertMessageDTOToMessageVO(messageDTO, MessageConstant.STATUS_OFFLINE);
-                        setCache(message);
+                        messageService.setCache(message);
+                        threadPoolService.submitTask(() -> {
+                            MessageModel messageModel = MessageUtil.convertMessageDTOToMessageModel(messageDTO, MessageConstant.STATUS_OFFLINE);
+                            messageProducer.syncSendMessage(messageModel);
+                        });
                         continue;
                     }
                     abstractStrategyChoose.chooseAndExecute(messageDTO.getMessageType(),
@@ -92,31 +99,6 @@ public class RemoteMessageConsumer implements CommandLineRunner {
 
         consumer.start();
         log.info("[RemoteMessageConsumer] 顺序消费者启动, topic: {}", dynamicTopic);
-    }
-
-    /**
-     * ARGV[1]: ZSet 分值 (timestamp)
-     * ARGV[2]: ZSet 数据 (序列化的 MessageModel)
-     * ARGV[3]: 过期时间 (秒)
-     *
-     * @param messageVO 消息前端展示
-     */
-    protected void setCache(MessageVO messageVO) {
-        String redisKey = RedisKeyUtil.getMessageOneToOneRedisKey(messageVO.getUserId(), messageVO.getToUserId());
-        String luaScript =
-                "redis.call('ZADD', KEYS[1], ARGV[1], ARGV[2]) " +
-                        "redis.call('EXPIRE', KEYS[1], ARGV[3])";
-
-        List<String> keys = Collections.singletonList(redisKey);
-        List<Object> args = Arrays.asList(
-                messageVO.getTimestamp(),
-                messageVO,
-                Duration.ofDays(7).getSeconds()
-        );
-
-        RedisScript<Void> redisScript = new DefaultRedisScript<>(luaScript, Void.class);
-        redisTemplate.execute(redisScript, keys, args.toArray());
-        log.info("[RemoteMessageConsumer] setCache {},redis缓存成功", messageVO);
     }
 
 }
