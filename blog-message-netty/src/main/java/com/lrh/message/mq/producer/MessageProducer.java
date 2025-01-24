@@ -6,6 +6,7 @@ import com.lrh.message.model.MessageModel;
 import com.lrh.message.netty.message.MessageDTO;
 import com.lrh.message.netty.message.MessageVO;
 import com.lrh.message.service.MessageService;
+import com.lrh.message.service.impl.ThreadPoolService;
 import com.lrh.message.utils.MessageUtil;
 import com.lrh.message.utils.NettyUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -38,10 +39,18 @@ public class MessageProducer {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-    public MessageProducer(MessageService messageService, RocketMQTemplate rocketMQTemplate, RedisTemplate<String, Object> redisTemplate) {
+    private final ThreadPoolService threadPoolService;
+
+    private final MessageProducer messageProducer;
+
+    public MessageProducer(MessageService messageService, RocketMQTemplate rocketMQTemplate,
+                           RedisTemplate<String, Object> redisTemplate, ThreadPoolService threadPoolService,
+                           MessageProducer messageProducer) {
         this.messageService = messageService;
         this.rocketMQTemplate = rocketMQTemplate;
         this.redisTemplate = redisTemplate;
+        this.threadPoolService = threadPoolService;
+        this.messageProducer = messageProducer;
     }
 
     public void syncSendMessage(MessageModel messageModel) {
@@ -60,6 +69,10 @@ public class MessageProducer {
             log.info("[MessageProducer] 用户不在线");
             MessageVO messageVO = MessageUtil.convertMessageDTOToMessageVO(messageDTO, MessageConstant.STATUS_OFFLINE);
             messageService.setCache(messageVO);
+            threadPoolService.submitTask(() -> {
+                MessageModel messageModel = MessageUtil.convertMessageDTOToMessageModel(messageDTO, MessageConstant.STATUS_OFFLINE);
+                messageProducer.syncSendMessage(messageModel);
+            });
             return;
         }
         if (Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(RedisKeyConstant.NETTY_SERVER_SET_KEY, address))) {
@@ -70,6 +83,10 @@ public class MessageProducer {
             log.info("[MessageProducer] 用户不在线:{}", messageDTO.getToUserId());
             MessageVO messageVO = MessageUtil.convertMessageDTOToMessageVO(messageDTO, MessageConstant.STATUS_OFFLINE);
             messageService.setCache(messageVO);
+            threadPoolService.submitTask(() -> {
+                MessageModel messageModel = MessageUtil.convertMessageDTOToMessageModel(messageDTO, MessageConstant.STATUS_OFFLINE);
+                messageProducer.syncSendMessage(messageModel);
+            });
         }
     }
 

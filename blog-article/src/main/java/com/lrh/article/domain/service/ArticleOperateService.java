@@ -113,21 +113,18 @@ public class ArticleOperateService {
     }
 
     public ArticleEntity getArticleById(ArticleQuery articleQuery) {
-        LockUtil lockUtil = new LockUtil(redissonClient);
-        return lockUtil.tryReadLock(String.format(RedisConstant.ARTICLE_LOCK, articleQuery.getArticleId()), () -> {
-            ArticlePO articlePO = articleRepository.getArticlesById(articleQuery.getArticleId());
-            if (articlePO == null) {
-                return null;
-            }
-            ArticleEntity articleEntity = ArticleEntity.fromPO(articlePO);
-            List<LabelPO> articleIdList = labelOperateRepository.selectLabelsByArticleId(articleQuery.getArticleId());
-            if (articleIdList == null) {
-                articleEntity.setLabelEntityList(new ArrayList<>());
-            } else {
-                articleEntity.setLabelEntityList(LabelConvertor.toListLabelEntityConvertor(articleIdList));
-            }
-            return articleEntity;
-        });
+        ArticlePO articlePO = articleRepository.getArticlesById(articleQuery.getArticleId());
+        if (articlePO == null) {
+            return null;
+        }
+        ArticleEntity articleEntity = ArticleEntity.fromPO(articlePO);
+        List<LabelPO> articleIdList = labelOperateRepository.selectLabelsByArticleId(articleQuery.getArticleId());
+        if (articleIdList == null) {
+            articleEntity.setLabelEntityList(new ArrayList<>());
+        } else {
+            articleEntity.setLabelEntityList(LabelConvertor.toListLabelEntityConvertor(articleIdList));
+        }
+        return articleEntity;
     }
 
     @Transactional(rollbackFor = Exception.class)

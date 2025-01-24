@@ -12,7 +12,6 @@ import com.lrh.message.netty.ChannelContext;
 import com.lrh.message.netty.message.MessageDTO;
 import com.lrh.message.netty.message.MessageHandler;
 import com.lrh.message.service.FriendService;
-import com.lrh.message.service.MessageService;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -49,16 +48,12 @@ public class WebSocketRequestHandler extends SimpleChannelInboundHandler<TextWeb
 
     private final FriendService friendService;
 
-    private final MessageService messageService;
-
     public WebSocketRequestHandler(AbstractStrategyChoose abstractStrategyChoose, MessageProducer messageProducer,
-                                   RedisTemplate<String, Object> redisTemplate,
-                                   FriendService friendService, MessageService messageService) {
+                                   RedisTemplate<String, Object> redisTemplate, FriendService friendService) {
         this.abstractStrategyChoose = abstractStrategyChoose;
         this.messageProducer = messageProducer;
         this.redisTemplate = redisTemplate;
         this.friendService = friendService;
-        this.messageService = messageService;
     }
 
 

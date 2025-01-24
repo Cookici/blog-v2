@@ -48,7 +48,7 @@ public class CommentApplicationService {
         query.valid();
         Long total = commentOperateService.countCommentsPage(query);
         if (total == null || total == 0L) {
-            return null;
+            return new PageDTO<>();
         }
 
         //获取top的CommentEntity
@@ -72,7 +72,7 @@ public class CommentApplicationService {
         query.valid();
         Long total = commentOperateService.countChildCommentsPage(query);
         if (total == null || total == 0L) {
-            return null;
+            return new PageDTO<>();
         }
 
         List<CommentEntity> commentEntityList = commentOperateService.getChildCommentsPage(query);
