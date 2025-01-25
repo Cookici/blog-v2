@@ -41,16 +41,12 @@ public class MessageProducer {
 
     private final ThreadPoolService threadPoolService;
 
-    private final MessageProducer messageProducer;
-
     public MessageProducer(MessageService messageService, RocketMQTemplate rocketMQTemplate,
-                           RedisTemplate<String, Object> redisTemplate, ThreadPoolService threadPoolService,
-                           MessageProducer messageProducer) {
+                           RedisTemplate<String, Object> redisTemplate, ThreadPoolService threadPoolService) {
         this.messageService = messageService;
         this.rocketMQTemplate = rocketMQTemplate;
         this.redisTemplate = redisTemplate;
         this.threadPoolService = threadPoolService;
-        this.messageProducer = messageProducer;
     }
 
     public void syncSendMessage(MessageModel messageModel) {
@@ -71,7 +67,7 @@ public class MessageProducer {
             messageService.setCache(messageVO);
             threadPoolService.submitTask(() -> {
                 MessageModel messageModel = MessageUtil.convertMessageDTOToMessageModel(messageDTO, MessageConstant.STATUS_OFFLINE);
-                messageProducer.syncSendMessage(messageModel);
+                syncSendMessage(messageModel);
             });
             return;
         }
@@ -85,7 +81,7 @@ public class MessageProducer {
             messageService.setCache(messageVO);
             threadPoolService.submitTask(() -> {
                 MessageModel messageModel = MessageUtil.convertMessageDTOToMessageModel(messageDTO, MessageConstant.STATUS_OFFLINE);
-                messageProducer.syncSendMessage(messageModel);
+                syncSendMessage(messageModel);
             });
         }
     }
