@@ -11,6 +11,7 @@ import com.lrh.message.constants.MessageConstant;
 import com.lrh.message.dto.MessageReqDTO;
 import com.lrh.message.dto.PageDTO;
 import com.lrh.message.dto.req.MessageChangeStatusReq;
+import com.lrh.message.dto.req.MessageGetOfflineReq;
 import com.lrh.message.dto.req.MessagePageReq;
 import com.lrh.message.mapper.MessageMapper;
 import com.lrh.message.model.MessageModel;
@@ -139,11 +140,11 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, MessageModel>
 
         LambdaQueryWrapper<MessageModel> queryWrapper = Wrappers.lambdaQuery(MessageModel.class)
                 .and(wrapper -> wrapper
-                       .eq(MessageModel::getUserId, userId)
-                       .eq(MessageModel::getToUserId, friendId)
-                       .or()
-                       .eq(MessageModel::getUserId, friendId)
-                       .eq(MessageModel::getToUserId, userId))
+                        .eq(MessageModel::getUserId, userId)
+                        .eq(MessageModel::getToUserId, friendId)
+                        .or()
+                        .eq(MessageModel::getUserId, friendId)
+                        .eq(MessageModel::getToUserId, userId))
                 .eq(MessageModel::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
                 .orderByDesc(MessageModel::getTimestamp)
                 .last("limit 1");
@@ -192,6 +193,30 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, MessageModel>
                 .set(MessageModel::getMessageStatus, MessageConstant.STATUS_ONLINE);
 
         messageMapper.update(updateWrapper);
+    }
+
+    @Override
+    public Map<String, Long> getOfflineMessageCount(MessageGetOfflineReq req) {
+        if (!req.getUserId().equals(UserContext.getUserId())) {
+            throw new RuntimeException("非法请求");
+        }
+        if (req.getUserIds() == null || req.getUserIds().isEmpty()) {
+            throw new RuntimeException("非法请求");
+        }
+        LambdaQueryWrapper<MessageModel> queryWrapper = Wrappers.lambdaQuery(MessageModel.class)
+                .in(MessageModel::getUserId, req.getUserIds())
+                .eq(MessageModel::getToUserId, UserContext.getUserId())
+                .eq(MessageModel::getMessageStatus, MessageConstant.STATUS_OFFLINE)
+                .eq(MessageModel::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
+
+        List<MessageModel> messageModelList = messageMapper.selectList(queryWrapper);
+        Map<String, Long> result = new HashMap<>();
+        for (MessageModel messageModel : messageModelList) {
+            String userId = messageModel.getUserId();
+            result.put(userId, result.getOrDefault(userId, 0L) + 1);
+        }
+
+        return result;
     }
 
 
