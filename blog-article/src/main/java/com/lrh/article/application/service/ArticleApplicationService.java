@@ -19,6 +19,7 @@ import com.lrh.common.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -88,11 +89,11 @@ public class ArticleApplicationService {
 
 
         return PageDTO.<ArticleDTO>builder()
-                .page(query.getPage())
-                .total(total)
-                .pageSize(query.getPageSize())
-                .data(articleDTOList).
-                build();
+                      .page(query.getPage())
+                      .total(total)
+                      .pageSize(query.getPageSize())
+                      .data(articleDTOList).
+                      build();
     }
 
     public ArticleDTO getArticleById(ArticleQuery query) {
@@ -203,11 +204,48 @@ public class ArticleApplicationService {
 
 
         return PageDTO.<ArticleDTO>builder()
-                .page(query.getPage())
-                .total(total)
-                .pageSize(query.getPageSize())
-                .data(articleDTOList).
-                build();
+                      .page(query.getPage())
+                      .total(total)
+                      .pageSize(query.getPageSize())
+                      .data(articleDTOList).
+                      build();
+    }
+
+    public PageDTO<ArticleDTO> listQueryArticles(ArticleListQuery query) {
+        query.valid();
+        Page<ArticleEntity> articleEntityPage = articleOperateService.queryListArticle(query);
+        List<ArticleEntity> articleEntityList = articleEntityPage.getContent();
+        List<String> userIds = articleEntityList.stream().map(ArticleEntity::getUserId).collect(Collectors.toList());
+
+        Result<Map<String, UserVO>> userList = userClient.getByIds(userIds);
+        Map<String, UserVO> userIdForUser = userList.getData();
+        List<ArticleDTO> articleDTOList = new ArrayList<>();
+        articleEntityList.forEach(articleEntity -> {
+                    UserVO userVO = userIdForUser.get(articleEntity.getUserId());
+                    if (userVO != null) {
+                        articleDTOList.add(ArticleDTO.fromEntity(articleEntity, null));
+                    }
+                }
+        );
+
+        List<String> articleIds = articleEntityList.stream().map(ArticleEntity::getArticleId).collect(Collectors.toList());
+        Map<String, Long> articleLikeCountBatch = articleCacheRepository.getArticleLikeCountBatch(articleIds);
+        Map<String, Long> articleViewCountBatch = articleCacheRepository.getArticleViewCountBatch(articleIds);
+
+        articleDTOList.forEach(articleDTO -> {
+            Long likeCount = articleLikeCountBatch.getOrDefault(articleDTO.getArticleId(), 0L);
+            Long viewCount = articleViewCountBatch.getOrDefault(articleDTO.getArticleId(), 0L);
+            articleDTO.setLikeCount(likeCount);
+            articleDTO.setViewCount(viewCount);
+        });
+
+
+        return PageDTO.<ArticleDTO>builder()
+                      .page(query.getPage())
+                      .total(articleEntityPage.getTotalElements())
+                      .pageSize(query.getPageSize())
+                      .data(articleDTOList).
+                      build();
     }
 
 }
