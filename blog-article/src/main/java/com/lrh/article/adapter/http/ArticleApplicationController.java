@@ -88,8 +88,7 @@ public class ArticleApplicationController {
 
     @GetMapping("/userArticleData")
     public Result<UserDataDTO> getUserArticleData() {
-        UserDataDTO userArticleDataDTO =
-                articleApplicationService.articlesDataByUserId();
+        UserDataDTO userArticleDataDTO = articleApplicationService.articlesDataByUserId();
         return Result.success(userArticleDataDTO);
     }
 
@@ -99,5 +98,11 @@ public class ArticleApplicationController {
         return Result.success(resp);
     }
 
+
+    @GetMapping("/list")
+    public Result<Object> listQueryArticle(ArticleListQuery query) {
+        PageDTO<ArticleDTO> resp = articleApplicationService.listQueryArticles(query);
+        return Result.success(resp);
+    }
 
 }
