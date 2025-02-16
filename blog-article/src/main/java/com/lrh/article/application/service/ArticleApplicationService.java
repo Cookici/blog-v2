@@ -8,6 +8,7 @@ import com.lrh.article.constants.RedisConstant;
 import com.lrh.article.domain.entity.ArticleEntity;
 import com.lrh.article.domain.entity.UserArticleDataEntity;
 import com.lrh.article.domain.repository.ArticleCacheRepository;
+import com.lrh.article.domain.repository.ArticleLikeRepository;
 import com.lrh.article.domain.service.ArticleOperateService;
 import com.lrh.article.domain.service.CommentOperateService;
 import com.lrh.article.domain.vo.UserVO;
@@ -18,8 +19,8 @@ import com.lrh.common.context.UserContext;
 import com.lrh.common.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
-import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,16 +44,20 @@ public class ArticleApplicationService {
     private final CommentOperateService commentOperateService;
     private final UserClient userClient;
     private final MessageNettyClient messageNettyClient;
-    private RedissonClient redissonClient;
+    private final RedissonClient redissonClient;
+    private final ArticleLikeRepository articleLikeRepository;
 
     public ArticleApplicationService(ArticleOperateService articleOperateService, ArticleCacheRepository articleCacheRepository,
                                      CommentOperateService commentOperateService, UserClient userClient,
-                                     MessageNettyClient messageNettyClient) {
+                                     MessageNettyClient messageNettyClient, RedissonClient redissonClient,
+                                     ArticleLikeRepository articleLikeRepository) {
         this.articleOperateService = articleOperateService;
         this.articleCacheRepository = articleCacheRepository;
         this.commentOperateService = commentOperateService;
         this.userClient = userClient;
         this.messageNettyClient = messageNettyClient;
+        this.redissonClient = redissonClient;
+        this.articleLikeRepository = articleLikeRepository;
     }
 
     public PageDTO<ArticleDTO> pageArticles(ArticlePageQuery query) {
@@ -89,11 +94,11 @@ public class ArticleApplicationService {
 
 
         return PageDTO.<ArticleDTO>builder()
-                      .page(query.getPage())
-                      .total(total)
-                      .pageSize(query.getPageSize())
-                      .data(articleDTOList).
-                      build();
+                .page(query.getPage())
+                .total(total)
+                .pageSize(query.getPageSize())
+                .data(articleDTOList).
+                build();
     }
 
     public ArticleDTO getArticleById(ArticleQuery query) {
@@ -204,11 +209,11 @@ public class ArticleApplicationService {
 
 
         return PageDTO.<ArticleDTO>builder()
-                      .page(query.getPage())
-                      .total(total)
-                      .pageSize(query.getPageSize())
-                      .data(articleDTOList).
-                      build();
+                .page(query.getPage())
+                .total(total)
+                .pageSize(query.getPageSize())
+                .data(articleDTOList).
+                build();
     }
 
     public PageDTO<ArticleDTO> listQueryArticles(ArticleListQuery query) {
@@ -241,11 +246,27 @@ public class ArticleApplicationService {
 
 
         return PageDTO.<ArticleDTO>builder()
-                      .page(query.getPage())
-                      .total(articleEntityPage.getTotalElements())
-                      .pageSize(query.getPageSize())
-                      .data(articleDTOList).
-                      build();
+                .page(query.getPage())
+                .total(articleEntityPage.getTotalElements())
+                .pageSize(query.getPageSize())
+                .data(articleDTOList).
+                build();
     }
 
+    public void deleteLike(ArticleDeleteLikeCommand command) {
+        command.valid();
+        articleOperateService.deleteArticleLike(command.getArticleId(), UserContext.getUserId());
+    }
+
+    public PageDTO<ArticleDTO> recommendArticles(ArticleRecommendQuery query) {
+        query.valid();
+        String userId = UserContext.getUserId();
+        return new PageDTO<>();
+    }
+
+    public PageDTO<ArticleDTO> likeArticles(ArticleLikePageQuery query) {
+        query.valid();
+        String userId = UserContext.getUserId();
+        return new PageDTO<>();
+    }
 }

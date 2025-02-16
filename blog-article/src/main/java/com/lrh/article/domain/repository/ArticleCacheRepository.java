@@ -16,7 +16,7 @@ public interface ArticleCacheRepository {
 
     void incrArticleViewCount(String articleId,String ukId);
 
-    void incrArticleLikeCount(String articleId, String ukId);
+    Boolean incrArticleLikeCount(String articleId, String ukId);
 
     Long getArticleLikeCount(String articleId);
 
@@ -27,4 +27,6 @@ public interface ArticleCacheRepository {
     Map<String,Long> getArticleViewCountBatch(List<String> articleId);
 
     void deleteArticleCache(String articleId);
+
+    Boolean deleteArticleLike(String articleId,String ukId);
 }

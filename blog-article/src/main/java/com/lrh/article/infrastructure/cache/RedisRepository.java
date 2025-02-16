@@ -4,11 +4,10 @@ import com.lrh.article.constants.RedisConstant;
 import com.lrh.article.domain.repository.ArticleCacheRepository;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @ProjectName: blog-v2
@@ -34,8 +33,8 @@ public class RedisRepository implements ArticleCacheRepository {
     }
 
     @Override
-    public void incrArticleLikeCount(String articleId, String ukId) {
-        redisTemplate.opsForHash().increment(String.format(RedisConstant.ARTICLE_LIKE, articleId), ukId, 1);
+    public Boolean incrArticleLikeCount(String articleId, String ukId) {
+        return redisTemplate.opsForHash().putIfAbsent(String.format(RedisConstant.ARTICLE_LIKE, articleId), ukId, 1);
     }
 
     @Override
@@ -90,5 +89,23 @@ public class RedisRepository implements ArticleCacheRepository {
     public void deleteArticleCache(String articleId) {
         redisTemplate.delete(String.format(RedisConstant.ARTICLE_VIEW, articleId));
         redisTemplate.delete(String.format(RedisConstant.ARTICLE_LIKE, articleId));
+    }
+
+    @Override
+    public Boolean deleteArticleLike(String articleId, String ukId) {
+        String key = String.format(RedisConstant.ARTICLE_LIKE, articleId);
+        String luaScript =
+                "if redis.call('HEXISTS', KEYS[1], ARGV[1]) == 1 then " +
+                        "   return redis.call('HDEL', KEYS[1], ARGV[1]); " +
+                        "else " +
+                        "   return 0; " +
+                        "end";
+        List<String> keys = Collections.singletonList(key);
+        Long result = redisTemplate.execute(
+                new DefaultRedisScript<>(luaScript, Long.class),
+                keys,
+                ukId
+        );
+        return result == 1;
     }
 }

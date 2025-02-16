@@ -3,6 +3,7 @@ package com.lrh.article.infrastructure.database.repository;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.lrh.article.application.cqe.article.ArticleLikePageQuery;
 import com.lrh.article.application.cqe.article.ArticleListQuery;
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
 import com.lrh.article.application.cqe.article.ArticleUserPageQuery;

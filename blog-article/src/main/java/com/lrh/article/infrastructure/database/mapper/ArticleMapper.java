@@ -1,6 +1,7 @@
 package com.lrh.article.infrastructure.database.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.lrh.article.application.cqe.article.ArticleLikePageQuery;
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
 import com.lrh.article.application.cqe.article.ArticleUserPageQuery;
 import com.lrh.article.infrastructure.po.ArticlePO;
@@ -30,4 +31,6 @@ public interface ArticleMapper extends BaseMapper<ArticlePO> {
     List<ArticlePO> selectUserPageArticle(@Param("query") ArticleUserPageQuery query,
                                           @Param("offset") Long offset,
                                           @Param("limit") Long limit);
+
+    Long selectUserLikeCountPage(@Param("query") ArticleLikePageQuery query);
 }

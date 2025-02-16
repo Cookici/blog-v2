@@ -98,6 +98,24 @@ public class ArticleApplicationController {
         return Result.success(resp);
     }
 
+    @PostMapping("/like/delete")
+    public Result<Object> deleteLike(@RequestBody ArticleDeleteLikeCommand command) {
+        articleApplicationService.deleteLike(command);
+        return Result.success();
+    }
+
+    @GetMapping("/recommend")
+    public Result<PageDTO<ArticleDTO>> pageRecommendArticle(ArticleRecommendQuery query) {
+        PageDTO<ArticleDTO> resp = articleApplicationService.recommendArticles(query);
+        return Result.success(resp);
+    }
+
+    @GetMapping("/like/page")
+    public Result<PageDTO<ArticleDTO>> pageLikeArticle(ArticleLikePageQuery query) {
+        PageDTO<ArticleDTO> resp = articleApplicationService.likeArticles(query);
+        return Result.success(resp);
+    }
+
 
     @GetMapping("/list")
     public Result<Object> listQueryArticle(ArticleListQuery query) {

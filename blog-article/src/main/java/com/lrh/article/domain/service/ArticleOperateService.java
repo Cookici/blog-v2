@@ -16,10 +16,10 @@ import com.lrh.article.util.LockUtil;
 import com.lrh.common.context.UserContext;
 import com.lrh.common.util.IdUtil;
 import org.redisson.api.RedissonClient;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -39,15 +39,18 @@ public class ArticleOperateService {
     private final LabelOperateRepository labelOperateRepository;
     private final CommentOperateRepository commentOperateRepository;
     private final ArticleCacheRepository articleCacheRepository;
+    private final ArticleLikeRepository articleLikeRepository;
     private final RedissonClient redissonClient;
 
     public ArticleOperateService(ArticleOperateRepository articleRepository, ArticleLabelOperateRepository articleLabelOperateRepository,
-                                 LabelOperateRepository labelOperateRepository, CommentOperateRepository commentOperateRepository, ArticleCacheRepository articleCacheRepository, RedissonClient redissonClient) {
+                                 LabelOperateRepository labelOperateRepository, CommentOperateRepository commentOperateRepository,
+                                 ArticleCacheRepository articleCacheRepository, ArticleLikeRepository articleLikeRepository, RedissonClient redissonClient) {
         this.articleRepository = articleRepository;
         this.articleLabelOperateRepository = articleLabelOperateRepository;
         this.labelOperateRepository = labelOperateRepository;
         this.commentOperateRepository = commentOperateRepository;
         this.articleCacheRepository = articleCacheRepository;
+        this.articleLikeRepository = articleLikeRepository;
         this.redissonClient = redissonClient;
     }
 
@@ -187,7 +190,15 @@ public class ArticleOperateService {
     }
 
     public void articleLikeIncrement(ArticleLikeCommand command) {
-        articleCacheRepository.incrArticleLikeCount(command.getArticleId(), UserContext.getUserId());
+        Boolean isSuccess = articleCacheRepository.incrArticleLikeCount(command.getArticleId(), UserContext.getUserId());
+        if (isSuccess) {
+            try {
+                articleLikeRepository.incrArticleLikeCount(command.getArticleId(), UserContext.getUserId());
+            } catch (Exception e) {
+                articleCacheRepository.deleteArticleLike(command.getArticleId(), UserContext.getUserId());
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public void articleNoLoginViewIncrement(ArticleNoLoginViewCommand command) {
@@ -238,6 +249,9 @@ public class ArticleOperateService {
     }
 
     public Map<String, ArticleEntity> getArticleByIds(List<String> articleIdList) {
+        if(articleIdList.isEmpty()){
+            return new HashMap<>();
+        }
         List<ArticlePO> articlePOList = articleRepository.getArticleByIds(articleIdList);
         Map<String, ArticleEntity> articleMap = new HashMap<>();
         for (ArticlePO articlePO : articlePOList) {
@@ -253,16 +267,28 @@ public class ArticleOperateService {
 
         // 将 ArticleDO 转换为 ArticleEntity
         List<ArticleEntity> articleEntityList = articleDOPage.getContent().stream()
-                                                             .map(ArticleDO::toArticleEntity)  // 使用 map 进行转换
-                                                             .collect(Collectors.toList());   // 收集成 List
+                .map(ArticleDO::toArticleEntity)
+                .collect(Collectors.toList());
 
         // 创建 PageImpl 并传递原始的 Pageable 和总数
-        return  new PageImpl<>(
+        return new PageImpl<>(
                 articleEntityList,
-                articleDOPage.getPageable(),  // 传递分页信息
-                articleDOPage.getTotalElements()  // 传递总元素数量
+                articleDOPage.getPageable(),
+                articleDOPage.getTotalElements()
         );
 
+    }
+
+    public void deleteArticleLike(String articleId, String userId) {
+        Boolean isSuccess = articleCacheRepository.deleteArticleLike(articleId, userId);
+        if (isSuccess) {
+            try {
+                articleLikeRepository.deleteArticleLike(articleId, userId);
+            } catch (Exception e) {
+                articleCacheRepository.incrArticleLikeCount(articleId, userId);
+                throw new RuntimeException(e);
+            }
+        }
     }
 
 }
