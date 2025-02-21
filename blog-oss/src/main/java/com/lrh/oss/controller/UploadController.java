@@ -41,6 +41,7 @@ public class UploadController {
 
     @GetMapping("/text/sensing")
     public Result<TextSensingResp> textSensing(TextSensingReq req) throws Exception {
+        System.out.println("oss开始检测");
         TextSensingCmd cmd = new TextSensingCmd(req);
         TextSensingResp resp = baiDuTextSensingService.detectSensitiveWords(cmd);
         return Result.success(resp);

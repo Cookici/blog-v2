@@ -48,6 +48,9 @@ public class ArticlePO {
     @TableField("update_time")
     private LocalDateTime updateTime;
 
+    @TableField("status")
+    private String status;
+
     @TableField("is_deleted")
     private Integer isDeleted;
 }

@@ -1,6 +1,7 @@
 package com.lrh.article.infrastructure.doc;
 
 import com.lrh.article.domain.entity.ArticleEntity;
+import com.lrh.article.domain.entity.LabelEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,6 +12,8 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.time.LocalDateTime;
+import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -59,6 +62,25 @@ public class ArticleDO {
         articleEntity.setUserId(userId);
         articleEntity.setLabelEntityList(labels.stream().map(LabelDO::toLabelEntity).collect(Collectors.toList()));
         return articleEntity;
+    }
+
+    public static ArticleDO fromArticleEntity(ArticleEntity articleEntity) {
+        ArticleDO articleDO = new ArticleDO();
+        articleDO.setArticleId(articleEntity.getArticleId());
+        articleDO.setArticleTitle(articleEntity.getArticleTitle());
+        articleDO.setArticleContent(articleEntity.getArticleContent());
+        articleDO.setCreateTime(articleEntity.getCreateTime());
+        articleDO.setUpdateTime(articleEntity.getUpdateTime());
+        articleDO.setUserId(articleEntity.getUserId());
+        List<LabelDO> labelDOList = articleEntity.getLabelEntityList().stream()
+                                                 .map(v -> LabelDO.builder()
+                                                                  .labelId(v.getLabelId())
+                                                                  .labelName(v.getLabelName())
+                                                                  .build())
+                                                 .collect(Collectors.toList());
+
+        articleDO.setLabels(labelDOList);
+        return articleDO;
     }
 
 }

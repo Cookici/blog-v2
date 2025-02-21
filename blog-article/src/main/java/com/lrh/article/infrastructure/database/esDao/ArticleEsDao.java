@@ -9,6 +9,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.domain.PageImpl;  // 用来转换成 Page
@@ -58,7 +60,9 @@ public class ArticleEsDao {
         elasticsearchRestTemplate.save(article);
     }
 
-    public void deleteArticleDo(ArticleDO article) {
-        elasticsearchRestTemplate.delete(article);
+    public void deleteArticleById(String articleId) {
+        Criteria criteria = new Criteria("articleId").is(articleId);
+        CriteriaQuery deleteQuery = new CriteriaQuery(criteria);
+        elasticsearchRestTemplate.delete(deleteQuery, ArticleDO.class);
     }
 }

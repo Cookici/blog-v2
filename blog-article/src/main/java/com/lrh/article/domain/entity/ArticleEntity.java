@@ -1,5 +1,6 @@
 package com.lrh.article.domain.entity;
 
+import com.lrh.article.infrastructure.doc.ArticleDO;
 import com.lrh.article.infrastructure.po.ArticlePO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,6 +25,7 @@ import java.util.List;
 public class ArticleEntity {
     private String articleId;
     private String userId;
+    private String status;
     private String articleTitle;
     private String articleContent;
     private LocalDateTime createTime;
@@ -42,6 +44,7 @@ public class ArticleEntity {
                 .articleContent(articlePO.getArticleContent())
                 .createTime(articlePO.getCreateTime())
                 .updateTime(articlePO.getUpdateTime())
+                .status(articlePO.getStatus())
                 .build();
     }
 }

@@ -33,6 +33,8 @@ public class ArticleDTO {
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 
+    private String status;
+
     private UserVO userInfo;
 
     private List<LabelDTO> labels;
@@ -52,6 +54,7 @@ public class ArticleDTO {
                 .createTime(articleEntity.getCreateTime())
                 .updateTime(articleEntity.getUpdateTime())
                 .userInfo(userVO)
+                .status(articleEntity.getStatus())
                 .labels(LabelDTO.fromEntityList(articleEntity.getLabelEntityList()))
                 .build();
     }

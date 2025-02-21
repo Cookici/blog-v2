@@ -6,6 +6,7 @@ import com.lrh.article.application.cqe.article.ArticleUserPageQuery;
 import com.lrh.article.infrastructure.po.ArticlePO;
 import org.springframework.data.domain.Page;
 import com.lrh.article.infrastructure.doc.ArticleDO;
+
 import java.util.List;
 
 /**
@@ -26,7 +27,9 @@ public interface ArticleOperateRepository {
 
     Integer deleteArticleById(String articleId);
 
-    void updateArticleById(String articleId, String articleTitle, String articleContent);
+    Integer updateArticleSatusById(String articleId, String status);
+
+    void updateArticleById(String articleId, String articleTitle, String articleContent, String status);
 
     void insertArticle(ArticlePO articlePO);
 
@@ -40,4 +43,8 @@ public interface ArticleOperateRepository {
 
 
     Page<ArticleDO> findArticleListByQuery(ArticleListQuery query);
+
+    void deleteEsById(String articleId);
+
+    void saveArticleDo(ArticleDO articleDO);
 }

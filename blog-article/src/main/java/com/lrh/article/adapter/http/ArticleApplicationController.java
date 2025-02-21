@@ -5,6 +5,7 @@ import com.lrh.article.application.dto.PageDTO;
 import com.lrh.article.application.dto.UserDataDTO;
 import com.lrh.article.application.dto.article.ArticleDTO;
 import com.lrh.article.application.service.ArticleApplicationService;
+import com.lrh.article.infrastructure.client.OssClient;
 import com.lrh.common.result.Result;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,8 +25,10 @@ public class ArticleApplicationController {
 
     private final ArticleApplicationService articleApplicationService;
 
-    public ArticleApplicationController(ArticleApplicationService articleApplicationService) {
+    private final OssClient ossClient;
+    public ArticleApplicationController(ArticleApplicationService articleApplicationService, OssClient ossClient) {
         this.articleApplicationService = articleApplicationService;
+        this.ossClient = ossClient;
     }
 
     @GetMapping("/get/{articleId}")
