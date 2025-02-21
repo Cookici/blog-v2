@@ -1,5 +1,6 @@
 package com.lrh.article.infrastructure.database.repository;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.lrh.article.domain.repository.ArticleLabelOperateRepository;
@@ -30,6 +31,14 @@ public class ArticleLabelRepositoryImpl implements ArticleLabelOperateRepository
     public List<ArticleLabelPO> getArticleLabelListByArticles(List<String> articleIdList) {
         List<ArticleLabelPO> articleLabelPOList = articleLabelMapper.getArticleLabelListByArticles(articleIdList);
         return articleLabelPOList;
+    }
+
+    @Override
+    public List<ArticleLabelPO> getArticleLabelListByLabelIds(List<String> labelIdList) {
+        LambdaQueryWrapper<ArticleLabelPO> lambdaQueryWrapper = Wrappers.lambdaQuery(ArticleLabelPO.class)
+                .in(ArticleLabelPO::getLabelId, labelIdList)
+                .eq(ArticleLabelPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
+        return articleLabelMapper.selectList(lambdaQueryWrapper);
     }
 
     @Override

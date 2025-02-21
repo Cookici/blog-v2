@@ -28,7 +28,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
-            <version>2.6.13</version>  <!-- 根据你的 Spring Boot 版本选择合适的版本 -->
         </dependency>
         <dependency>
             <groupId>org.jetbrains</groupId>

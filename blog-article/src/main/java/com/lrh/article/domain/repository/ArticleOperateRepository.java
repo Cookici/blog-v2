@@ -3,9 +3,9 @@ package com.lrh.article.domain.repository;
 import com.lrh.article.application.cqe.article.ArticleListQuery;
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
 import com.lrh.article.application.cqe.article.ArticleUserPageQuery;
+import com.lrh.article.infrastructure.doc.ArticleDO;
 import com.lrh.article.infrastructure.po.ArticlePO;
 import org.springframework.data.domain.Page;
-import com.lrh.article.infrastructure.doc.ArticleDO;
 
 import java.util.List;
 
