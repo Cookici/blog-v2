@@ -10,5 +10,5 @@ import org.springframework.web.bind.annotation.RequestParam;
 @FeignClient(name = "blog-oss")
 public interface OssClient {
     @GetMapping("/api/oss/file/text/sensing")
-    Result<TextSensingDTO> getByIds(@RequestParam("text") String text);
+    Result<TextSensingDTO> textSensing(@RequestParam("text") String text);
 }

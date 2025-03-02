@@ -20,7 +20,23 @@ spring:
     host: cd-crs-0q0ceb8t.sql.tencentcdb.com
     port: 29577
     password: lrh,903.520hhhh
-
+rocketmq:
+  name-server: localhost:9876
+  producer:
+    #生产者组名
+    group: article-group
+    topic: article-topic
+    #消息发送的超时时间，毫米级别，默认为3S
+    send-message-timeout: 60000
+    #最大的消息限制 默认为128K
+    max-message-size: 4194304
+    #同步消息发送失败重试次数
+    retry-times-when-send-failed: 3
+    #异步消息发送失败重试的次数
+    retry-times-when-send-async-failed: 3
+  consumer:
+    group: article-group
+    topic: article-topic
 mybatis-plus:
   mapper-locations: classpath*:xml/*.xml
   configuration:

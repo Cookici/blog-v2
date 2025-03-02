@@ -50,7 +50,7 @@ public class ElasticsearchConfig {
         return new RestHighLevelClient(builder);
     }
 
-    @Bean
+    @Bean(name = "elasticsearchTemplate")
     public ElasticsearchRestTemplate elasticsearchRestTemplate() {
         return new ElasticsearchRestTemplate(client());
     }

@@ -1,5 +1,6 @@
 package com.lrh.article.domain.repository;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lrh.article.application.cqe.article.ArticleListQuery;
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
 import com.lrh.article.application.cqe.article.ArticleUserPageQuery;
@@ -27,7 +28,9 @@ public interface ArticleOperateRepository {
 
     Integer deleteArticleById(String articleId);
 
-    void updateArticleById(String articleId, String articleTitle, String articleContent);
+    Integer updateArticleSatusById(String articleId, String status);
+
+    void updateArticleById(String articleId, String articleTitle, String articleContent, String status);
 
     void insertArticle(ArticlePO articlePO);
 
@@ -41,4 +44,8 @@ public interface ArticleOperateRepository {
 
 
     Page<ArticleDO> findArticleListByQuery(ArticleListQuery query);
+
+    void deleteEsById(String articleId);
+
+    void saveArticleDo(ArticleDO articleDO);
 }

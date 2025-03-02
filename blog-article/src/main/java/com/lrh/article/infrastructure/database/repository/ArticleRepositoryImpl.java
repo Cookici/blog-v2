@@ -3,6 +3,7 @@ package com.lrh.article.infrastructure.database.repository;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lrh.article.application.cqe.article.ArticleLikePageQuery;
 import com.lrh.article.application.cqe.article.ArticleListQuery;
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
@@ -67,7 +68,17 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
     }
 
     @Override
-    public void updateArticleById(String articleId, String articleTitle, String articleContent) {
+    public Integer updateArticleSatusById(String articleId, String status) {
+        LambdaUpdateWrapper<ArticlePO> updateWrapper = Wrappers.lambdaUpdate(ArticlePO.class)
+                .eq(ArticlePO::getArticleId, articleId)
+                .eq(ArticlePO::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
+                .set(ArticlePO::getStatus, status);
+
+        return  articleMapper.update(updateWrapper);
+    }
+
+    @Override
+    public void updateArticleById(String articleId, String articleTitle, String articleContent,String status) {
         if (articleTitle == null && articleContent == null) {
             return;
         }
@@ -80,8 +91,12 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
         if (articleContent != null) {
             updateWrapper.set(ArticlePO::getArticleContent, articleContent);
         }
+        if (status != null) {
+            updateWrapper.set(ArticlePO::getStatus, status);
+        }
         articleMapper.update(updateWrapper);
     }
+
 
     @Override
     public void insertArticle(ArticlePO articlePO) {
@@ -117,5 +132,15 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
     @Override
     public  Page<ArticleDO> findArticleListByQuery(ArticleListQuery query){
         return articleEsDao.searchArticles(query);
+    }
+
+    @Override
+    public void deleteEsById(String articleId) {
+        articleEsDao.deleteArticleById(articleId);
+    }
+
+    @Override
+    public void saveArticleDo(ArticleDO articleDO)  {
+        articleEsDao.saveArticleDo(articleDO);
     }
 }
