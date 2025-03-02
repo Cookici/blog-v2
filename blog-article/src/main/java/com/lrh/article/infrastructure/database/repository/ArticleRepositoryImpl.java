@@ -3,6 +3,7 @@ package com.lrh.article.infrastructure.database.repository;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lrh.article.application.cqe.article.ArticleLikePageQuery;
 import com.lrh.article.application.cqe.article.ArticleListQuery;
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
@@ -139,7 +140,7 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
     }
 
     @Override
-    public void saveArticleDo(ArticleDO articleDO) {
+    public void saveArticleDo(ArticleDO articleDO)  {
         articleEsDao.saveArticleDo(articleDO);
     }
 }

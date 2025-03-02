@@ -1,7 +1,6 @@
 package com.lrh.article.domain.service;
 
 import com.lrh.article.application.cqe.article.*;
-import com.lrh.article.application.dto.TextSensingDTO;
 import com.lrh.article.constants.RedisConstant;
 import com.lrh.article.domain.entity.ArticleEntity;
 import com.lrh.article.domain.entity.LabelEntity;
@@ -18,7 +17,6 @@ import com.lrh.article.infrastructure.po.LabelPO;
 import com.lrh.article.util.LockUtil;
 import com.lrh.common.annotations.ArticleSyncRecords;
 import com.lrh.common.context.UserContext;
-import com.lrh.common.result.Result;
 import com.lrh.common.util.IdUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
@@ -55,7 +53,7 @@ public class ArticleOperateService {
     public ArticleOperateService(ArticleOperateRepository articleRepository, ArticleLabelOperateRepository articleLabelOperateRepository,
                                  LabelOperateRepository labelOperateRepository,
                                  OssClient ossClient,
-                               CommentOperateRepository commentOperateRepository,
+                                 CommentOperateRepository commentOperateRepository,
                                  ArticleCacheRepository articleCacheRepository, ArticleLikeRepository articleLikeRepository, RedissonClient redissonClient) {
 
         this.articleRepository = articleRepository;
@@ -155,36 +153,22 @@ public class ArticleOperateService {
         if (articleEntity == null) {
             return;
         }
-        if (articleEntity.getStatus().equals(Deleted.getStatus())) {
-            articleRepository.deleteEsById(articleId);
-            // TODO mysql怎么删除
-            return;
-        }
-        log.info("开始检测");
-//        Result<TextSensingDTO> result = ossClient.textSensing(articleEntity.getArticleContent());
-        log.info("检测成功");
-//        TextSensingDTO textSensingDTO = result.getData();
-
-
+        // TODO 内容检测
         articleRepository.updateArticleSatusById(articleId, Published.getStatus());
         ArticleDO articleDO = ArticleDO.fromArticleEntity(articleEntity);
         articleRepository.saveArticleDo(articleDO);
-
+        log.info("消费成功");
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void deleteArticleById(ArticleDeleteCommand command) {
+    @ArticleSyncRecords
+    public ArticleMessageVO deleteArticleById(ArticleDeleteCommand command) {
         validExceptionOperate(command.getArticleId(), command.getUserId());
         LockUtil lockUtil = new LockUtil(redissonClient);
         lockUtil.tryWriteLock(String.format(RedisConstant.ARTICLE_LOCK, command.getArticleId()), () -> {
-            articleLabelOperateRepository.deleteLabelForArticle(command.getArticleId());
-            Integer update = articleRepository.deleteArticleById(command.getArticleId());
-            if (update == null || update == 0) {
-                return;
-            }
-            commentOperateRepository.deleteCommentsByArticle(command.getArticleId());
-            articleCacheRepository.deleteArticleCache(command.getArticleId());
+            articleRepository.updateArticleSatusById(command.getArticleId(), Deleted.getStatus());
         });
+        return new ArticleMessageVO(command.getArticleId(), Deleted);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -226,7 +210,7 @@ public class ArticleOperateService {
             articleLabelOperateRepository.restoreDeletedArticleLabel(command.getArticleId(), command.getLabelIdList());
             articleLabelOperateRepository.upsertLabelForArticle(command.getArticleId(), command.getLabelIdList());
         });
-        return new ArticleMessageVO(command.getArticleId(),UnderAudit);
+        return new ArticleMessageVO(command.getArticleId(), UnderAudit);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -241,10 +225,10 @@ public class ArticleOperateService {
                                        .build();
         articleRepository.insertArticle(articlePO);
         if (command.getLabelIdList().isEmpty()) {
-            return new ArticleMessageVO(articlePO.getArticleId(),UnderAudit);
+            return new ArticleMessageVO(articlePO.getArticleId(), UnderAudit);
         }
         articleLabelOperateRepository.upsertLabelForArticle(articlePO.getArticleId(), command.getLabelIdList());
-        return new ArticleMessageVO(articlePO.getArticleId(),UnderAudit);
+        return new ArticleMessageVO(articlePO.getArticleId(), UnderAudit);
     }
 
     public void articleViewIncrement(ArticleViewCommand command) {
@@ -311,7 +295,7 @@ public class ArticleOperateService {
     }
 
     public Map<String, ArticleEntity> getArticleByIds(List<String> articleIdList) {
-        if(articleIdList.isEmpty()){
+        if (articleIdList.isEmpty()) {
             return new HashMap<>();
         }
         List<ArticlePO> articlePOList = articleRepository.getArticleByIds(articleIdList);
@@ -329,8 +313,8 @@ public class ArticleOperateService {
 
         // 将 ArticleDO 转换为 ArticleEntity
         List<ArticleEntity> articleEntityList = articleDOPage.getContent().stream()
-                .map(ArticleDO::toArticleEntity)
-                .collect(Collectors.toList());
+                                                             .map(ArticleDO::toArticleEntity)
+                                                             .collect(Collectors.toList());
 
         // 创建 PageImpl 并传递原始的 Pageable 和总数
         return new PageImpl<>(

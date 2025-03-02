@@ -2,11 +2,13 @@ package com.lrh.article.adapter.http;
 
 import com.lrh.article.application.cqe.article.*;
 import com.lrh.article.application.dto.PageDTO;
+import com.lrh.article.application.dto.TextSensingDTO;
 import com.lrh.article.application.dto.UserDataDTO;
 import com.lrh.article.application.dto.article.ArticleDTO;
 import com.lrh.article.application.service.ArticleApplicationService;
 import com.lrh.article.infrastructure.client.OssClient;
 import com.lrh.common.result.Result;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -19,6 +21,7 @@ import javax.servlet.http.HttpServletRequest;
  * @Description:
  * @Date: 2024/12/14 23:20
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/article")
 public class ArticleApplicationController {

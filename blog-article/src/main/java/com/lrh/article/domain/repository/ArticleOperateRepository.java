@@ -1,5 +1,6 @@
 package com.lrh.article.domain.repository;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lrh.article.application.cqe.article.ArticleListQuery;
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
 import com.lrh.article.application.cqe.article.ArticleUserPageQuery;
