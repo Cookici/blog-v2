@@ -1,7 +1,7 @@
 /*
  Navicat Premium Dump SQL
 
- Source Server         : tenxunyun
+ Source Server         : 腾讯云-blog
  Source Server Type    : MySQL
  Source Server Version : 50718 (5.7.18-txsql-log)
  Source Host           : sh-cdb-pezvivda.sql.tencentcdb.com:63950
@@ -11,7 +11,7 @@
  Target Server Version : 50718 (5.7.18-txsql-log)
  File Encoding         : 65001
 
- Date: 11/01/2025 16:35:06
+ Date: 02/03/2025 18:24:21
 */
 
 SET NAMES utf8mb4;
@@ -26,6 +26,7 @@ CREATE TABLE `t_message`  (
   `message_id` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
   `message_content` varchar(512) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
   `message_type` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
+  `message_status` varchar(10) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
   `user_id` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
   `to_user_id` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
   `timestamp` bigint(20) UNSIGNED NOT NULL,
@@ -35,6 +36,6 @@ CREATE TABLE `t_message`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_message_id`(`message_id`, `is_deleted`) USING BTREE,
   INDEX `idx_user_to_id`(`user_id`, `to_user_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 56 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
 SET FOREIGN_KEY_CHECKS = 1;
