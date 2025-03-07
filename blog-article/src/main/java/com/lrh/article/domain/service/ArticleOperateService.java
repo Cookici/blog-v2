@@ -160,30 +160,22 @@ public class ArticleOperateService {
         log.info("消费成功");
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    @ArticleSyncRecords
-    public ArticleMessageVO deleteArticleById(ArticleDeleteCommand command) {
-        validExceptionOperate(command.getArticleId(), command.getUserId());
-        LockUtil lockUtil = new LockUtil(redissonClient);
-        lockUtil.tryWriteLock(String.format(RedisConstant.ARTICLE_LOCK, command.getArticleId()), () -> {
-            articleRepository.updateArticleSatusById(command.getArticleId(), Deleted.getStatus());
-        });
-        return new ArticleMessageVO(command.getArticleId(), Deleted);
-    }
+
 
     @Transactional(rollbackFor = Exception.class)
-    public void deleteById(String ArticleId) {
+    @ArticleSyncRecords
+    public ArticleMessageVO deleteById(ArticleDeleteCommand command) {
         LockUtil lockUtil = new LockUtil(redissonClient);
-        lockUtil.tryWriteLock(String.format(RedisConstant.ARTICLE_LOCK, ArticleId), () -> {
-            articleLabelOperateRepository.deleteLabelForArticle(ArticleId);
-            Integer update = articleRepository.deleteArticleById(ArticleId);
+        lockUtil.tryWriteLock(String.format(RedisConstant.ARTICLE_LOCK, command.getArticleId()), () -> {
+            articleLabelOperateRepository.deleteLabelForArticle(command.getArticleId());
+            Integer update = articleRepository.deleteArticleById(command.getArticleId());
             if (update == null || update == 0) {
                 return;
             }
-            commentOperateRepository.deleteCommentsByArticle(ArticleId);
-            articleCacheRepository.deleteArticleCache(ArticleId);
-            articleRepository.deleteEsById(ArticleId);
+            commentOperateRepository.deleteCommentsByArticle(command.getArticleId());
+            articleCacheRepository.deleteArticleCache(command.getArticleId());
         });
+        return new ArticleMessageVO(command.getArticleId(),Deleted);
     }
 
     private void validExceptionOperate(String articleId, String userId) {
@@ -323,6 +315,9 @@ public class ArticleOperateService {
                 articleDOPage.getTotalElements()
         );
 
+    }
+    public void deleteEsArticle(String articleId){
+        articleRepository.deleteEsById(articleId);
     }
 
     public void deleteArticleLike(String articleId, String userId) {

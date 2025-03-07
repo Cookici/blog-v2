@@ -131,7 +131,7 @@ public class ArticleApplicationService {
 
     public void deleteArticleById(ArticleDeleteCommand command) {
         command.valid();
-        articleOperateService.deleteArticleById(command);
+        articleOperateService.deleteById(command);
     }
 
     public void updateArticle(ArticleUpdateCommand command) {
