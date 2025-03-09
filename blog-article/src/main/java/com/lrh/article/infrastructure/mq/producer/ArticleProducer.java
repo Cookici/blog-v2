@@ -30,7 +30,7 @@ public class ArticleProducer {
     public void sendMessage(ArticleMessageVO messageVO) {
         try {
             threadPoolExecutor.submit(() -> rocketMQTemplate.syncSend(topic, messageVO));
-            log.info("[ArticleMessageVO] 成功发送消息: %s ", messageVO.getArticleId());
+            log.info("[ArticleMessageVO] 成功发送消息: {} ", messageVO.getArticleId());
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
