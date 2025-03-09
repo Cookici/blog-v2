@@ -48,23 +48,21 @@ public class ArticleOperateService {
     private final ArticleCacheRepository articleCacheRepository;
     private final ArticleLikeRepository articleLikeRepository;
     private final RedissonClient redissonClient;
-    private final OssClient ossClient;
 
-    public ArticleOperateService(ArticleOperateRepository articleRepository, ArticleLabelOperateRepository articleLabelOperateRepository,
+    public ArticleOperateService(ArticleOperateRepository articleRepository,
+                                 ArticleLabelOperateRepository articleLabelOperateRepository,
                                  LabelOperateRepository labelOperateRepository,
-                                 OssClient ossClient,
                                  CommentOperateRepository commentOperateRepository,
-                                 ArticleCacheRepository articleCacheRepository, ArticleLikeRepository articleLikeRepository, RedissonClient redissonClient) {
+                                 ArticleCacheRepository articleCacheRepository,
+                                 ArticleLikeRepository articleLikeRepository,
+                                 RedissonClient redissonClient) {
 
         this.articleRepository = articleRepository;
         this.articleLabelOperateRepository = articleLabelOperateRepository;
         this.labelOperateRepository = labelOperateRepository;
         this.commentOperateRepository = commentOperateRepository;
         this.articleCacheRepository = articleCacheRepository;
-
-        this.ossClient = ossClient;
         this.articleLikeRepository = articleLikeRepository;
-
         this.redissonClient = redissonClient;
     }
 
@@ -172,17 +170,17 @@ public class ArticleOperateService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void deleteById(String ArticleId) {
+    public void deleteById(String articleId) {
         LockUtil lockUtil = new LockUtil(redissonClient);
-        lockUtil.tryWriteLock(String.format(RedisConstant.ARTICLE_LOCK, ArticleId), () -> {
-            articleLabelOperateRepository.deleteLabelForArticle(ArticleId);
-            Integer update = articleRepository.deleteArticleById(ArticleId);
+        lockUtil.tryWriteLock(String.format(RedisConstant.ARTICLE_LOCK, articleId), () -> {
+            articleLabelOperateRepository.deleteLabelForArticle(articleId);
+            Integer update = articleRepository.deleteArticleById(articleId);
             if (update == null || update == 0) {
                 return;
             }
-            commentOperateRepository.deleteCommentsByArticle(ArticleId);
-            articleCacheRepository.deleteArticleCache(ArticleId);
-            articleRepository.deleteEsById(ArticleId);
+            commentOperateRepository.deleteCommentsByArticle(articleId);
+            articleCacheRepository.deleteArticleCache(articleId);
+            articleRepository.deleteEsById(articleId);
         });
     }
 

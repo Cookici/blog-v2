@@ -28,10 +28,8 @@ public class ArticleApplicationController {
 
     private final ArticleApplicationService articleApplicationService;
 
-    private final OssClient ossClient;
-    public ArticleApplicationController(ArticleApplicationService articleApplicationService, OssClient ossClient) {
+    public ArticleApplicationController(ArticleApplicationService articleApplicationService) {
         this.articleApplicationService = articleApplicationService;
-        this.ossClient = ossClient;
     }
 
     @GetMapping("/get/{articleId}")
