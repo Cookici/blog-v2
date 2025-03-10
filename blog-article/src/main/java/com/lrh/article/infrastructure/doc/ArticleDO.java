@@ -1,7 +1,6 @@
 package com.lrh.article.infrastructure.doc;
 
 import com.lrh.article.domain.entity.ArticleEntity;
-import com.lrh.article.domain.entity.LabelEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,8 +11,6 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.time.LocalDateTime;
-import java.util.AbstractList;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,6 +45,9 @@ public class ArticleDO {
     @Field(type = FieldType.Keyword)  // 使用 Keyword 类型存储 userName，不进行分析
     private String userName;  // 新添加的 userName 字段
 
+    @Field(type = FieldType.Keyword)
+    private Integer isDeleted;
+
 
     public ArticleEntity toArticleEntity() {
         ArticleEntity articleEntity = new ArticleEntity();
@@ -69,6 +69,7 @@ public class ArticleDO {
         articleDO.setCreateTime(articleEntity.getCreateTime());
         articleDO.setUpdateTime(articleEntity.getUpdateTime());
         articleDO.setUserId(articleEntity.getUserId());
+        articleDO.setIsDeleted(0);
         List<LabelDO> labelDOList = articleEntity.getLabelEntityList().stream()
                                                  .map(v -> LabelDO.builder()
                                                                   .labelId(v.getLabelId())

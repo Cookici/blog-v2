@@ -18,7 +18,7 @@ public class ArticleSyncDeleteHandler extends ArticleSyncUpdateHandler implement
 
     @Override
     public void syncArticleUpdate(ArticleMessageVO article) {
-        articleOperateService.deleteById(article.getArticleId());
+        articleOperateService.deleteEsArticle(article.getArticleId());
     }
 
     @Override
