@@ -27,16 +27,13 @@ public class ArticleConsumer implements RocketMQListener<ArticleMessageVO> {
 
     @Override
     public void onMessage(ArticleMessageVO messageVO) {
-        log.info("[ArticleMessageVO] 消费消息: %s", messageVO.getArticleId());
+        log.info("[ArticleMessageVO] 消费消息: {}", messageVO.getArticleId());
         if (messageVO.getArticleId() == null || messageVO.getArticleId().length() > BusinessConstant.ID_MAX_LENGTH) {
             throw new ValidException("校验失败");
         }
-        threadPoolExecutor.submit(new Runnable() {
-            @Override
-            public void run() {
-                abstractStrategyChoose.chooseAndExecute(messageVO.getStatus().getStatus(), messageVO);
-                log.info("[ArticleMessageVO] 成功消费消息: "+messageVO.getArticleId());
-            }
+        threadPoolExecutor.submit(() -> {
+            abstractStrategyChoose.chooseAndExecute(messageVO.getStatus().getStatus(), messageVO);
+            log.info("[ArticleMessageVO] 成功消费消息: {}", messageVO.getArticleId());
         });
     }
 }

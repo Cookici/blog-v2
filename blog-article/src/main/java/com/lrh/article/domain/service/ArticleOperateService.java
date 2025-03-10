@@ -48,23 +48,21 @@ public class ArticleOperateService {
     private final ArticleCacheRepository articleCacheRepository;
     private final ArticleLikeRepository articleLikeRepository;
     private final RedissonClient redissonClient;
-    private final OssClient ossClient;
 
-    public ArticleOperateService(ArticleOperateRepository articleRepository, ArticleLabelOperateRepository articleLabelOperateRepository,
+    public ArticleOperateService(ArticleOperateRepository articleRepository,
+                                 ArticleLabelOperateRepository articleLabelOperateRepository,
                                  LabelOperateRepository labelOperateRepository,
-                                 OssClient ossClient,
                                  CommentOperateRepository commentOperateRepository,
-                                 ArticleCacheRepository articleCacheRepository, ArticleLikeRepository articleLikeRepository, RedissonClient redissonClient) {
+                                 ArticleCacheRepository articleCacheRepository,
+                                 ArticleLikeRepository articleLikeRepository,
+                                 RedissonClient redissonClient) {
 
         this.articleRepository = articleRepository;
         this.articleLabelOperateRepository = articleLabelOperateRepository;
         this.labelOperateRepository = labelOperateRepository;
         this.commentOperateRepository = commentOperateRepository;
         this.articleCacheRepository = articleCacheRepository;
-
-        this.ossClient = ossClient;
         this.articleLikeRepository = articleLikeRepository;
-
         this.redissonClient = redissonClient;
     }
 

@@ -45,19 +45,16 @@ public class ArticleApplicationService {
     private final UserClient userClient;
     private final MessageNettyClient messageNettyClient;
     private final RedissonClient redissonClient;
-    private final ArticleLikeRepository articleLikeRepository;
 
     public ArticleApplicationService(ArticleOperateService articleOperateService, ArticleCacheRepository articleCacheRepository,
                                      CommentOperateService commentOperateService, UserClient userClient,
-                                     MessageNettyClient messageNettyClient, RedissonClient redissonClient,
-                                     ArticleLikeRepository articleLikeRepository) {
+                                     MessageNettyClient messageNettyClient, RedissonClient redissonClient) {
         this.articleOperateService = articleOperateService;
         this.articleCacheRepository = articleCacheRepository;
         this.commentOperateService = commentOperateService;
         this.userClient = userClient;
         this.messageNettyClient = messageNettyClient;
         this.redissonClient = redissonClient;
-        this.articleLikeRepository = articleLikeRepository;
     }
 
     public PageDTO<ArticleDTO> pageArticles(ArticlePageQuery query) {
