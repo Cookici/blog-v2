@@ -69,6 +69,7 @@ public class ArticleDO {
         articleDO.setCreateTime(articleEntity.getCreateTime());
         articleDO.setUpdateTime(articleEntity.getUpdateTime());
         articleDO.setUserId(articleEntity.getUserId());
+        articleDO.setIsDeleted(0);
         List<LabelDO> labelDOList = articleEntity.getLabelEntityList().stream()
                                                  .map(v -> LabelDO.builder()
                                                                   .labelId(v.getLabelId())
