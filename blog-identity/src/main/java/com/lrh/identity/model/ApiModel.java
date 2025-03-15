@@ -10,12 +10,14 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@TableName("t_role")
-public class RoleModel {
+@TableName("t_api_resource")
+public class ApiModel {
     private Long id;
-    private String roleId;
-    private String roleName;
-    private String roleCode;
-    private String roleDesc;
+    private String apiId;
+    private String moduleId;
+    private String apiName;
+    private String apiPath;
+    private String apiMethod;
+    private String apiDesc;
     private Integer isDeleted;
 }

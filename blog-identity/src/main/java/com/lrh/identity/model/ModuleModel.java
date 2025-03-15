@@ -10,12 +10,13 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@TableName("t_role")
-public class RoleModel {
+@TableName("t_module")
+public class ModuleModel {
     private Long id;
-    private String roleId;
-    private String roleName;
-    private String roleCode;
-    private String roleDesc;
+    private String moduleId;
+    private String moduleName;
+    private String modulePrefix;
+    private String moduleDesc;
+    private String parentId;
     private Integer isDeleted;
 }

@@ -54,9 +54,6 @@ public class UserModel {
     @TableField("user_photo")
     private String userPhoto;
 
-    @TableField("role_name")
-    private String roleName;
-
     @TableField("user_email")
     private String userEmail;
 

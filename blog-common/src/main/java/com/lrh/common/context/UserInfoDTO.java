@@ -21,6 +21,5 @@ public class UserInfoDTO {
 
     private String userId;
     private String userName;
-    private String roleName;
     private String token;
 }
