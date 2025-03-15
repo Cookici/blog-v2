@@ -53,10 +53,8 @@ public class ArticleEsDao {
                     .should(QueryBuilders.matchQuery("userName", element).fuzziness(Fuzziness.AUTO)));
         }
 
-        // 使用新的API替代已弃用的withSort方法
         queryBuilder.withSorts(SortBuilders.fieldSort("updateTime").order(SortOrder.DESC));
         
-        // 分页设置
         queryBuilder.withPageable(PageRequest.of(offset.intValue(), limit.intValue()));
 
         SearchHits<ArticleDO> searchHits = elasticsearchRestTemplate.search(
