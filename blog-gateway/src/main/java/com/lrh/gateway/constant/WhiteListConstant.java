@@ -17,6 +17,10 @@ public class WhiteListConstant {
             "/api/oss/file/upload",
             "/api/article/page",
             "/api/article/get",
+            "/api/comment/page_child",
+            "/api/comment/page",
             "/api/label/kinds",
+            "/api/article/view/no_login",
+            "/api/article/like/no_login"
     };
 }

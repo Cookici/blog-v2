@@ -35,11 +35,9 @@ public class UserInfoFilter implements Filter, Ordered {
                 Map<String, Claim> claims = verify.getClaims();
                 String userName = String.valueOf(claims.get("userName").asString());
                 String userId = String.valueOf(claims.get("userId").asString());
-                String roleName = String.valueOf(claims.get("roleName").asString());
                 UserInfoDTO userInfoDTO = UserInfoDTO.builder()
                         .userId(userId)
                         .userName(userName)
-                        .roleName(roleName)
                         .token(token)
                         .build();
                 UserContext.setUser(userInfoDTO);

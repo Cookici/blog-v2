@@ -16,6 +16,8 @@ import com.lrh.blog.user.dto.vo.UserVO;
 import com.lrh.blog.user.mapper.UserMapper;
 import com.lrh.blog.user.model.UserModel;
 import com.lrh.blog.user.romote.OssClient;
+import com.lrh.blog.user.romote.RoleClient;
+import com.lrh.blog.user.romote.dto.req.UserRoleBindReq;
 import com.lrh.blog.user.service.UserService;
 import com.lrh.blog.user.util.DESUtil;
 import com.lrh.blog.user.util.LockUtil;
@@ -26,6 +28,7 @@ import com.lrh.common.result.Result;
 import com.lrh.common.util.HostUtil;
 import com.lrh.common.util.IdUtil;
 import com.lrh.common.util.JwtUtil;
+import io.seata.spring.annotation.GlobalTransactional;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
@@ -71,11 +74,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
 
     private final OssClient ossClient;
 
-    public UserServiceImpl(UserMapper userMapper, RedisTemplate<String, Object> redisTemplate, RedissonClient redissonClient, OssClient ossClient) {
+    private final RoleClient roleClient;
+
+    public UserServiceImpl(UserMapper userMapper, RedisTemplate<String, Object> redisTemplate, RedissonClient redissonClient, OssClient ossClient, RoleClient roleClient) {
         this.userMapper = userMapper;
         this.redisTemplate = redisTemplate;
         this.redissonClient = redissonClient;
         this.ossClient = ossClient;
+        this.roleClient = roleClient;
     }
 
     @Override
@@ -106,7 +112,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
                 () -> {
                     String token = (String) redisTemplate.opsForHash().get(RedisKeyConstant.LOGIN_HASH_KEY, userModel.getUserId());
                     if (token == null) {
-                        token = getToken(resp.getUserId(), resp.getUserName(), userModel.getRoleName());
+                        token = getToken(resp.getUserId(), resp.getUserName());
                         redisTemplate.opsForHash().put(RedisKeyConstant.LOGIN_HASH_KEY, userModel.getUserId(), token);
                         redisTemplate.expire(RedisKeyConstant.LOGIN_HASH_KEY, 2, TimeUnit.HOURS);
                     }
@@ -115,16 +121,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
     }
 
 
-    private String getToken(String userId, String userName, String roleName) {
+    private String getToken(String userId, String userName) {
         Map<String, String> payload = new HashMap<>();
         payload.put("userId", userId);
         payload.put("userName", userName);
-        payload.put("roleName", roleName);
         return JwtUtil.getToken(payload);
     }
 
 
     @Override
+    @GlobalTransactional(rollbackFor = Exception.class)
     public UserRegisterResp register(UserRegisterCmd cmd) {
         LockUtil lockUtil = new LockUtil(redissonClient);
         return lockUtil.tryLock(String.format(RedisKeyConstant.REGISTER_LOCK_KEY, cmd.getUserPhone()), () -> {
@@ -138,11 +144,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
             userModel.setUserLevel(UserConstant.DEFAULT_LEVEL);
             userModel.setUserIp(cmd.getUserIp());
             userModel.setUserEmail(cmd.getUserEmail());
-            userModel.setRoleName(UserConstant.LOGIN_ROLE);
             int insert = userMapper.insert(userModel);
             if (insert <= 0) {
                 return null;
             }
+
+            Result<Boolean> booleanResult = roleClient
+                    .bindUserRole(new UserRoleBindReq(userModel.getUserId(),UserConstant.LOGIN_ROLE));
+            if (!booleanResult.getData()) {
+                throw new RuntimeException("角色绑定失败");
+            }
+
             return new UserRegisterResp().convertedUserModelToUserLoginResp(userModel);
         });
     }
