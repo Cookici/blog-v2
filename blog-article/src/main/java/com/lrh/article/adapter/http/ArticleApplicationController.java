@@ -2,11 +2,9 @@ package com.lrh.article.adapter.http;
 
 import com.lrh.article.application.cqe.article.*;
 import com.lrh.article.application.dto.PageDTO;
-import com.lrh.article.application.dto.TextSensingDTO;
 import com.lrh.article.application.dto.UserDataDTO;
 import com.lrh.article.application.dto.article.ArticleDTO;
 import com.lrh.article.application.service.ArticleApplicationService;
-import com.lrh.article.infrastructure.client.OssClient;
 import com.lrh.common.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -121,7 +119,7 @@ public class ArticleApplicationController {
     }
 
 
-    @GetMapping("/list")
+    @GetMapping("/es/page")
     public Result<Object> listQueryArticle(ArticleListQuery query) {
         PageDTO<ArticleDTO> resp = articleApplicationService.listQueryArticles(query);
         return Result.success(resp);
