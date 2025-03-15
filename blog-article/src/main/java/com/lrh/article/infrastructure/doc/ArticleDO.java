@@ -21,13 +21,22 @@ import java.util.stream.Collectors;
 @Document(indexName = "article_index")
 public class ArticleDO {
 
-    @Id  // 主键 ID，Elasticsearch 会自动生成
+    /**
+     * 主键 ID，Elasticsearch 会自动生成
+     */
+    @Id
     private String articleId;
 
-    @Field(type = FieldType.Text, analyzer = "ik_max_word")  // 设置分词器为 ik_max_word
+    /**
+     * 设置分词器为 ik_max_word
+     */
+    @Field(type = FieldType.Text, analyzer = "ik_max_word")
     private String articleTitle;
 
-    @Field(type = FieldType.Text, analyzer = "ik_max_word")  // 设置分词器为 ik_max_word
+    /**
+     * 设置分词器为 ik_max_word
+     */
+    @Field(type = FieldType.Text, analyzer = "ik_max_word")
     private String articleContent;
 
     @Field(type = FieldType.Date, pattern = "yyyy-MM-dd'T'HH:mm:ss", format = {})
@@ -39,11 +48,17 @@ public class ArticleDO {
     @Field(type = FieldType.Nested)
     private List<LabelDO> labels;
 
-    @Field(type = FieldType.Keyword)  // 使用 Keyword 类型存储 userId，不进行分析
-    private String userId;  // 新添加的 userId 字段
+    /**
+     * 使用 Keyword 类型存储 userId，不进行分析
+      */
+    @Field(type = FieldType.Keyword)
+    private String userId;
 
-    @Field(type = FieldType.Keyword)  // 使用 Keyword 类型存储 userName，不进行分析
-    private String userName;  // 新添加的 userName 字段
+    /**
+     * 使用 Keyword 类型存储 userName，不进行分析
+     */
+    @Field(type = FieldType.Keyword)
+    private String userName;
 
     @Field(type = FieldType.Keyword)
     private Integer isDeleted;

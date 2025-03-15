@@ -3,8 +3,6 @@ package com.lrh.article.infrastructure.database.repository;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.lrh.article.application.cqe.article.ArticleLikePageQuery;
 import com.lrh.article.application.cqe.article.ArticleListQuery;
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
 import com.lrh.article.application.cqe.article.ArticleUserPageQuery;
@@ -15,7 +13,6 @@ import com.lrh.article.infrastructure.doc.ArticleDO;
 import com.lrh.article.infrastructure.po.ArticlePO;
 import com.lrh.common.constant.BusinessConstant;
 import org.springframework.stereotype.Repository;
-import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -104,7 +101,7 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
     }
 
     @Override
-    public List<ArticlePO> countArticlesByUserId(String userId) {
+    public List<ArticlePO> getArticlesByUserId(String userId) {
         LambdaQueryWrapper<ArticlePO> queryWrapper = Wrappers.lambdaQuery(ArticlePO.class)
                 .eq(ArticlePO::getUserId, userId)
                 .eq(ArticlePO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
@@ -130,9 +127,17 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
     }
 
     @Override
-    public  Page<ArticleDO> findArticleListByQuery(ArticleListQuery query){
-        return articleEsDao.searchArticles(query);
+    public List<ArticleDO> getArticleListByEsQuery(ArticleListQuery query) {
+        return articleEsDao.getArticleList(query.getOffset(),query.getLimit(),query.getElement());
     }
+
+
+    @Override
+    public Long countArticlesByEsQuery(ArticleListQuery query) {
+        return articleEsDao.countArticle(query.getElement());
+    }
+
+
 
     @Override
     public void deleteEsById(String articleId) {

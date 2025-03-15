@@ -8,7 +8,6 @@ import com.lrh.article.constants.RedisConstant;
 import com.lrh.article.domain.entity.ArticleEntity;
 import com.lrh.article.domain.entity.UserArticleDataEntity;
 import com.lrh.article.domain.repository.ArticleCacheRepository;
-import com.lrh.article.domain.repository.ArticleLikeRepository;
 import com.lrh.article.domain.service.ArticleOperateService;
 import com.lrh.article.domain.service.CommentOperateService;
 import com.lrh.article.domain.vo.UserVO;
@@ -19,7 +18,6 @@ import com.lrh.common.context.UserContext;
 import com.lrh.common.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -215,8 +213,12 @@ public class ArticleApplicationService {
 
     public PageDTO<ArticleDTO> listQueryArticles(ArticleListQuery query) {
         query.valid();
-        Page<ArticleEntity> articleEntityPage = articleOperateService.queryListArticle(query);
-        List<ArticleEntity> articleEntityList = articleEntityPage.getContent();
+
+        Long total = articleOperateService.countUserArticlesEsPage(query);
+        if(total == null || total == 0){
+            return new PageDTO<>();
+        }
+        List<ArticleEntity> articleEntityList = articleOperateService.getUserArticlesEsPage(query);
         List<String> userIds = articleEntityList.stream().map(ArticleEntity::getUserId).collect(Collectors.toList());
 
         Result<Map<String, UserVO>> userList = userClient.getByIds(userIds);
@@ -244,7 +246,7 @@ public class ArticleApplicationService {
 
         return PageDTO.<ArticleDTO>builder()
                 .page(query.getPage())
-                .total(articleEntityPage.getTotalElements())
+                .total(total)
                 .pageSize(query.getPageSize())
                 .data(articleDTOList).
                 build();

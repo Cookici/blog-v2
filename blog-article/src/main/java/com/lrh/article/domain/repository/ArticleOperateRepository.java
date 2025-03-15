@@ -1,12 +1,10 @@
 package com.lrh.article.domain.repository;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lrh.article.application.cqe.article.ArticleListQuery;
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
 import com.lrh.article.application.cqe.article.ArticleUserPageQuery;
 import com.lrh.article.infrastructure.doc.ArticleDO;
 import com.lrh.article.infrastructure.po.ArticlePO;
-import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -34,7 +32,7 @@ public interface ArticleOperateRepository {
 
     void insertArticle(ArticlePO articlePO);
 
-    List<ArticlePO> countArticlesByUserId(String userId);
+    List<ArticlePO> getArticlesByUserId(String userId);
 
     Long countUserArticlesPage(ArticleUserPageQuery query);
 
@@ -43,7 +41,9 @@ public interface ArticleOperateRepository {
     List<ArticlePO> getArticleByIds(List<String> articleIdList);
 
 
-    Page<ArticleDO> findArticleListByQuery(ArticleListQuery query);
+    List<ArticleDO> getArticleListByEsQuery(ArticleListQuery query);
+
+    Long countArticlesByEsQuery(ArticleListQuery query);
 
     void deleteEsById(String articleId);
 

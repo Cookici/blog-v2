@@ -7,7 +7,6 @@ import com.lrh.article.domain.entity.LabelEntity;
 import com.lrh.article.domain.entity.UserArticleDataEntity;
 import com.lrh.article.domain.repository.*;
 import com.lrh.article.domain.vo.ArticleMessageVO;
-import com.lrh.article.infrastructure.client.OssClient;
 import com.lrh.article.infrastructure.database.convertor.ArticleConvertor;
 import com.lrh.article.infrastructure.database.convertor.LabelConvertor;
 import com.lrh.article.infrastructure.doc.ArticleDO;
@@ -20,8 +19,6 @@ import com.lrh.common.context.UserContext;
 import com.lrh.common.util.IdUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -246,7 +243,7 @@ public class ArticleOperateService {
     }
 
     public UserArticleDataEntity articlesDataByUserId(String userId) {
-        List<ArticlePO> articlePOList = articleRepository.countArticlesByUserId(userId);
+        List<ArticlePO> articlePOList = articleRepository.getArticlesByUserId(userId);
         List<String> articleIds = articlePOList.stream()
                                                .map(ArticlePO::getArticleId)
                                                .collect(Collectors.toList());
@@ -297,23 +294,18 @@ public class ArticleOperateService {
         return articleMap;
     }
 
-    public Page<ArticleEntity> queryListArticle(ArticleListQuery query) {
-        // 查询文章列表并返回分页结果
-        Page<ArticleDO> articleDOPage = articleRepository.findArticleListByQuery(query);
 
-        // 将 ArticleDO 转换为 ArticleEntity
-        List<ArticleEntity> articleEntityList = articleDOPage.getContent().stream()
-                                                             .map(ArticleDO::toArticleEntity)
-                                                             .collect(Collectors.toList());
-
-        // 创建 PageImpl 并传递原始的 Pageable 和总数
-        return new PageImpl<>(
-                articleEntityList,
-                articleDOPage.getPageable(),
-                articleDOPage.getTotalElements()
-        );
-
+    public Long countUserArticlesEsPage(ArticleListQuery query) {
+        return articleRepository.countArticlesByEsQuery(query);
     }
+
+    public List<ArticleEntity> getUserArticlesEsPage(ArticleListQuery query) {
+        List<ArticleDO> articleListByEsQuery = articleRepository.getArticleListByEsQuery(query);
+        return articleListByEsQuery.stream()
+                .map(ArticleDO::toArticleEntity)
+                .collect(Collectors.toList());
+    }
+
     public void deleteEsArticle(String articleId){
         articleRepository.deleteEsById(articleId);
     }
