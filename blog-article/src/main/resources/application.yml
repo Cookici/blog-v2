@@ -21,7 +21,7 @@ spring:
     port: 29577
     password: lrh,903.520hhhh
 rocketmq:
-  name-server: localhost:9876
+  name-server: 113.44.37.116:9876
   producer:
     #生产者组名
     group: article-group
