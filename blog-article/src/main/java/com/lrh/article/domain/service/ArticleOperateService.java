@@ -142,7 +142,6 @@ public class ArticleOperateService {
         return articleEntity;
     }
 
-    @Transactional(rollbackFor = Exception.class)
     public void syncUpdateArticle(String articleId) {
         ArticleEntity articleEntity = getArticleById(new ArticleQuery(articleId));
         if (articleEntity == null) {
