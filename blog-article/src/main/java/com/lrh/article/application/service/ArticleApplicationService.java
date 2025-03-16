@@ -8,6 +8,7 @@ import com.lrh.article.constants.RedisConstant;
 import com.lrh.article.domain.entity.ArticleEntity;
 import com.lrh.article.domain.entity.UserArticleDataEntity;
 import com.lrh.article.domain.repository.ArticleCacheRepository;
+import com.lrh.article.domain.repository.ArticleLikeRepository;
 import com.lrh.article.domain.service.ArticleOperateService;
 import com.lrh.article.domain.service.CommentOperateService;
 import com.lrh.article.domain.vo.UserVO;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -43,16 +45,18 @@ public class ArticleApplicationService {
     private final UserClient userClient;
     private final MessageNettyClient messageNettyClient;
     private final RedissonClient redissonClient;
+    private final ArticleLikeRepository articleLikeRepository;
 
     public ArticleApplicationService(ArticleOperateService articleOperateService, ArticleCacheRepository articleCacheRepository,
                                      CommentOperateService commentOperateService, UserClient userClient,
-                                     MessageNettyClient messageNettyClient, RedissonClient redissonClient) {
+                                     MessageNettyClient messageNettyClient, RedissonClient redissonClient, ArticleLikeRepository articleLikeRepository) {
         this.articleOperateService = articleOperateService;
         this.articleCacheRepository = articleCacheRepository;
         this.commentOperateService = commentOperateService;
         this.userClient = userClient;
         this.messageNettyClient = messageNettyClient;
         this.redissonClient = redissonClient;
+        this.articleLikeRepository = articleLikeRepository;
     }
 
     public PageDTO<ArticleDTO> pageArticles(ArticlePageQuery query) {
@@ -263,9 +267,42 @@ public class ArticleApplicationService {
         return new PageDTO<>();
     }
 
-    public PageDTO<ArticleDTO> likeArticles(ArticleLikePageQuery query) {
+    public PageDTO<ArticleDTO> likeArticlesPage(ArticleLikePageQuery query) {
         query.valid();
-        String userId = UserContext.getUserId();
+        Set<String> likeArticleIds = articleLikeRepository.getLikedArticleIdsByUserId(query.getUserId());
+        if(likeArticleIds == null || likeArticleIds.isEmpty()) {
+            return new PageDTO<>();
+        }
+        Long total = articleOperateService.countLikeArticlesPage(query,likeArticleIds);
+        if(total == null || total == 0){
+            return new PageDTO<>();
+        }
+        List<ArticleEntity> articleEntityList  = articleOperateService.getLikeArticlesPage(query,likeArticleIds);
+
+        List<String> userIds = articleEntityList.stream().map(ArticleEntity::getUserId).collect(Collectors.toList());
+
+        Result<Map<String, UserVO>> userList = userClient.getByIds(userIds);
+        Map<String, UserVO> userIdForUser = userList.getData();
+        List<ArticleDTO> articleDTOList = new ArrayList<>();
+        articleEntityList.forEach(articleEntity -> {
+                    UserVO userVO = userIdForUser.get(articleEntity.getUserId());
+                    if (userVO != null) {
+                        articleDTOList.add(ArticleDTO.fromEntity(articleEntity, null));
+                    }
+                }
+        );
+
+        List<String> articleIds = articleEntityList.stream().map(ArticleEntity::getArticleId).collect(Collectors.toList());
+        Map<String, Long> articleLikeCountBatch = articleCacheRepository.getArticleLikeCountBatch(articleIds);
+        Map<String, Long> articleViewCountBatch = articleCacheRepository.getArticleViewCountBatch(articleIds);
+
+        articleDTOList.forEach(articleDTO -> {
+            Long likeCount = articleLikeCountBatch.getOrDefault(articleDTO.getArticleId(), 0L);
+            Long viewCount = articleViewCountBatch.getOrDefault(articleDTO.getArticleId(), 0L);
+            articleDTO.setLikeCount(likeCount);
+            articleDTO.setViewCount(viewCount);
+        });
+
         return new PageDTO<>();
     }
 }
