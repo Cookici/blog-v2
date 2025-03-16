@@ -83,8 +83,8 @@ public class ArticleOperateService {
     private void setLabelListForArticleEntityList(List<ArticleEntity> articleEntityList) {
         // 提取文章 ID 列表
         List<String> articleIdList = articleEntityList.stream()
-                                                      .map(ArticleEntity::getArticleId)
-                                                      .collect(Collectors.toList());
+                .map(ArticleEntity::getArticleId)
+                .collect(Collectors.toList());
 
         // 获取文章与标签 ID 的映射关系
         List<ArticleLabelPO> articleLabelPOList = articleLabelOperateRepository.getArticleLabelListByArticles(articleIdList);
@@ -96,24 +96,24 @@ public class ArticleOperateService {
         // 获取标签详细信息
         List<LabelPO> labelPOList = labelOperateRepository.getLabelListByIds(
                 articleIdToLabelIdsMap.values().stream()
-                                      .flatMap(Collection::stream)
-                                      .distinct()
-                                      .collect(Collectors.toList())
+                        .flatMap(Collection::stream)
+                        .distinct()
+                        .collect(Collectors.toList())
         );
 
         List<LabelEntity> labelEntityList = LabelConvertor.toListLabelEntityConvertor(labelPOList);
 
         // 构建标签 ID 到标签实体的映射
         Map<String, LabelEntity> labelIdToLabelEntityMap = labelEntityList.stream()
-                                                                          .collect(Collectors.toMap(LabelEntity::getLabelId, label -> label));
+                .collect(Collectors.toMap(LabelEntity::getLabelId, label -> label));
 
         // 为每篇文章设置对应的标签列表
         articleEntityList.forEach(articleEntity -> {
             List<String> labelIds = articleIdToLabelIdsMap.getOrDefault(articleEntity.getArticleId(), Collections.emptyList());
             List<LabelEntity> labels = labelIds.stream()
-                                               .map(labelIdToLabelEntityMap::get)
-                                               .filter(Objects::nonNull)
-                                               .collect(Collectors.toList());
+                    .map(labelIdToLabelEntityMap::get)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
             articleEntity.setLabelEntityList(labels);
         });
     }
@@ -156,7 +156,6 @@ public class ArticleOperateService {
     }
 
 
-
     @Transactional(rollbackFor = Exception.class)
     @ArticleSyncRecords
     public ArticleMessageVO deleteById(ArticleDeleteCommand command) {
@@ -170,7 +169,7 @@ public class ArticleOperateService {
             commentOperateRepository.deleteCommentsByArticle(command.getArticleId());
             articleCacheRepository.deleteArticleCache(command.getArticleId());
         });
-        return new ArticleMessageVO(command.getArticleId(),Deleted);
+        return new ArticleMessageVO(command.getArticleId(), Deleted);
     }
 
     private void validExceptionOperate(String articleId, String userId) {
@@ -204,12 +203,12 @@ public class ArticleOperateService {
     @ArticleSyncRecords
     public ArticleMessageVO insertArticle(ArticleInsertCommand command) {
         ArticlePO articlePO = ArticlePO.builder()
-                                       .articleId("article_" + IdUtil.getUuid())
-                                       .articleTitle(command.getArticleTitle())
-                                       .articleContent(command.getArticleContent())
-                                       .userId(command.getUserId())
-                                       .status(UnderAudit.getStatus())
-                                       .build();
+                .articleId("article_" + IdUtil.getUuid())
+                .articleTitle(command.getArticleTitle())
+                .articleContent(command.getArticleContent())
+                .userId(command.getUserId())
+                .status(UnderAudit.getStatus())
+                .build();
         articleRepository.insertArticle(articlePO);
         if (command.getLabelIdList().isEmpty()) {
             return new ArticleMessageVO(articlePO.getArticleId(), UnderAudit);
@@ -245,19 +244,19 @@ public class ArticleOperateService {
     public UserArticleDataEntity articlesDataByUserId(String userId) {
         List<ArticlePO> articlePOList = articleRepository.getArticlesByUserId(userId);
         List<String> articleIds = articlePOList.stream()
-                                               .map(ArticlePO::getArticleId)
-                                               .collect(Collectors.toList());
+                .map(ArticlePO::getArticleId)
+                .collect(Collectors.toList());
         Long articleCount = (long) articlePOList.size();
         Map<String, Long> articleLikeCountBatch =
                 articleCacheRepository.getArticleLikeCountBatch(articleIds);
         Long likeCount = articleLikeCountBatch.values().stream()
-                                              .mapToLong(Long::longValue)
-                                              .sum();
+                .mapToLong(Long::longValue)
+                .sum();
         Map<String, Long> articleViewCountBatch =
                 articleCacheRepository.getArticleViewCountBatch(articleIds);
         Long viewCount = articleViewCountBatch.values().stream()
-                                              .mapToLong(Long::longValue)
-                                              .sum();
+                .mapToLong(Long::longValue)
+                .sum();
         return new UserArticleDataEntity(articleCount, likeCount, viewCount);
     }
 
@@ -306,7 +305,7 @@ public class ArticleOperateService {
                 .collect(Collectors.toList());
     }
 
-    public void deleteEsArticle(String articleId){
+    public void deleteEsArticle(String articleId) {
         articleRepository.deleteEsById(articleId);
     }
 
@@ -322,4 +321,17 @@ public class ArticleOperateService {
         }
     }
 
+    public Long countLikeArticlesPage(ArticleLikePageQuery query, Set<String> likeArticleIds) {
+        if (likeArticleIds == null || likeArticleIds.isEmpty()) {
+            return 0L;
+        }
+        return articleRepository.countLikeArticle(query, likeArticleIds);
+    }
+
+    public List<ArticleEntity> getLikeArticlesPage(ArticleLikePageQuery query, Set<String> likeArticleIds) {
+        List<ArticleDO> articleDOList = articleRepository.getLikeArticleList(query, likeArticleIds);
+        return articleDOList.stream()
+                .map(ArticleDO::toArticleEntity)
+                .collect(Collectors.toList());
+    }
 }

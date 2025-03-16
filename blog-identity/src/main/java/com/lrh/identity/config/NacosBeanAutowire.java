@@ -1,4 +1,4 @@
-package com.lrh.common.nacos;
+package com.lrh.identity.config;
 
 import com.alibaba.cloud.commons.io.FileUtils;
 import com.alibaba.cloud.nacos.NacosServiceAutoConfiguration;
@@ -11,6 +11,7 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,6 +25,7 @@ import java.nio.charset.StandardCharsets;
  * @Description:
  * @Date: 2025/1/18 16:49
  */
+@Component
 @Slf4j
 public class NacosBeanAutowire implements BeanPostProcessor, EnvironmentAware {
 
@@ -61,7 +63,6 @@ public class NacosBeanAutowire implements BeanPostProcessor, EnvironmentAware {
                 throw new RuntimeException(e);
             }
         }
-
         return BeanPostProcessor.super.postProcessBeforeInitialization(bean, beanName);
     }
 }

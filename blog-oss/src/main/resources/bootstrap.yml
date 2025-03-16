@@ -4,10 +4,6 @@ spring:
   cloud:
     nacos:
       config:
-        server-addr: 106.53.50.195:8848
-        namespace: 1aae6af7-a418-4ff0-9967-c35349cd15ab
+        server-addr: 124.221.86.127:8848
+        namespace: 8e1226be-f812-42f2-8038-68471a69f191
         file-extension: yaml
-  redis:
-    host: cd-crs-0q0ceb8t.sql.tencentcdb.com
-    port: 29577
-    password: lrh,903.520hhhh

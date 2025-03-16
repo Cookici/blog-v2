@@ -1,7 +1,6 @@
 package com.lrh.gateway.config;
 
 import com.alibaba.cloud.commons.io.FileUtils;
-import com.alibaba.cloud.nacos.NacosConfigAutoConfiguration;
 import com.alibaba.cloud.nacos.NacosServiceAutoConfiguration;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
@@ -50,20 +49,7 @@ public class NacosBeanAutowire implements BeanPostProcessor, EnvironmentAware {
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-        if (bean instanceof NacosConfigAutoConfiguration) {
-            try {
-                File file = new File(path);
-                log.info("[NacosConfig] NacosConfigAutoConfiguration 找到数据库配置json文件: {}", file.getAbsolutePath());
-                String config = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-                JSONObject configJson = JSON.parseObject(config);
-                environment.getSystemProperties().put("spring.cloud.nacos.config.server-addr", configJson.getString("server-addr"));
-                environment.getSystemProperties().put("spring.cloud.nacos.config.username", configJson.getString("username"));
-                environment.getSystemProperties().put("spring.cloud.nacos.config.password", configJson.getString("password"));
-            } catch (IOException e) {
-                log.error("[NacosConfig]配置NacosConfigAutoConfiguration失败,原因为: {}", e.getMessage());
-                throw new RuntimeException(e);
-            }
-        } else if (bean instanceof NacosServiceAutoConfiguration) {
+        if (bean instanceof NacosServiceAutoConfiguration) {
             try {
                 File file = new File(path);
                 log.info("[NacosConfig] NacosServiceAutoConfiguration 找到数据库配置json文件: {}", file.getAbsolutePath());
@@ -77,7 +63,6 @@ public class NacosBeanAutowire implements BeanPostProcessor, EnvironmentAware {
                 throw new RuntimeException(e);
             }
         }
-
         return BeanPostProcessor.super.postProcessBeforeInitialization(bean, beanName);
     }
 }

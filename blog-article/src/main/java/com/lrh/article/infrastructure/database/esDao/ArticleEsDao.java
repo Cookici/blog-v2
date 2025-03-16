@@ -15,6 +15,7 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilde
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -75,5 +76,44 @@ public class ArticleEsDao {
         }
 
         return elasticsearchRestTemplate.count(queryBuilder.build(), ArticleDO.class);
+    }
+
+    public Long countLikeArticleList(String element, Set<String> likeIds) {
+        NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder();
+
+        queryBuilder.withQuery(QueryBuilders.termsQuery("articleId", likeIds));
+
+        if (StringUtils.isNotBlank(element)) {
+            queryBuilder.withQuery(QueryBuilders.boolQuery()
+                    .should(QueryBuilders.matchQuery("articleTitle", element).fuzziness(Fuzziness.AUTO))
+                    .should(QueryBuilders.matchQuery("articleContent", element).fuzziness(Fuzziness.AUTO))
+                    .should(QueryBuilders.matchQuery("userName", element).fuzziness(Fuzziness.AUTO)));
+        }
+
+        return elasticsearchRestTemplate.count(queryBuilder.build(), ArticleDO.class);
+    }
+
+    public List<ArticleDO> getLikeArticleList(Long offset, Long limit, String element, Set<String> likeIds) {
+        NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder();
+
+        queryBuilder.withQuery(QueryBuilders.termsQuery("articleId", likeIds));
+
+        if (StringUtils.isNotBlank(element)) {
+            queryBuilder.withQuery(QueryBuilders.boolQuery()
+                    .should(QueryBuilders.matchQuery("articleTitle", element).fuzziness(Fuzziness.AUTO))
+                    .should(QueryBuilders.matchQuery("articleContent", element).fuzziness(Fuzziness.AUTO))
+                    .should(QueryBuilders.matchQuery("userName", element).fuzziness(Fuzziness.AUTO)));
+        }
+
+        queryBuilder.withSorts(SortBuilders.fieldSort("updateTime").order(SortOrder.DESC));
+        
+        queryBuilder.withPageable(PageRequest.of(offset.intValue(), limit.intValue()));
+
+        SearchHits<ArticleDO> searchHits = elasticsearchRestTemplate.search(
+                queryBuilder.build(), ArticleDO.class);
+        
+        return searchHits.stream()
+                .map(SearchHit::getContent)
+                .collect(Collectors.toList());
     }
 }

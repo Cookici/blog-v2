@@ -114,7 +114,7 @@ public class ArticleApplicationController {
 
     @GetMapping("/like/page")
     public Result<PageDTO<ArticleDTO>> pageLikeArticle(ArticleLikePageQuery query) {
-        PageDTO<ArticleDTO> resp = articleApplicationService.likeArticles(query);
+        PageDTO<ArticleDTO> resp = articleApplicationService.likeArticlesPage(query);
         return Result.success(resp);
     }
 

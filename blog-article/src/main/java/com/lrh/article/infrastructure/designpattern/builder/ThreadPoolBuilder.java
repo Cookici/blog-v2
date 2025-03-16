@@ -2,7 +2,6 @@ package com.lrh.article.infrastructure.designpattern.builder;
 
 import com.baomidou.mybatisplus.core.toolkit.Assert;
 import com.lrh.article.infrastructure.config.designpattern.builder.Builder;
-import org.springframework.context.annotation.Bean;
 
 import java.math.BigDecimal;
 import java.util.concurrent.*;

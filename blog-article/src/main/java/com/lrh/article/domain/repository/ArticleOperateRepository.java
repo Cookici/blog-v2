@@ -1,5 +1,6 @@
 package com.lrh.article.domain.repository;
 
+import com.lrh.article.application.cqe.article.ArticleLikePageQuery;
 import com.lrh.article.application.cqe.article.ArticleListQuery;
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
 import com.lrh.article.application.cqe.article.ArticleUserPageQuery;
@@ -7,6 +8,7 @@ import com.lrh.article.infrastructure.doc.ArticleDO;
 import com.lrh.article.infrastructure.po.ArticlePO;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @ProjectName: blog-ddd
@@ -48,4 +50,8 @@ public interface ArticleOperateRepository {
     void deleteEsById(String articleId);
 
     void saveArticleDo(ArticleDO articleDO);
+
+    Long countLikeArticle(ArticleLikePageQuery query, Set<String> likeIds);
+
+    List<ArticleDO> getLikeArticleList(ArticleLikePageQuery query, Set<String> likeArticleIds);
 }
