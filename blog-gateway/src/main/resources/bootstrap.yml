@@ -2,41 +2,8 @@ spring:
   application:
     name: blog-gateway
   cloud:
-    gateway:
-      default-filters:
-        - AddRequestHeader=gateway-env, blog-gateway
-      routes:
-        - id: user
-          uri: lb://blog-user
-          predicates:
-            - Path=/api/user/**
-
-        - id: identity
-          uri: lb://blog-identity
-          predicates:
-            - Path=/api/role/**,/api/permission/**
-
-        - id: article
-          uri: lb://blog-article
-          predicates:
-            - Path=/api/article/**,/api/comment/**,/api/label/**
-
-        - id: oss
-          uri: lb://blog-oss
-          predicates:
-            - Path=/api/oss/file/**
-
-        - id: message
-          uri: lb://blog-message
-          predicates:
-            - Path=/api/message/**
-
-        - id: message-netty
-          uri: lb://blog-message-netty
-          predicates:
-            - Path=/api/message-netty/**,/api/friend/**,/api/friend-apply/**
-
-        - id: netty
-          uri: lb://blog-netty
-          predicates:
-            - Path=/api/netty/**
+    nacos:
+      config:
+        server-addr: 124.221.86.127:8848
+        namespace: 8e1226be-f812-42f2-8038-68471a69f191
+        file-extension: yaml
