@@ -25,7 +25,7 @@ mybatis-plus:
       logic-not-delete-value: 0
 
 rocketmq:
-  name-server: localhost:9876
+  name-server: 113.44.37.116:9876
   producer:
     #生产者组名
     group: message-group
