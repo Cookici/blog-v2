@@ -142,14 +142,14 @@ public class ArticleOperateService {
         return articleEntity;
     }
 
-    public void syncUpdateArticle(String articleId) {
-        ArticleEntity articleEntity = getArticleById(new ArticleQuery(articleId));
+    public void syncUpdateArticle(ArticleMessageVO article) {
+        ArticleEntity articleEntity = getArticleById(new ArticleQuery(article.getArticleId()));
         if (articleEntity == null) {
             return;
         }
         // TODO 内容检测
-        articleRepository.updateArticleSatusById(articleId, Published.getStatus());
-        ArticleDO articleDO = ArticleDO.fromArticleEntity(articleEntity);
+        articleRepository.updateArticleSatusById(article.getArticleId(), Published.getStatus());
+        ArticleDO articleDO = ArticleDO.fromArticleEntity(articleEntity,article.getUserName());
         articleRepository.saveArticleDo(articleDO);
         log.info("消费成功");
     }
@@ -168,7 +168,7 @@ public class ArticleOperateService {
             commentOperateRepository.deleteCommentsByArticle(command.getArticleId());
             articleCacheRepository.deleteArticleCache(command.getArticleId());
         });
-        return new ArticleMessageVO(command.getArticleId(), Deleted);
+        return new ArticleMessageVO(command.getArticleId(),UserContext.getUsername(), Deleted);
     }
 
     private void validExceptionOperate(String articleId, String userId) {
@@ -195,7 +195,7 @@ public class ArticleOperateService {
             articleLabelOperateRepository.restoreDeletedArticleLabel(command.getArticleId(), command.getLabelIdList());
             articleLabelOperateRepository.upsertLabelForArticle(command.getArticleId(), command.getLabelIdList());
         });
-        return new ArticleMessageVO(command.getArticleId(), UnderAudit);
+        return new ArticleMessageVO(command.getArticleId(),UserContext.getUsername(), Deleted);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -210,10 +210,10 @@ public class ArticleOperateService {
                 .build();
         articleRepository.insertArticle(articlePO);
         if (command.getLabelIdList().isEmpty()) {
-            return new ArticleMessageVO(articlePO.getArticleId(), UnderAudit);
+            return new ArticleMessageVO(articlePO.getArticleId(),UserContext.getUsername(), UnderAudit);
         }
         articleLabelOperateRepository.upsertLabelForArticle(articlePO.getArticleId(), command.getLabelIdList());
-        return new ArticleMessageVO(articlePO.getArticleId(), UnderAudit);
+        return new ArticleMessageVO(articlePO.getArticleId(),UserContext.getUsername(), UnderAudit);
     }
 
     public void articleViewIncrement(ArticleViewCommand command) {
