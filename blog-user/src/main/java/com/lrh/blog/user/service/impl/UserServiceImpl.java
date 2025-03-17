@@ -316,4 +316,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
         return Objects.equals(data.getString("prov"), "") ? "unknown" : data.getString("prov");
     }
 
+    @Override
+    public List<String> getActiveUserIds(int limit) {
+        // 基于最近登录时间获取活跃用户
+        LambdaQueryWrapper<UserModel> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.orderByDesc(UserModel::getUpdateTime)
+                    .last("LIMIT " + limit);
+        
+        List<UserModel> activeUsers = this.list(queryWrapper);
+        
+        return activeUsers.stream()
+                .map(UserModel::getUserId)
+                .collect(Collectors.toList());
+    }
+
 }

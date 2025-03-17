@@ -23,5 +23,10 @@ public interface ArticleLabelOperateRepository {
 
     List<ArticleLabelPO> getArticleLabelListByArticles(List<String> articleIdList);
 
-    List<ArticleLabelPO> getArticleLabelListByLabelIds(List<String> labelIdList);
+    /**
+     * 获取用户喜欢的标签列表
+     * @param userId 用户ID
+     * @return 标签列表
+     */
+    List<String> getUserLikedLabels(String userId);
 }

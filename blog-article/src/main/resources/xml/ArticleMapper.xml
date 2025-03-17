@@ -155,5 +155,25 @@
         LIMIT #{offset}, #{limit}
     </select>
 
+    <update id="batchUpdateMetrics">
+        UPDATE t_article
+        <trim prefix="SET" suffixOverrides=",">
+            <trim prefix="like_count = CASE" suffix="END,">
+                <foreach collection="list" item="item">
+                    WHEN article_id = #{item.articleId} THEN #{item.likeCount}
+                </foreach>
+            </trim>
+            <trim prefix="view_count = CASE" suffix="END,">
+                <foreach collection="list" item="item">
+                    WHEN article_id = #{item.articleId} THEN #{item.viewCount}
+                </foreach>
+            </trim>
+        </trim>
+        WHERE article_id IN
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item.articleId}
+        </foreach>
+        AND is_deleted = 0
+    </update>
 
 </mapper>

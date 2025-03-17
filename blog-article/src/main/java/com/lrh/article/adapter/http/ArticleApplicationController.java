@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * @ProjectName: blog-ddd
@@ -106,9 +107,17 @@ public class ArticleApplicationController {
         return Result.success();
     }
 
+    //下面接口为ES
+
+    @GetMapping("/hot")
+    public Result<List<ArticleDTO>> getHotArticles(ArticleHotQuery query){
+        List<ArticleDTO> resp = articleApplicationService.getHotArticles(query);
+        return Result.success(resp);
+    }
+
     @GetMapping("/recommend")
-    public Result<PageDTO<ArticleDTO>> pageRecommendArticle(ArticleRecommendQuery query) {
-        PageDTO<ArticleDTO> resp = articleApplicationService.recommendArticles(query);
+    public Result<List<ArticleDTO>> pageRecommendArticle(ArticleRecommendQuery query) {
+        List<ArticleDTO> resp = articleApplicationService.recommendArticles(query);
         return Result.success(resp);
     }
 
@@ -122,6 +131,12 @@ public class ArticleApplicationController {
     @GetMapping("/es/page")
     public Result<Object> listQueryArticle(ArticleListQuery query) {
         PageDTO<ArticleDTO> resp = articleApplicationService.listQueryArticles(query);
+        return Result.success(resp);
+    }
+
+    @GetMapping("/es/user/page")
+    public Result<PageDTO<ArticleDTO>> listQueryUserArticle(ArticleEsUserPageQuery query) {
+        PageDTO<ArticleDTO> resp = articleApplicationService.listQueryUserArticles(query);
         return Result.success(resp);
     }
 

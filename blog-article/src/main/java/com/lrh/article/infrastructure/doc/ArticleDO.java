@@ -61,9 +61,9 @@ public class ArticleDO {
     private String userName;
 
     @Field(type = FieldType.Keyword)
-    private Integer likeCount;
+    private Long likeCount;
     @Field(type = FieldType.Keyword)
-    private Integer viewCount;
+    private Long viewCount;
 
     @Field(type = FieldType.Keyword)
     private Integer isDeleted;
@@ -90,8 +90,8 @@ public class ArticleDO {
         articleDO.setUpdateTime(articleEntity.getUpdateTime());
         articleDO.setUserId(articleEntity.getUserId());
         articleDO.setUserName(userName);
-        articleDO.setLikeCount(0);
-        articleDO.setViewCount(0);
+        articleDO.setLikeCount(0L);
+        articleDO.setViewCount(0L);
         articleDO.setIsDeleted(0);
         List<LabelDO> labelDOList = articleEntity.getLabelEntityList().stream()
                                                  .map(v -> LabelDO.builder()

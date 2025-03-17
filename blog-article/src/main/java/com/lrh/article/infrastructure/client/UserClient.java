@@ -22,6 +22,14 @@ import java.util.Map;
 public interface UserClient {
     @GetMapping("/api/user/getByIds")
     Result<Map<String, UserVO>> getByIds(@RequestParam("userIds") List<String> userIds);
+    
+    /**
+     * 获取活跃用户ID列表
+     * @param limit 限制返回数量
+     * @return 活跃用户ID列表
+     */
+    @GetMapping("/api/user/active")
+    Result<List<String>> getActiveUserIds(@RequestParam("limit") Integer limit);
 }
 
 
