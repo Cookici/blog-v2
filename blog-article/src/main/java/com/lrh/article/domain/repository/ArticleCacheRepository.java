@@ -1,5 +1,7 @@
 package com.lrh.article.domain.repository;
 
+import com.lrh.article.application.dto.article.ArticleDTO;
+
 import java.util.List;
 import java.util.Map;
 
@@ -29,4 +31,12 @@ public interface ArticleCacheRepository {
     void deleteArticleCache(String articleId);
 
     Boolean deleteArticleLike(String articleId,String ukId);
+
+    List<String> getUserHotArticleIds(String userId);
+
+    void saveUserHotArticleIds(String userId, List<String> articleIds);
+
+    List<ArticleDTO> getUserRecommendArticles(String userId);
+
+    void saveUserRecommendCache(String userId, List<ArticleDTO> articleDTOList);
 }

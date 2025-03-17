@@ -1,6 +1,5 @@
 package com.lrh.article.domain.entity;
 
-import com.lrh.article.infrastructure.doc.ArticleDO;
 import com.lrh.article.infrastructure.po.ArticlePO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,6 +27,8 @@ public class ArticleEntity {
     private String status;
     private String articleTitle;
     private String articleContent;
+    private Long viewCount;
+    private Long likeCount;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 
@@ -45,6 +46,8 @@ public class ArticleEntity {
                 .createTime(articlePO.getCreateTime())
                 .updateTime(articlePO.getUpdateTime())
                 .status(articlePO.getStatus())
+                .likeCount(articlePO.getLikeCount())
+                .viewCount(articlePO.getViewCount())
                 .build();
     }
 }

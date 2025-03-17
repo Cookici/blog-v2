@@ -48,6 +48,12 @@ public class ArticlePO {
     @TableField("update_time")
     private LocalDateTime updateTime;
 
+    @TableField("like_count")
+    private Long likeCount;
+
+    @TableField("view_count")
+    private Long viewCount;
+
     @TableField("status")
     private String status;
 

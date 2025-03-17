@@ -22,15 +22,13 @@ public class UserDataDTO {
     private Long likeCount;
     private Long viewCount;
     private Long commentCount;
-    private Long friendApplyCount;
 
-    public static UserDataDTO fromEntity(UserArticleDataEntity userArticleData, Long commentCount, Long friendApplyCount) {
+    public static UserDataDTO fromEntity(UserArticleDataEntity userArticleData, Long commentCount) {
         return new UserDataDTO(
                 userArticleData.getArticleCount(),
                 userArticleData.getLikeCount(),
                 userArticleData.getViewCount(),
-                commentCount,
-                friendApplyCount
+                commentCount
         );
     }
 }

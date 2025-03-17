@@ -19,6 +19,7 @@ import com.lrh.common.context.UserContext;
 import com.lrh.common.util.IdUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -149,7 +150,7 @@ public class ArticleOperateService {
         }
         // TODO 内容检测
         articleRepository.updateArticleSatusById(article.getArticleId(), Published.getStatus());
-        ArticleDO articleDO = ArticleDO.fromArticleEntity(articleEntity,article.getUserName());
+        ArticleDO articleDO = ArticleDO.fromArticleEntity(articleEntity, article.getUserName());
         articleRepository.saveArticleDo(articleDO);
         log.info("消费成功");
     }
@@ -168,7 +169,7 @@ public class ArticleOperateService {
             commentOperateRepository.deleteCommentsByArticle(command.getArticleId());
             articleCacheRepository.deleteArticleCache(command.getArticleId());
         });
-        return new ArticleMessageVO(command.getArticleId(),UserContext.getUsername(), Deleted);
+        return new ArticleMessageVO(command.getArticleId(), UserContext.getUsername(), Deleted);
     }
 
     private void validExceptionOperate(String articleId, String userId) {
@@ -195,7 +196,7 @@ public class ArticleOperateService {
             articleLabelOperateRepository.restoreDeletedArticleLabel(command.getArticleId(), command.getLabelIdList());
             articleLabelOperateRepository.upsertLabelForArticle(command.getArticleId(), command.getLabelIdList());
         });
-        return new ArticleMessageVO(command.getArticleId(),UserContext.getUsername(), Deleted);
+        return new ArticleMessageVO(command.getArticleId(), UserContext.getUsername(), Deleted);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -210,16 +211,18 @@ public class ArticleOperateService {
                 .build();
         articleRepository.insertArticle(articlePO);
         if (command.getLabelIdList().isEmpty()) {
-            return new ArticleMessageVO(articlePO.getArticleId(),UserContext.getUsername(), UnderAudit);
+            return new ArticleMessageVO(articlePO.getArticleId(), UserContext.getUsername(), UnderAudit);
         }
         articleLabelOperateRepository.upsertLabelForArticle(articlePO.getArticleId(), command.getLabelIdList());
-        return new ArticleMessageVO(articlePO.getArticleId(),UserContext.getUsername(), UnderAudit);
+        return new ArticleMessageVO(articlePO.getArticleId(), UserContext.getUsername(), UnderAudit);
     }
 
+    @Async("articleAsyncExecutor")
     public void articleViewIncrement(ArticleViewCommand command) {
         articleCacheRepository.incrArticleViewCount(command.getArticleId(), UserContext.getUserId());
     }
 
+    @Async("articleAsyncExecutor")
     public void articleLikeIncrement(ArticleLikeCommand command) {
         Boolean isSuccess = articleCacheRepository.incrArticleLikeCount(command.getArticleId(), UserContext.getUserId());
         if (isSuccess) {
@@ -227,15 +230,18 @@ public class ArticleOperateService {
                 articleLikeRepository.incrArticleLikeCount(command.getArticleId(), UserContext.getUserId());
             } catch (Exception e) {
                 articleCacheRepository.deleteArticleLike(command.getArticleId(), UserContext.getUserId());
-                throw new RuntimeException(e);
+                log.error("文章点赞失败，articleId: {}, userId: {}", command.getArticleId(), UserContext.getUserId(), e);
+                throw new RuntimeException("文章点赞失败", e);
             }
         }
     }
 
+    @Async("articleAsyncExecutor")
     public void articleNoLoginViewIncrement(ArticleNoLoginViewCommand command) {
         articleCacheRepository.incrArticleViewCount(command.getArticleId(), command.getIp());
     }
 
+    @Async("articleAsyncExecutor")
     public void articleNoLoginLikeIncrement(ArticleNoLoginLikeCommand command) {
         articleCacheRepository.incrArticleLikeCount(command.getArticleId(), command.getIp());
     }
@@ -293,11 +299,11 @@ public class ArticleOperateService {
     }
 
 
-    public Long countUserArticlesEsPage(ArticleListQuery query) {
+    public Long countArticlesEsPage(ArticleListQuery query) {
         return articleRepository.countArticlesByEsQuery(query);
     }
 
-    public List<ArticleEntity> getUserArticlesEsPage(ArticleListQuery query) {
+    public List<ArticleEntity> getArticlesEsPage(ArticleListQuery query) {
         List<ArticleDO> articleListByEsQuery = articleRepository.getArticleListByEsQuery(query);
         return articleListByEsQuery.stream()
                 .map(ArticleDO::toArticleEntity)
@@ -332,5 +338,58 @@ public class ArticleOperateService {
         return articleDOList.stream()
                 .map(ArticleDO::toArticleEntity)
                 .collect(Collectors.toList());
+    }
+
+    public Long countEsUserArticlesEsPage(ArticleEsUserPageQuery query) {
+        return articleRepository.countUserArticlesEsPage(query);
+    }
+
+    public List<ArticleEntity> getEsUserArticlesEsPage(ArticleEsUserPageQuery query) {
+        List<ArticleDO> articleDOList = articleRepository.getUserArticlesEsPage(query);
+        if (articleDOList == null) {
+            return new ArrayList<>();
+        }
+
+        return articleDOList.stream()
+                .map(ArticleDO::toArticleEntity)
+                .collect(Collectors.toList());
+    }
+
+    public List<ArticleEntity> getHotArticles(ArticleHotQuery query) {
+        List<String> articleIds = articleCacheRepository.getUserHotArticleIds(query.getUserId());
+        List<ArticleDO> articleDOList = articleRepository.getHotArticles(articleIds);
+        if (articleDOList == null || articleDOList.isEmpty()) {
+            List<ArticleDO> hotArticlesTop = articleRepository.getHotArticlesTop(10);
+            return hotArticlesTop.stream()
+                    .map(ArticleDO::toArticleEntity)
+                    .collect(Collectors.toList());
+        }
+        return articleDOList.stream()
+                .map(ArticleDO::toArticleEntity)
+                .collect(Collectors.toList());
+    }
+
+    public List<ArticleEntity> getRecommendArticles(String userId) {
+        // 1. 获取用户喜欢的文章标签
+        List<String> userLikedLabels = articleLabelOperateRepository.getUserLikedLabels(userId);
+        
+        // 2. 获取推荐文章
+        List<ArticlePO> recommendArticles = articleRepository.getRecommendArticles(userId, userLikedLabels);
+        
+        if (recommendArticles == null || recommendArticles.isEmpty()) {
+            // 如果没有匹配的推荐文章，返回热门文章
+            recommendArticles = articleRepository.getHotArticles(10);
+        }
+        
+        if (recommendArticles == null) {
+            return new ArrayList<>();
+        }
+        
+        List<ArticleEntity> articleEntityList = ArticleConvertor.toArticleEntityListConvertor(recommendArticles);
+        
+        // 为每篇文章设置对应的标签列表
+        setLabelListForArticleEntityList(articleEntityList);
+        
+        return articleEntityList;
     }
 }

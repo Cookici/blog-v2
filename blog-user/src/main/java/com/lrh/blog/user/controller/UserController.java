@@ -108,4 +108,11 @@ public class UserController {
         return Result.success(userVOList);
     }
 
+
+    @GetMapping("/active")
+    Result<List<String>> getActiveUserIds(@RequestParam("limit") Integer limit) {
+        List<String> activeUserIds = userService.getActiveUserIds(limit);
+        return Result.success(activeUserIds);
+    }
+
 }

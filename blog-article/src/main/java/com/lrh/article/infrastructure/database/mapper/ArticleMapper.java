@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @ProjectName: blog-ddd
@@ -30,4 +31,10 @@ public interface ArticleMapper extends BaseMapper<ArticlePO> {
     List<ArticlePO> selectUserPageArticle(@Param("query") ArticleUserPageQuery query,
                                           @Param("offset") Long offset,
                                           @Param("limit") Long limit);
+
+    /**
+     * 批量更新文章指标数据
+     * @param updateBatch 更新数据批次
+     */
+    void batchUpdateMetrics(@Param("list") List<Map<String, Object>> updateBatch);
 }

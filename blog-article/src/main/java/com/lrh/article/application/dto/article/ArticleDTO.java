@@ -56,6 +56,8 @@ public class ArticleDTO {
                 .userInfo(userVO)
                 .status(articleEntity.getStatus())
                 .labels(LabelDTO.fromEntityList(articleEntity.getLabelEntityList()))
+                .likeCount(articleEntity.getLikeCount())
+                .viewCount(articleEntity.getViewCount())
                 .build();
     }
 

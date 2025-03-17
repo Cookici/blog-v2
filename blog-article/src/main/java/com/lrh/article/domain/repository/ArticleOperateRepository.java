@@ -1,13 +1,11 @@
 package com.lrh.article.domain.repository;
 
-import com.lrh.article.application.cqe.article.ArticleLikePageQuery;
-import com.lrh.article.application.cqe.article.ArticleListQuery;
-import com.lrh.article.application.cqe.article.ArticlePageQuery;
-import com.lrh.article.application.cqe.article.ArticleUserPageQuery;
+import com.lrh.article.application.cqe.article.*;
 import com.lrh.article.infrastructure.doc.ArticleDO;
 import com.lrh.article.infrastructure.po.ArticlePO;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -54,4 +52,48 @@ public interface ArticleOperateRepository {
     Long countLikeArticle(ArticleLikePageQuery query, Set<String> likeIds);
 
     List<ArticleDO> getLikeArticleList(ArticleLikePageQuery query, Set<String> likeArticleIds);
+
+
+    /**
+     * 获取所有文章ID
+     * @return 所有文章ID列表
+     */
+    List<String> getAllArticleIds();
+
+    /**
+     * 批量更新文章点赞和浏览量数据
+     * @param updateBatch 更新数据批次
+     */
+    void batchUpdateArticleMetrics(List<Map<String, Object>> updateBatch);
+
+    /**
+     * 更新ES中文章的点赞和浏览量数据
+     * @param articleId 文章ID
+     * @param likeCount 点赞数
+     * @param viewCount 浏览量
+     */
+    void updateArticleEsMetrics(String articleId, Long likeCount, Long viewCount);
+
+    Long countUserArticlesEsPage(ArticleEsUserPageQuery query);
+
+    List<ArticleDO> getUserArticlesEsPage(ArticleEsUserPageQuery query);
+
+    List<ArticleDO> getHotArticles(List<String> articleIds);
+
+    List<ArticleDO> getHotArticlesTop(Integer top);
+
+    /**
+     * 获取推荐文章列表
+     * @param userId 用户ID
+     * @param labelNames 用户喜欢的标签列表
+     * @return 推荐文章列表
+     */
+    List<ArticlePO> getRecommendArticles(String userId, List<String> labelNames);
+
+    /**
+     * 获取热门文章列表
+     * @param limit 限制数量
+     * @return 热门文章列表
+     */
+    List<ArticlePO> getHotArticles(int limit);
 }

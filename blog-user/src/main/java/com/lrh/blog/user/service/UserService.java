@@ -40,4 +40,11 @@ public interface UserService extends IService<UserModel> {
     String updateIp(UserUpdateIpCmd cmd);
 
     PageDTO<UserVO> searchPage(UserSearchPageCmd cmd);
+    
+    /**
+     * 获取活跃用户ID列表
+     * @param limit 限制返回数量
+     * @return 活跃用户ID列表
+     */
+    List<String> getActiveUserIds(int limit);
 }
