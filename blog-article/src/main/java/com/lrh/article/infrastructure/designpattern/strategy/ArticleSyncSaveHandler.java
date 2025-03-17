@@ -18,7 +18,7 @@ public class ArticleSyncSaveHandler extends ArticleSyncUpdateHandler implements 
 
     @Override
     public void syncArticleUpdate(ArticleMessageVO article) {
-        articleOperateService.syncUpdateArticle(article.getArticleId());
+        articleOperateService.syncUpdateArticle(article);
     }
 
     @Override

@@ -81,7 +81,7 @@ public class ArticleDO {
         return articleEntity;
     }
 
-    public static ArticleDO fromArticleEntity(ArticleEntity articleEntity) {
+    public static ArticleDO fromArticleEntity(ArticleEntity articleEntity,String userName) {
         ArticleDO articleDO = new ArticleDO();
         articleDO.setArticleId(articleEntity.getArticleId());
         articleDO.setArticleTitle(articleEntity.getArticleTitle());
@@ -89,6 +89,7 @@ public class ArticleDO {
         articleDO.setCreateTime(articleEntity.getCreateTime());
         articleDO.setUpdateTime(articleEntity.getUpdateTime());
         articleDO.setUserId(articleEntity.getUserId());
+        articleDO.setUserName(userName);
         articleDO.setLikeCount(0);
         articleDO.setViewCount(0);
         articleDO.setIsDeleted(0);

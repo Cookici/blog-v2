@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class ArticleMessageVO {
-    String articleId;
-    ArticleStatusEnum status;
+    private String articleId;
+    private String userName;
+    private ArticleStatusEnum status;
 }
