@@ -79,10 +79,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
     private final RoleClient roleClient;
 
     private final ApplicationEventPublisher eventPublisher;
-    
-    public UserServiceImpl(UserMapper userMapper, RedisTemplate<String, Object> redisTemplate, 
-                          RedissonClient redissonClient, OssClient ossClient, 
-                          RoleClient roleClient, ApplicationEventPublisher eventPublisher) {
+
+    public UserServiceImpl(UserMapper userMapper, RedisTemplate<String, Object> redisTemplate,
+                           RedissonClient redissonClient, OssClient ossClient,
+                           RoleClient roleClient, ApplicationEventPublisher eventPublisher) {
         this.userMapper = userMapper;
         this.redisTemplate = redisTemplate;
         this.redissonClient = redissonClient;
@@ -157,7 +157,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
             }
 
             Result<Boolean> booleanResult = roleClient
-                    .bindUserRole(new UserRoleBindReq(userModel.getUserId(),UserConstant.LOGIN_ROLE));
+                    .bindUserRole(new UserRoleBindReq(userModel.getUserId(), UserConstant.LOGIN_ROLE));
             if (!booleanResult.getData()) {
                 throw new RuntimeException("角色绑定失败");
             }
@@ -168,21 +168,55 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
 
     @Override
     public UserUpdateResp updateUserInfo(UserUpdateCmd cmd) {
-        LambdaUpdateWrapper<UserModel> updateWrapper = Wrappers.lambdaUpdate(UserModel.class)
+        // 1. 先获取当前用户信息
+        LambdaQueryWrapper<UserModel> queryWrapper = Wrappers.lambdaQuery(UserModel.class)
                 .eq(UserModel::getUserId, cmd.getUserId())
-                .eq(UserModel::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
-                .set(UserModel::getUserName, cmd.getUserName())
-                .set(UserModel::getUserSex, cmd.getUserSex())
-                .set(UserModel::getUserBirthday, cmd.getUserBirthday());
-        int update = userMapper.update(updateWrapper);
-        if (update <= 0) {
+                .eq(UserModel::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
+        UserModel userModel = userMapper.selectOne(queryWrapper);
+        if (userModel == null || userModel.getIsDeleted().equals(BusinessConstant.IS_DELETED)) {
+            log.warn("[UserServiceImpl] updateUserInfo 用户不存在或已删除: userId={}", cmd.getUserId());
             return null;
         }
-        
-        // 发布用户更新事件
-        eventPublisher.publishEvent(new UserUpdateEvent(this, cmd.getUserId(), cmd.getUserName()));
-        log.info("[UserServiceImpl] updateUserInfo 用户信息更新成功，已发布更新事件: userId={}, userName={}", cmd.getUserId(), cmd.getUserName());
-        
+
+        // 2. 构建动态更新条件
+        LambdaUpdateWrapper<UserModel> updateWrapper = Wrappers.lambdaUpdate(UserModel.class)
+                .eq(UserModel::getUserId, cmd.getUserId())
+                .eq(UserModel::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
+
+        boolean needUpdate = false;
+
+        if (cmd.isFieldUpdated("userName")) {
+            updateWrapper.set(UserModel::getUserName, cmd.getUserName());
+            needUpdate = true;
+        }
+
+        if (cmd.isFieldUpdated("userSex")) {
+            updateWrapper.set(UserModel::getUserSex, cmd.getUserSex());
+            needUpdate = true;
+        }
+
+        if (cmd.isFieldUpdated("userBirthday")) {
+            updateWrapper.set(UserModel::getUserBirthday, cmd.getUserBirthday());
+            needUpdate = true;
+        }
+
+        if (!needUpdate) {
+            log.info("[UserServiceImpl] updateUserInfo 没有需要更新的字段: userId={}", cmd.getUserId());
+            return new UserUpdateResp(0);
+        }
+
+        int update = userMapper.update(updateWrapper);
+        if (update <= 0) {
+            log.error("[UserServiceImpl] updateUserInfo 更新失败: userId={}", cmd.getUserId());
+            return null;
+        }
+
+        if (cmd.isFieldUpdated("userName") && !userModel.getUserName().equals(cmd.getUserName())) {
+            eventPublisher.publishEvent(new UserUpdateEvent(this, cmd.getUserId(), cmd.getUserName()));
+            log.info("[UserServiceImpl] updateUserInfo 用户名更新成功，已发布更新事件: userId={}, oldName={}, newName={}",
+                    cmd.getUserId(), userModel.getUserName(), cmd.getUserName());
+        }
+
         return new UserUpdateResp(update);
     }
 
@@ -262,7 +296,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
                 );
 
         Long total = userMapper.selectCount(queryWrapper);
-        if(total == null || total == 0L){
+        if (total == null || total == 0L) {
             return new PageDTO<>();
         }
 
@@ -333,10 +367,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
         // 基于最近登录时间获取活跃用户
         LambdaQueryWrapper<UserModel> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.orderByDesc(UserModel::getUpdateTime)
-                    .last("LIMIT " + limit);
-        
+                .last("LIMIT " + limit);
+
         List<UserModel> activeUsers = this.list(queryWrapper);
-        
+
         return activeUsers.stream()
                 .map(UserModel::getUserId)
                 .collect(Collectors.toList());
