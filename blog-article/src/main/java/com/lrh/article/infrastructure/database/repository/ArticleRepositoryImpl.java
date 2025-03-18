@@ -13,12 +13,11 @@ import com.lrh.article.infrastructure.doc.ArticleDO;
 import com.lrh.article.infrastructure.po.ArticleLabelPO;
 import com.lrh.article.infrastructure.po.ArticlePO;
 import com.lrh.common.constant.BusinessConstant;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -30,6 +29,7 @@ import java.util.stream.Collectors;
  * @Date: 2024/12/14 20:54
  */
 
+@Slf4j
 @Repository
 public class ArticleRepositoryImpl implements ArticleOperateRepository {
 
@@ -219,43 +219,43 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
         if (labelNames == null || labelNames.isEmpty()) {
             return getHotArticles(10);
         }
-        
+
         // 1. 获取与用户标签偏好相关的文章标签关系
         LambdaQueryWrapper<ArticleLabelPO> labelQueryWrapper = Wrappers.lambdaQuery(ArticleLabelPO.class)
                 .in(ArticleLabelPO::getLabelId, labelNames)
                 .eq(ArticleLabelPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
         List<ArticleLabelPO> articleLabelPOList = articleLabelMapper.selectList(labelQueryWrapper);
-        
+
         if (articleLabelPOList == null || articleLabelPOList.isEmpty()) {
             return getHotArticles(10);
         }
-        
+
         // 2. 提取相关文章ID
         List<String> recommendArticleIds = articleLabelPOList.stream()
                 .map(ArticleLabelPO::getArticleId)
                 .distinct()
                 .collect(Collectors.toList());
-        
+
         // 3. 查询文章详情，排除用户自己的文章和已删除的文章
         LambdaQueryWrapper<ArticlePO> queryWrapper = Wrappers.lambdaQuery(ArticlePO.class)
                 .in(ArticlePO::getArticleId, recommendArticleIds)
                 .ne(ArticlePO::getUserId, userId)
                 .eq(ArticlePO::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
                 .eq(ArticlePO::getStatus, ArticleStatusEnum.Published);
-        
+
         // 4. 按更新时间降序排序，限制返回10条
         queryWrapper.orderByDesc(ArticlePO::getUpdateTime);
-        
+
         // 5. 查询并返回推荐文章列表
         List<ArticlePO> recommendArticles = articleMapper.selectList(queryWrapper);
-        
+
         // 如果推荐文章不足10条，补充热门文章
         if (recommendArticles.size() < 10) {
             // 获取已推荐的文章ID
             Set<String> existingArticleIds = recommendArticles.stream()
                     .map(ArticlePO::getArticleId)
                     .collect(Collectors.toSet());
-            
+
             // 查询热门文章，排除已推荐的文章
             LambdaQueryWrapper<ArticlePO> hotQueryWrapper = Wrappers.lambdaQuery(ArticlePO.class)
                     .notIn(!existingArticleIds.isEmpty(), ArticlePO::getArticleId, existingArticleIds)
@@ -264,11 +264,11 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
                     .eq(ArticlePO::getStatus, ArticleStatusEnum.Published)
                     .orderByDesc(ArticlePO::getViewCount)
                     .last("LIMIT " + (10 - recommendArticles.size()));
-            
+
             List<ArticlePO> hotArticles = articleMapper.selectList(hotQueryWrapper);
             recommendArticles.addAll(hotArticles);
         }
-        
+
         return recommendArticles;
     }
 
@@ -280,7 +280,70 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
                 .eq(ArticlePO::getStatus, ArticleStatusEnum.Published)
                 .orderByDesc(ArticlePO::getViewCount)
                 .last("LIMIT " + limit);
-        
+
         return articleMapper.selectList(queryWrapper);
     }
+
+    @Override
+    public Long countArticlesForReconciliation(LocalDateTime startTime, LocalDateTime endTime) {
+        LambdaQueryWrapper<ArticlePO> queryWrapper = Wrappers.lambdaQuery(ArticlePO.class);
+
+
+        if (startTime != null && endTime != null) {
+            queryWrapper.between(ArticlePO::getUpdateTime, startTime, endTime);
+        }
+
+        return articleMapper.selectCount(queryWrapper);
+    }
+
+    @Override
+    public List<String> getArticleIdsForReconciliation(LocalDateTime startTime, LocalDateTime endTime, int page, int size) {
+        LambdaQueryWrapper<ArticlePO> queryWrapper = Wrappers.lambdaQuery(ArticlePO.class);
+
+        queryWrapper.select(ArticlePO::getArticleId);
+
+        // 如果指定了时间范围，则添加时间条件
+        if (startTime != null && endTime != null) {
+            queryWrapper.between(ArticlePO::getUpdateTime, startTime, endTime);
+        }
+
+        int offset = (page - 1) * size;
+
+        queryWrapper.orderByDesc(ArticlePO::getUpdateTime).last("LIMIT " + offset + " , " + size);
+
+
+        return articleMapper.selectList(queryWrapper).stream().map(ArticlePO::getArticleId).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ArticleDO> getArticleEsByIds(List<String> articleIds) {
+        if (articleIds == null || articleIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<ArticleDO> result = new ArrayList<>();
+        for (String articleId : articleIds) {
+            ArticleDO article = articleEsDao.getArticleById(articleId);
+            if (article != null) {
+                result.add(article);
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public int batchSaveArticleDo(List<ArticleDO> articlesToAdd) {
+        if (articlesToAdd == null || articlesToAdd.isEmpty()) {
+            return 0;
+        }
+        return articleEsDao.batchSaveArticles(articlesToAdd);
+    }
+
+    @Override
+    public int batchUpdateArticleDo(List<ArticleDO> needUpdateEsArticles) {
+        if (needUpdateEsArticles == null || needUpdateEsArticles.isEmpty()) {
+            return 0;
+        }
+        return articleEsDao.batchUpdateArticles(needUpdateEsArticles);
+    }
+
 }

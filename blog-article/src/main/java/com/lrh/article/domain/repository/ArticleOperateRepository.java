@@ -4,6 +4,7 @@ import com.lrh.article.application.cqe.article.*;
 import com.lrh.article.infrastructure.doc.ArticleDO;
 import com.lrh.article.infrastructure.po.ArticlePO;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -96,4 +97,33 @@ public interface ArticleOperateRepository {
      * @return 热门文章列表
      */
     List<ArticlePO> getHotArticles(int limit);
+
+    /**
+     * 获取需要对账的文章总数
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 文章总数
+     */
+    Long countArticlesForReconciliation(LocalDateTime startTime, LocalDateTime endTime);
+    
+    /**
+     * 获取需要对账的文章ID列表
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @param page 页码
+     * @param size 每页大小
+     * @return 文章ID列表
+     */
+    List<String> getArticleIdsForReconciliation(LocalDateTime startTime, LocalDateTime endTime, int page, int size);
+    
+    /**
+     * 从ES获取指定ID的文章列表
+     * @param articleIds 文章ID列表
+     * @return ES中的文章列表
+     */
+    List<ArticleDO> getArticleEsByIds(List<String> articleIds);
+
+    int batchSaveArticleDo(List<ArticleDO> articlesToAdd);
+
+    int batchUpdateArticleDo(List<ArticleDO> needUpdateEsArticles);
 }

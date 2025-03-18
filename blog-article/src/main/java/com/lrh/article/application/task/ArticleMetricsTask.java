@@ -35,9 +35,9 @@ public class ArticleMetricsTask {
 
     /**
      * 定时同步文章点赞和浏览量数据到ES和数据库
-     * 每10分钟执行一次
+     * 每1小时执行一次
      */
-    @Scheduled(fixedRate = 600000)
+    @Scheduled(cron = "0 0 * * * ?")
     public void syncArticleMetricsData() {
         log.info("开始同步文章点赞和浏览量数据");
         try {

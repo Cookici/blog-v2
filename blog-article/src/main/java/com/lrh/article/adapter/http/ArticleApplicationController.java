@@ -5,6 +5,7 @@ import com.lrh.article.application.dto.PageDTO;
 import com.lrh.article.application.dto.UserDataDTO;
 import com.lrh.article.application.dto.article.ArticleDTO;
 import com.lrh.article.application.service.ArticleApplicationService;
+import com.lrh.article.application.task.ArticleDataConsistencyTask;
 import com.lrh.common.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -26,9 +27,11 @@ import java.util.List;
 public class ArticleApplicationController {
 
     private final ArticleApplicationService articleApplicationService;
+    private final ArticleDataConsistencyTask articleDataConsistencyTask;
 
-    public ArticleApplicationController(ArticleApplicationService articleApplicationService) {
+    public ArticleApplicationController(ArticleApplicationService articleApplicationService, ArticleDataConsistencyTask articleDataConsistencyTask) {
         this.articleApplicationService = articleApplicationService;
+        this.articleDataConsistencyTask = articleDataConsistencyTask;
     }
 
     @GetMapping("/get/{articleId}")
