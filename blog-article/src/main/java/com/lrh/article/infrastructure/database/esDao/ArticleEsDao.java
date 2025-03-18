@@ -265,10 +265,10 @@ public class ArticleEsDao {
             for (ArticleDO ignored : savedArticles) {
                 count++;
             }
-            log.info("批量保存文章到ES成功，共{}篇", count);
+            log.info("[ArticleEsDao] batchSaveArticles 批量保存文章到ES成功，共{}篇", count);
             return count;
         } catch (Exception e) {
-            log.error("批量保存文章到ES失败: {}", e.getMessage(), e);
+            log.error("[ArticleEsDao] batchSaveArticles 批量保存文章到ES失败: {}", e.getMessage(), e);
             return 0;
         }
     }
@@ -289,10 +289,60 @@ public class ArticleEsDao {
             for (ArticleDO ignored : updatedArticles) {
                 count++;
             }
-            log.info("批量更新ES文章成功，共{}篇", count);
+            log.info("[ArticleEsDao] batchUpdateArticles 批量更新ES文章成功，共{}篇", count);
             return count;
         } catch (Exception e) {
-            log.error("批量更新ES文章失败: {}", e.getMessage(), e);
+            log.error("[ArticleEsDao] batchUpdateArticles 批量更新ES文章失败: {}", e.getMessage(), e);
+            return 0;
+        }
+    }
+
+    /**
+     * 根据用户ID批量更新文章用户名
+     *
+     * @param userId 用户ID
+     * @param userName 新的用户名
+     * @return 更新的文章数量
+     */
+    public int updateUserNameByUserId(String userId, String userName) {
+        if (StringUtils.isBlank(userId) || StringUtils.isBlank(userName)) {
+            log.warn("[ArticleEsDao] updateUserNameByUserId 更新ES文章用户名失败：userId或userName为空");
+            return 0;
+        }
+
+        try {
+            // 构建查询条件：查找该用户的所有未删除文章
+            NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder();
+            BoolQueryBuilder boolQuery = QueryBuilders.boolQuery()
+                    .must(QueryBuilders.termQuery("userId", userId))
+                    .must(QueryBuilders.termQuery("isDeleted", BusinessConstant.IS_NOT_DELETED));
+            
+            queryBuilder.withQuery(boolQuery);
+            
+            // 执行查询获取所有匹配的文章
+            SearchHits<ArticleDO> searchHits = elasticsearchRestTemplate.search(
+                    queryBuilder.build(), ArticleDO.class);
+            
+            List<ArticleDO> articles = searchHits.stream()
+                    .map(SearchHit::getContent)
+                    .collect(Collectors.toList());
+            
+            if (articles.isEmpty()) {
+                log.info("[ArticleEsDao] updateUserNameByUserId 用户[{}]在ES中没有文章，无需更新用户名", userId);
+                return 0;
+            }
+            
+            // 更新每篇文章的用户名
+            for (ArticleDO article : articles) {
+                article.setUserName(userName);
+            }
+            
+            // 批量保存更新后的文章
+            int updatedCount = batchUpdateArticles(articles);
+            log.info("[ArticleEsDao] updateUserNameByUserId 成功更新用户[{}]的ES文章用户名为[{}]，共更新{}篇", userId, userName, updatedCount);
+            return updatedCount;
+        } catch (Exception e) {
+            log.error("[ArticleEsDao] updateUserNameByUserId 更新用户[{}]的ES文章用户名失败: {}", userId, e.getMessage(), e);
             return 0;
         }
     }

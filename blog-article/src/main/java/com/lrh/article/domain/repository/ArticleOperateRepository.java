@@ -126,4 +126,6 @@ public interface ArticleOperateRepository {
     int batchSaveArticleDo(List<ArticleDO> articlesToAdd);
 
     int batchUpdateArticleDo(List<ArticleDO> needUpdateEsArticles);
+
+    Integer updateArticleEsUserName(String userId, String userName);
 }
