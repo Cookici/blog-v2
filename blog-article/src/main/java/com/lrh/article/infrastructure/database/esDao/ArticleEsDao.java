@@ -238,4 +238,62 @@ public class ArticleEsDao {
                 .map(SearchHit::getContent)
                 .collect(Collectors.toList());
     }
+
+    /**
+     * 根据ID获取ES中的文章
+     *
+     * @param articleId 文章ID
+     * @return 文章对象，如果不存在则返回null
+     */
+    public ArticleDO getArticleById(String articleId) {
+        return elasticsearchRestTemplate.get(articleId, ArticleDO.class);
+    }
+
+    /**
+     * 批量保存文章到ES
+     * @param articles 文章列表
+     * @return 成功保存的数量
+     */
+    public int batchSaveArticles(List<ArticleDO> articles) {
+        if (articles == null || articles.isEmpty()) {
+            return 0;
+        }
+
+        try {
+            Iterable<ArticleDO> savedArticles = elasticsearchRestTemplate.save(articles);
+            int count = 0;
+            for (ArticleDO ignored : savedArticles) {
+                count++;
+            }
+            log.info("批量保存文章到ES成功，共{}篇", count);
+            return count;
+        } catch (Exception e) {
+            log.error("批量保存文章到ES失败: {}", e.getMessage(), e);
+            return 0;
+        }
+    }
+
+    /**
+     * 批量更新文章到ES
+     * @param articles 文章列表
+     * @return 成功更新的数量
+     */
+    public int batchUpdateArticles(List<ArticleDO> articles) {
+        if (articles == null || articles.isEmpty()) {
+            return 0;
+        }
+
+        try {
+            Iterable<ArticleDO> updatedArticles = elasticsearchRestTemplate.save(articles);
+            int count = 0;
+            for (ArticleDO ignored : updatedArticles) {
+                count++;
+            }
+            log.info("批量更新ES文章成功，共{}篇", count);
+            return count;
+        } catch (Exception e) {
+            log.error("批量更新ES文章失败: {}", e.getMessage(), e);
+            return 0;
+        }
+    }
 }

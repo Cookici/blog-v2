@@ -29,4 +29,14 @@ public class RedisConstant {
      * 文章推荐预热锁
      */
     public static final String ARTICLE_RECOMMEND_PRELOAD_LOCK = "article:recommend:preload:lock";
+    
+    /**
+     * 文章数据库与ES每日增量对账锁
+     */
+    public static final String ARTICLE_RECONCILIATION_LOCK = "article:reconciliation:lock";
+    
+    /**
+     * 文章数据库与ES全量对账锁
+     */
+    public static final String ARTICLE_FULL_RECONCILIATION_LOCK = "article:full:reconciliation:lock";
 }
