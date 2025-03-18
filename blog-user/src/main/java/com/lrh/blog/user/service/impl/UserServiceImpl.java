@@ -13,6 +13,7 @@ import com.lrh.blog.user.dto.cqe.*;
 import com.lrh.blog.user.dto.req.ImageUploadReq;
 import com.lrh.blog.user.dto.resp.*;
 import com.lrh.blog.user.dto.vo.UserVO;
+import com.lrh.blog.user.event.UserUpdateEvent;
 import com.lrh.blog.user.mapper.UserMapper;
 import com.lrh.blog.user.model.UserModel;
 import com.lrh.blog.user.romote.OssClient;
@@ -32,6 +33,7 @@ import io.seata.spring.annotation.GlobalTransactional;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -76,12 +78,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
 
     private final RoleClient roleClient;
 
-    public UserServiceImpl(UserMapper userMapper, RedisTemplate<String, Object> redisTemplate, RedissonClient redissonClient, OssClient ossClient, RoleClient roleClient) {
+    private final ApplicationEventPublisher eventPublisher;
+    
+    public UserServiceImpl(UserMapper userMapper, RedisTemplate<String, Object> redisTemplate, 
+                          RedissonClient redissonClient, OssClient ossClient, 
+                          RoleClient roleClient, ApplicationEventPublisher eventPublisher) {
         this.userMapper = userMapper;
         this.redisTemplate = redisTemplate;
         this.redissonClient = redissonClient;
         this.ossClient = ossClient;
         this.roleClient = roleClient;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -171,6 +178,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
         if (update <= 0) {
             return null;
         }
+        
+        // 发布用户更新事件
+        eventPublisher.publishEvent(new UserUpdateEvent(this, cmd.getUserId(), cmd.getUserName()));
+        log.info("[UserServiceImpl] updateUserInfo 用户信息更新成功，已发布更新事件: userId={}, userName={}", cmd.getUserId(), cmd.getUserName());
+        
         return new UserUpdateResp(update);
     }
 

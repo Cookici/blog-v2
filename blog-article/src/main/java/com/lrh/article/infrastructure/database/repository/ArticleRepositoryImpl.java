@@ -346,4 +346,18 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
         return articleEsDao.batchUpdateArticles(needUpdateEsArticles);
     }
 
+    @Override
+    public Integer updateArticleEsUserName(String userId, String userName) {
+        if (userId == null || userId.isEmpty() || userName == null || userName.isEmpty()) {
+            log.warn("[ArticleRepositoryImpl] updateArticleEsUserName 更新用户文章用户名参数无效: userId={}, userName={}", userId, userName);
+            return 0;
+        }
+        
+        log.info("[ArticleRepositoryImpl] updateArticleEsUserName 开始更新用户[{}]的文章用户名为[{}]", userId, userName);
+        
+        // 直接调用ES DAO的方法批量更新用户名
+        int updatedCount = articleEsDao.updateUserNameByUserId(userId, userName);
+        log.info("[ArticleRepositoryImpl] updateArticleEsUserName ES中成功更新用户[{}]的{}篇文章用户名", userId, updatedCount);
+        return updatedCount;
+    }
 }
