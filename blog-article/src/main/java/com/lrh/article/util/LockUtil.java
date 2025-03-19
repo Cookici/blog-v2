@@ -343,5 +343,37 @@ public class LockUtil {
         }
     }
 
+    /**
+     * 尝试获取锁并执行有返回值的操作
+     * @param lockKey 锁名称
+     * @param supplier 要执行的操作
+     * @param <T> 返回值类型
+     * @return 操作结果
+     */
+    public <T> T tryLockAndReturn(String lockKey, Supplier<T> supplier) {
+        RLock lock = redissonClient.getLock(lockKey);
+        try {
+            boolean isLocked = lock.tryLock(10, 30, TimeUnit.SECONDS);
+            if (isLocked) {
+                try {
+                    return supplier.get();
+                } catch (Exception e) {
+                    log.error("Error while executing task with lock [{}]: {}", lockKey, e.getMessage(), e);
+                    throw new RuntimeException(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
+                } finally {
+                    if (lock.isLocked() && lock.isHeldByCurrentThread()) {
+                        lock.unlock();
+                    }
+                }
+            } else {
+                throw new RuntimeException(BusinessConstant.OPERATOR_MUCH);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Thread interrupted while trying to acquire lock [{}]: {}", lockKey, e.getMessage(), e);
+            throw new RuntimeException(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
+        }
+    }
+
 }
 
