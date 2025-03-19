@@ -2,14 +2,11 @@ package com.lrh.article.domain.service;
 
 import com.lrh.article.application.cqe.comment.*;
 import com.lrh.article.constants.CommentConstant;
-import com.lrh.article.constants.RedisConstant;
 import com.lrh.article.domain.entity.CommentEntity;
 import com.lrh.article.domain.repository.CommentOperateRepository;
 import com.lrh.article.infrastructure.database.convertor.CommentConvertor;
 import com.lrh.article.infrastructure.po.CommentPO;
-import com.lrh.article.util.LockUtil;
 import com.lrh.common.util.IdUtil;
-import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,11 +26,9 @@ public class CommentOperateService {
 
     private final CommentOperateRepository commentOperateRepository;
 
-    private final RedissonClient redissonClient;
 
-    public CommentOperateService(CommentOperateRepository commentOperateRepository, RedissonClient redissonClient) {
+    public CommentOperateService(CommentOperateRepository commentOperateRepository) {
         this.commentOperateRepository = commentOperateRepository;
-        this.redissonClient = redissonClient;
     }
 
 
@@ -58,21 +53,39 @@ public class CommentOperateService {
         return CommentConvertor.toCommentEntityListConvertor(commentPOList);
     }
 
-    public void insertComment(CommentInsertCommand command) {
+
+    /**
+     * 插入评论 - 不使用锁的版本，由应用服务层控制锁
+     */
+    public String insertComment(CommentInsertCommand command) {
+        CommentPO commentPO = getCommentPO(command);
+        
         if (!Objects.equals(command.getParentCommentId(), CommentConstant.TOP_COMMENT_PARENT_ID)) {
-            LockUtil lockUtil = new LockUtil(redissonClient);
-            lockUtil.tryLock(String.format(RedisConstant.PARENT_COMMENT_ID_OPERATOR_LOCK, command.getParentCommentId()), () -> {
-                CommentPO commentParentPO =
-                        commentOperateRepository.selectParentCommentByCommentId(command.getParentCommentId());
-                if (commentParentPO == null) {
-                    throw new RuntimeException("评论已经删除");
-                }
-                CommentPO commentPO = getCommentPO(command);
-                commentOperateRepository.insertComment(commentPO);
-            });
+            // 检查父评论是否存在
+            CommentPO commentParentPO = commentOperateRepository.selectParentCommentByCommentId(command.getParentCommentId());
+            if (commentParentPO == null) {
+                throw new RuntimeException("评论已经删除");
+            }
+        }
+        
+        commentOperateRepository.insertComment(commentPO);
+        return commentPO.getCommentId();
+    }
+
+    /**
+     * 删除评论 - 不使用锁的版本，由应用服务层控制锁
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteComment(CommentDeleteCommand command) {
+        validExceptionOperate(command.getCommentId(), command.getUserId());
+        
+        if (command.getParentCommentId().equals(CommentConstant.TOP_COMMENT_PARENT_ID)) {
+            // 删除顶级评论及其所有子评论
+            commentOperateRepository.deleteTopComment(command.getArticleId(), command.getCommentId());
+            commentOperateRepository.deleteChildComment(command.getArticleId(), command.getCommentId());
         } else {
-            CommentPO commentPO = getCommentPO(command);
-            commentOperateRepository.insertComment(commentPO);
+            // 只删除子评论
+            commentOperateRepository.deleteComment(command.getArticleId(), command.getParentCommentId(), command.getCommentId());
         }
     }
 
@@ -90,19 +103,6 @@ public class CommentOperateService {
     }
 
 
-    @Transactional(rollbackFor = Exception.class)
-    public void deleteComment(CommentDeleteCommand command) {
-        validExceptionOperate(command.getCommentId(), command.getUserId());
-        if (command.getParentCommentId().equals(CommentConstant.TOP_COMMENT_PARENT_ID)) {
-            LockUtil lockUtil = new LockUtil(redissonClient);
-            lockUtil.tryLock(String.format(RedisConstant.PARENT_COMMENT_ID_OPERATOR_LOCK, command.getCommentId()), () -> {
-                commentOperateRepository.deleteTopComment(command.getArticleId(), command.getCommentId());
-                commentOperateRepository.deleteChildComment(command.getArticleId(), command.getCommentId());
-            });
-        } else {
-            commentOperateRepository.deleteComment(command.getArticleId(), command.getParentCommentId(), command.getCommentId());
-        }
-    }
 
     private void validExceptionOperate(String commentId, String userId) {
         CommentPO commentPO = commentOperateRepository.getCommentByCommentId(commentId);
