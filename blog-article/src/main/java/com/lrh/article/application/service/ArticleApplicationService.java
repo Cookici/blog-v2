@@ -11,13 +11,16 @@ import com.lrh.article.domain.repository.ArticleCacheRepository;
 import com.lrh.article.domain.repository.ArticleLikeRepository;
 import com.lrh.article.domain.service.ArticleOperateService;
 import com.lrh.article.domain.service.CommentOperateService;
+import com.lrh.article.domain.vo.ArticleStatusEnum;
 import com.lrh.article.domain.vo.UserVO;
 import com.lrh.article.infrastructure.client.UserClient;
+import com.lrh.article.infrastructure.event.ArticleUpdateEvent;
 import com.lrh.article.util.LockUtil;
 import com.lrh.common.context.UserContext;
 import com.lrh.common.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -45,6 +48,7 @@ public class ArticleApplicationService {
     private final UserClient userClient;
     private final RedissonClient redissonClient;
     private final ArticleLikeRepository articleLikeRepository;
+
 
     public ArticleApplicationService(ArticleOperateService articleOperateService, ArticleCacheRepository articleCacheRepository,
                                      CommentOperateService commentOperateService, UserClient userClient,

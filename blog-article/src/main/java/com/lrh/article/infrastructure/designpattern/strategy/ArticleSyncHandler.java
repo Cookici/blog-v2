@@ -4,8 +4,8 @@ import com.lrh.article.domain.vo.ArticleMessageVO;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class ArticleSyncUpdateHandler {
+public abstract class ArticleSyncHandler {
 
-    public abstract void syncArticleUpdate(ArticleMessageVO articleId);
+    public abstract void syncArticle(ArticleMessageVO articleId);
 }
 
