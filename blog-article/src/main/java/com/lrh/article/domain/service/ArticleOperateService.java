@@ -7,18 +7,20 @@ import com.lrh.article.domain.entity.LabelEntity;
 import com.lrh.article.domain.entity.UserArticleDataEntity;
 import com.lrh.article.domain.repository.*;
 import com.lrh.article.domain.vo.ArticleMessageVO;
+import com.lrh.article.infrastructure.client.OssClient;
 import com.lrh.article.infrastructure.database.convertor.ArticleConvertor;
 import com.lrh.article.infrastructure.database.convertor.LabelConvertor;
 import com.lrh.article.infrastructure.doc.ArticleDO;
+import com.lrh.article.infrastructure.event.ArticleUpdateEvent;
 import com.lrh.article.infrastructure.po.ArticleLabelPO;
 import com.lrh.article.infrastructure.po.ArticlePO;
 import com.lrh.article.infrastructure.po.LabelPO;
 import com.lrh.article.util.LockUtil;
-import com.lrh.common.annotations.ArticleSyncRecords;
 import com.lrh.common.context.UserContext;
 import com.lrh.common.util.IdUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +48,8 @@ public class ArticleOperateService {
     private final ArticleCacheRepository articleCacheRepository;
     private final ArticleLikeRepository articleLikeRepository;
     private final RedissonClient redissonClient;
+    private final ApplicationEventPublisher eventPublisher;
+
 
     public ArticleOperateService(ArticleOperateRepository articleRepository,
                                  ArticleLabelOperateRepository articleLabelOperateRepository,
@@ -53,7 +57,8 @@ public class ArticleOperateService {
                                  CommentOperateRepository commentOperateRepository,
                                  ArticleCacheRepository articleCacheRepository,
                                  ArticleLikeRepository articleLikeRepository,
-                                 RedissonClient redissonClient) {
+                                 RedissonClient redissonClient,
+                                 ApplicationEventPublisher eventPublisher) {
 
         this.articleRepository = articleRepository;
         this.articleLabelOperateRepository = articleLabelOperateRepository;
@@ -62,6 +67,7 @@ public class ArticleOperateService {
         this.articleCacheRepository = articleCacheRepository;
         this.articleLikeRepository = articleLikeRepository;
         this.redissonClient = redissonClient;
+        this.eventPublisher = eventPublisher;
     }
 
 
@@ -84,8 +90,8 @@ public class ArticleOperateService {
     private void setLabelListForArticleEntityList(List<ArticleEntity> articleEntityList) {
         // 提取文章 ID 列表
         List<String> articleIdList = articleEntityList.stream()
-                .map(ArticleEntity::getArticleId)
-                .collect(Collectors.toList());
+                                                      .map(ArticleEntity::getArticleId)
+                                                      .collect(Collectors.toList());
 
         // 获取文章与标签 ID 的映射关系
         List<ArticleLabelPO> articleLabelPOList = articleLabelOperateRepository.getArticleLabelListByArticles(articleIdList);
@@ -97,24 +103,24 @@ public class ArticleOperateService {
         // 获取标签详细信息
         List<LabelPO> labelPOList = labelOperateRepository.getLabelListByIds(
                 articleIdToLabelIdsMap.values().stream()
-                        .flatMap(Collection::stream)
-                        .distinct()
-                        .collect(Collectors.toList())
+                                      .flatMap(Collection::stream)
+                                      .distinct()
+                                      .collect(Collectors.toList())
         );
 
         List<LabelEntity> labelEntityList = LabelConvertor.toListLabelEntityConvertor(labelPOList);
 
         // 构建标签 ID 到标签实体的映射
         Map<String, LabelEntity> labelIdToLabelEntityMap = labelEntityList.stream()
-                .collect(Collectors.toMap(LabelEntity::getLabelId, label -> label));
+                                                                          .collect(Collectors.toMap(LabelEntity::getLabelId, label -> label));
 
         // 为每篇文章设置对应的标签列表
         articleEntityList.forEach(articleEntity -> {
             List<String> labelIds = articleIdToLabelIdsMap.getOrDefault(articleEntity.getArticleId(), Collections.emptyList());
             List<LabelEntity> labels = labelIds.stream()
-                    .map(labelIdToLabelEntityMap::get)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
+                                               .map(labelIdToLabelEntityMap::get)
+                                               .filter(Objects::nonNull)
+                                               .collect(Collectors.toList());
             articleEntity.setLabelEntityList(labels);
         });
     }
@@ -143,7 +149,7 @@ public class ArticleOperateService {
         return articleEntity;
     }
 
-    public void syncUpdateArticle(ArticleMessageVO article) {
+    public void syncSaveArticle(ArticleMessageVO article) {
         ArticleEntity articleEntity = getArticleById(new ArticleQuery(article.getArticleId()));
         if (articleEntity == null) {
             return;
@@ -152,13 +158,11 @@ public class ArticleOperateService {
         articleRepository.updateArticleSatusById(article.getArticleId(), Published.getStatus());
         ArticleDO articleDO = ArticleDO.fromArticleEntity(articleEntity, article.getUserName());
         articleRepository.saveArticleDo(articleDO);
-        log.info("消费成功");
     }
 
 
     @Transactional(rollbackFor = Exception.class)
-    @ArticleSyncRecords
-    public ArticleMessageVO deleteById(ArticleDeleteCommand command) {
+    public void deleteById(ArticleDeleteCommand command) {
         LockUtil lockUtil = new LockUtil(redissonClient);
         lockUtil.tryWriteLock(String.format(RedisConstant.ARTICLE_LOCK, command.getArticleId()), () -> {
             articleLabelOperateRepository.deleteLabelForArticle(command.getArticleId());
@@ -169,7 +173,7 @@ public class ArticleOperateService {
             commentOperateRepository.deleteCommentsByArticle(command.getArticleId());
             articleCacheRepository.deleteArticleCache(command.getArticleId());
         });
-        return new ArticleMessageVO(command.getArticleId(), UserContext.getUsername(), Deleted);
+        eventPublisher.publishEvent(new ArticleUpdateEvent(this,command.getArticleId(),UserContext.getUsername(),Deleted));
     }
 
     private void validExceptionOperate(String articleId, String userId) {
@@ -183,8 +187,7 @@ public class ArticleOperateService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    @ArticleSyncRecords
-    public ArticleMessageVO updateArticleById(ArticleUpdateCommand command) {
+    public void updateArticleById(ArticleUpdateCommand command) {
         validExceptionOperate(command.getArticleId(), command.getUserId());
         LockUtil lockUtil = new LockUtil(redissonClient);
         lockUtil.tryWriteLock(String.format(RedisConstant.ARTICLE_LOCK, command.getArticleId()), () -> {
@@ -196,25 +199,24 @@ public class ArticleOperateService {
             articleLabelOperateRepository.restoreDeletedArticleLabel(command.getArticleId(), command.getLabelIdList());
             articleLabelOperateRepository.upsertLabelForArticle(command.getArticleId(), command.getLabelIdList());
         });
-        return new ArticleMessageVO(command.getArticleId(), UserContext.getUsername(), Deleted);
+        eventPublisher.publishEvent(new ArticleUpdateEvent(this,command.getArticleId(),UserContext.getUsername(), UnderAudit));
+
     }
 
     @Transactional(rollbackFor = Exception.class)
-    @ArticleSyncRecords
-    public ArticleMessageVO insertArticle(ArticleInsertCommand command) {
+    public void insertArticle(ArticleInsertCommand command) {
         ArticlePO articlePO = ArticlePO.builder()
-                .articleId("article_" + IdUtil.getUuid())
-                .articleTitle(command.getArticleTitle())
-                .articleContent(command.getArticleContent())
-                .userId(command.getUserId())
-                .status(UnderAudit.getStatus())
-                .build();
+                                       .articleId("article_" + IdUtil.getUuid())
+                                       .articleTitle(command.getArticleTitle())
+                                       .articleContent(command.getArticleContent())
+                                       .userId(command.getUserId())
+                                       .status(UnderAudit.getStatus())
+                                       .build();
         articleRepository.insertArticle(articlePO);
-        if (command.getLabelIdList().isEmpty()) {
-            return new ArticleMessageVO(articlePO.getArticleId(), UserContext.getUsername(), UnderAudit);
+        if (!command.getLabelIdList().isEmpty()) {
+            articleLabelOperateRepository.upsertLabelForArticle(articlePO.getArticleId(), command.getLabelIdList());
         }
-        articleLabelOperateRepository.upsertLabelForArticle(articlePO.getArticleId(), command.getLabelIdList());
-        return new ArticleMessageVO(articlePO.getArticleId(), UserContext.getUsername(), UnderAudit);
+        eventPublisher.publishEvent(new ArticleUpdateEvent(this,articlePO.getArticleId(),UserContext.getUsername(), UnderAudit));
     }
 
     @Async("articleAsyncExecutor")
@@ -249,19 +251,19 @@ public class ArticleOperateService {
     public UserArticleDataEntity articlesDataByUserId(String userId) {
         List<ArticlePO> articlePOList = articleRepository.getArticlesByUserId(userId);
         List<String> articleIds = articlePOList.stream()
-                .map(ArticlePO::getArticleId)
-                .collect(Collectors.toList());
+                                               .map(ArticlePO::getArticleId)
+                                               .collect(Collectors.toList());
         Long articleCount = (long) articlePOList.size();
         Map<String, Long> articleLikeCountBatch =
                 articleCacheRepository.getArticleLikeCountBatch(articleIds);
         Long likeCount = articleLikeCountBatch.values().stream()
-                .mapToLong(Long::longValue)
-                .sum();
+                                              .mapToLong(Long::longValue)
+                                              .sum();
         Map<String, Long> articleViewCountBatch =
                 articleCacheRepository.getArticleViewCountBatch(articleIds);
         Long viewCount = articleViewCountBatch.values().stream()
-                .mapToLong(Long::longValue)
-                .sum();
+                                              .mapToLong(Long::longValue)
+                                              .sum();
         return new UserArticleDataEntity(articleCount, likeCount, viewCount);
     }
 
@@ -306,8 +308,8 @@ public class ArticleOperateService {
     public List<ArticleEntity> getArticlesEsPage(ArticleListQuery query) {
         List<ArticleDO> articleListByEsQuery = articleRepository.getArticleListByEsQuery(query);
         return articleListByEsQuery.stream()
-                .map(ArticleDO::toArticleEntity)
-                .collect(Collectors.toList());
+                                   .map(ArticleDO::toArticleEntity)
+                                   .collect(Collectors.toList());
     }
 
     public void deleteEsArticle(String articleId) {
@@ -336,8 +338,8 @@ public class ArticleOperateService {
     public List<ArticleEntity> getLikeArticlesPage(ArticleLikePageQuery query, Set<String> likeArticleIds) {
         List<ArticleDO> articleDOList = articleRepository.getLikeArticleList(query, likeArticleIds);
         return articleDOList.stream()
-                .map(ArticleDO::toArticleEntity)
-                .collect(Collectors.toList());
+                            .map(ArticleDO::toArticleEntity)
+                            .collect(Collectors.toList());
     }
 
     public Long countEsUserArticlesEsPage(ArticleEsUserPageQuery query) {
@@ -351,8 +353,8 @@ public class ArticleOperateService {
         }
 
         return articleDOList.stream()
-                .map(ArticleDO::toArticleEntity)
-                .collect(Collectors.toList());
+                            .map(ArticleDO::toArticleEntity)
+                            .collect(Collectors.toList());
     }
 
     public List<ArticleEntity> getHotArticles(ArticleHotQuery query) {
@@ -361,35 +363,35 @@ public class ArticleOperateService {
         if (articleDOList == null || articleDOList.isEmpty()) {
             List<ArticleDO> hotArticlesTop = articleRepository.getHotArticlesTop(10);
             return hotArticlesTop.stream()
-                    .map(ArticleDO::toArticleEntity)
-                    .collect(Collectors.toList());
+                                 .map(ArticleDO::toArticleEntity)
+                                 .collect(Collectors.toList());
         }
         return articleDOList.stream()
-                .map(ArticleDO::toArticleEntity)
-                .collect(Collectors.toList());
+                            .map(ArticleDO::toArticleEntity)
+                            .collect(Collectors.toList());
     }
 
     public List<ArticleEntity> getRecommendArticles(String userId) {
         // 1. 获取用户喜欢的文章标签
         List<String> userLikedLabels = articleLabelOperateRepository.getUserLikedLabels(userId);
-        
+
         // 2. 获取推荐文章
         List<ArticlePO> recommendArticles = articleRepository.getRecommendArticles(userId, userLikedLabels);
-        
+
         if (recommendArticles == null || recommendArticles.isEmpty()) {
             // 如果没有匹配的推荐文章，返回热门文章
             recommendArticles = articleRepository.getHotArticles(10);
         }
-        
+
         if (recommendArticles == null) {
             return new ArrayList<>();
         }
-        
+
         List<ArticleEntity> articleEntityList = ArticleConvertor.toArticleEntityListConvertor(recommendArticles);
-        
+
         // 为每篇文章设置对应的标签列表
         setLabelListForArticleEntityList(articleEntityList);
-        
+
         return articleEntityList;
     }
 }

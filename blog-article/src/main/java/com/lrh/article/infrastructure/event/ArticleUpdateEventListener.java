@@ -1,17 +1,17 @@
-package com.lrh.article.infrastructure.mq.producer;
+package com.lrh.article.infrastructure.event;
 
 import com.lrh.article.domain.vo.ArticleMessageVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ThreadPoolExecutor;
 
 @Slf4j
-@Service
-public class ArticleProducer {
-
+@Component
+public class ArticleUpdateEventListener {
     @Value("${rocketmq.producer.topic}")
     private String topic;
 
@@ -20,12 +20,10 @@ public class ArticleProducer {
 
     private final ThreadPoolExecutor threadPoolExecutor;
 
-
-    public ArticleProducer(RocketMQTemplate rocketMQTemplate, ThreadPoolExecutor threadPoolExecutor) {
+    public ArticleUpdateEventListener(RocketMQTemplate rocketMQTemplate, ThreadPoolExecutor threadPoolExecutor) {
         this.rocketMQTemplate = rocketMQTemplate;
         this.threadPoolExecutor = threadPoolExecutor;
     }
-
 
     public void sendMessage(ArticleMessageVO messageVO) {
         try {
@@ -34,5 +32,14 @@ public class ArticleProducer {
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
+    }
+
+    @EventListener
+    public void articleUpdateEvent(ArticleUpdateEvent event) {
+        ArticleMessageVO articleMessageVO = new ArticleMessageVO();
+        articleMessageVO.setArticleId(event.getArticleId());
+        articleMessageVO.setStatus(event.getStatus());
+        articleMessageVO.setUserName(event.getUserName());
+        sendMessage(articleMessageVO);
     }
 }

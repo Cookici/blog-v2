@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class ArticleSyncSaveHandler extends ArticleSyncUpdateHandler implements AbstractExecuteStrategy<ArticleMessageVO, Void> {
+public class ArticleSyncSaveHandler extends ArticleSyncHandler implements AbstractExecuteStrategy<ArticleMessageVO, Void> {
     private final ArticleOperateService articleOperateService;
 
     public ArticleSyncSaveHandler(ArticleOperateService articleOperateService) {
@@ -17,8 +17,8 @@ public class ArticleSyncSaveHandler extends ArticleSyncUpdateHandler implements 
     }
 
     @Override
-    public void syncArticleUpdate(ArticleMessageVO article) {
-        articleOperateService.syncUpdateArticle(article);
+    public void syncArticle(ArticleMessageVO article) {
+        articleOperateService.syncSaveArticle(article);
     }
 
     @Override
@@ -29,6 +29,6 @@ public class ArticleSyncSaveHandler extends ArticleSyncUpdateHandler implements 
 
     @Override
     public void execute(ArticleMessageVO requestParam) {
-        syncArticleUpdate(requestParam);
+        syncArticle(requestParam);
     }
 }
