@@ -57,7 +57,6 @@ public class ArticleEsDao {
             boolQuery.should(QueryBuilders.matchQuery("articleTitle", element).fuzziness(Fuzziness.AUTO))
                     .should(QueryBuilders.matchQuery("articleContent", element).fuzziness(Fuzziness.AUTO))
                     .should(QueryBuilders.matchQuery("userName", element).fuzziness(Fuzziness.AUTO))
-                    .should(QueryBuilders.matchQuery("labels.labelName", element).fuzziness(Fuzziness.AUTO))
                     .minimumShouldMatch(1);
         }
 
@@ -86,7 +85,6 @@ public class ArticleEsDao {
             boolQuery.should(QueryBuilders.matchQuery("articleTitle", element).fuzziness(Fuzziness.AUTO))
                     .should(QueryBuilders.matchQuery("articleContent", element).fuzziness(Fuzziness.AUTO))
                     .should(QueryBuilders.matchQuery("userName", element).fuzziness(Fuzziness.AUTO))
-                    .should(QueryBuilders.matchQuery("labels.labelName", element).fuzziness(Fuzziness.AUTO))
                     .minimumShouldMatch(1);
         }
 
@@ -107,7 +105,6 @@ public class ArticleEsDao {
             boolQuery.should(QueryBuilders.matchQuery("articleTitle", element).fuzziness(Fuzziness.AUTO))
                     .should(QueryBuilders.matchQuery("articleContent", element).fuzziness(Fuzziness.AUTO))
                     .should(QueryBuilders.matchQuery("userName", element).fuzziness(Fuzziness.AUTO))
-                    .should(QueryBuilders.matchQuery("labels.labelName", element).fuzziness(Fuzziness.AUTO))
                     .minimumShouldMatch(1);
         }
 
@@ -127,7 +124,6 @@ public class ArticleEsDao {
             boolQuery.should(QueryBuilders.matchQuery("articleTitle", element).fuzziness(Fuzziness.AUTO))
                     .should(QueryBuilders.matchQuery("articleContent", element).fuzziness(Fuzziness.AUTO))
                     .should(QueryBuilders.matchQuery("userName", element).fuzziness(Fuzziness.AUTO))
-                    .should(QueryBuilders.matchQuery("labels.labelName", element).fuzziness(Fuzziness.AUTO))
                     .minimumShouldMatch(1);
         }
 
@@ -174,7 +170,6 @@ public class ArticleEsDao {
         if (StringUtils.isNotBlank(element)) {
             boolQuery.should(QueryBuilders.matchQuery("articleTitle", element).fuzziness(Fuzziness.AUTO))
                     .should(QueryBuilders.matchQuery("articleContent", element).fuzziness(Fuzziness.AUTO))
-                    .should(QueryBuilders.matchQuery("labels.labelName", element).fuzziness(Fuzziness.AUTO))
                     .minimumShouldMatch(1);
         }
 
@@ -193,7 +188,6 @@ public class ArticleEsDao {
         if (StringUtils.isNotBlank(element)) {
             boolQuery.should(QueryBuilders.matchQuery("articleTitle", element).fuzziness(Fuzziness.AUTO))
                     .should(QueryBuilders.matchQuery("articleContent", element).fuzziness(Fuzziness.AUTO))
-                    .should(QueryBuilders.matchQuery("labels.labelName", element).fuzziness(Fuzziness.AUTO))
                     .minimumShouldMatch(1);
         }
 
