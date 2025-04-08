@@ -11,8 +11,6 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -45,9 +43,6 @@ public class ArticleDO {
     @Field(type = FieldType.Date, pattern = "yyyy-MM-dd'T'HH:mm:ss", format = {})
     private LocalDateTime updateTime;
 
-    @Field(type = FieldType.Nested)
-    private List<LabelDO> labels;
-
     /**
      * 使用 Keyword 类型存储 userId，不进行分析
       */
@@ -77,7 +72,6 @@ public class ArticleDO {
         articleEntity.setCreateTime(createTime);
         articleEntity.setUpdateTime(updateTime);
         articleEntity.setUserId(userId);
-        articleEntity.setLabelEntityList(labels.stream().map(LabelDO::toLabelEntity).collect(Collectors.toList()));
         return articleEntity;
     }
 
@@ -93,14 +87,6 @@ public class ArticleDO {
         articleDO.setLikeCount(0L);
         articleDO.setViewCount(0L);
         articleDO.setIsDeleted(0);
-        List<LabelDO> labelDOList = articleEntity.getLabelEntityList().stream()
-                                                 .map(v -> LabelDO.builder()
-                                                                  .labelId(v.getLabelId())
-                                                                  .labelName(v.getLabelName())
-                                                                  .build())
-                                                 .collect(Collectors.toList());
-
-        articleDO.setLabels(labelDOList);
         return articleDO;
     }
 
