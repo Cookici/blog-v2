@@ -1,6 +1,7 @@
 package com.lrh.gateway.filter;
 
 import com.alibaba.fastjson2.JSON;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.lrh.gateway.client.PermissionClient;
 import com.lrh.gateway.client.dto.ApiDTO;
 import com.lrh.gateway.client.dto.ModuleDTO;
@@ -14,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -39,11 +39,9 @@ import java.util.Objects;
 @Component
 public class CustomGlobeFilter implements GlobalFilter {
 
-    private final RedisTemplate<String, Object> redisTemplate;
     private final PermissionClient permissionClient;
 
-    public CustomGlobeFilter(RedisTemplate<String, Object> redisTemplate, PermissionClient permissionClient) {
-        this.redisTemplate = redisTemplate;
+    public CustomGlobeFilter(PermissionClient permissionClient) {
         this.permissionClient = permissionClient;
     }
 
@@ -59,29 +57,29 @@ public class CustomGlobeFilter implements GlobalFilter {
             }
         }
 
-        String userId = exchange.getRequest().getHeaders().getFirst(PasswordKeyConstant.HEADER_USER_ID);
+        String token = exchange.getRequest().getHeaders().getFirst(PasswordKeyConstant.AUTHORIZATION);
 
-        // 未登录用户处理
-        if (userId == null) {
+        if (token == null || token.isEmpty()) {
             return isAnonymousAccessible(requestPath, method)
                     .flatMap(accessible ->
                             accessible ? chain.filter(exchange) : unauthorized(exchange));
         }
 
-        // 验证token
-        String token = (String) redisTemplate.opsForHash().get(PasswordKeyConstant.LOGIN_HASH_KEY, userId);
-        if (token == null) {
-            return unauthorized(exchange);
-        }
 
+        String userId;
         try {
-            JwtUtil.verify(token);
+            token = getToken(token);
+            DecodedJWT verify = JwtUtil.verify(token);
+            userId = verify.getClaim("userId").asString();
             exchange.getRequest().mutate()
-                    .header(PasswordKeyConstant.Authorization, token)
+                    .header(PasswordKeyConstant.AUTHORIZATION, token)
                     .build();
         } catch (Exception e) {
             log.error("[CustomGlobeFilter] token verify error : {}", e.getMessage());
-            redisTemplate.opsForHash().delete(PasswordKeyConstant.LOGIN_HASH_KEY, userId);
+            return unauthorized(exchange);
+        }
+
+        if (userId == null) {
             return unauthorized(exchange);
         }
 
@@ -92,47 +90,27 @@ public class CustomGlobeFilter implements GlobalFilter {
     }
 
     private Mono<Boolean> isAnonymousAccessible(String path, String method) {
-        return Mono.fromCallable(() -> 
-                redisTemplate.opsForHash().get(UserPermissionConstant.USER_PERMISSION, UserPermissionConstant.NO_LOGIN_USER_ID)
-            )
-            .flatMap(anonymousPermissions -> 
-                Mono.just(checkApiPermission(
-                    JSON.parseObject(JSON.toJSONString(anonymousPermissions), UserPermissionResp.class),
-                    path, method))
-            )
-            .switchIfEmpty(
-                Mono.fromCallable(() -> permissionClient.getUserPermissions(UserPermissionConstant.NO_LOGIN_USER_ID))
-                    .subscribeOn(Schedulers.boundedElastic())
-                    .map(result -> {
-                        if (result.getCode() != HttpStatus.OK.value()) {
-                            return false;
-                        }
-                        UserPermissionResp permissions = result.getData();
-                        return checkApiPermission(permissions, path, method);
-                    })
-            );
+        return Mono.fromCallable(() -> permissionClient.getUserPermissions(UserPermissionConstant.NO_LOGIN_USER_ID))
+                .subscribeOn(Schedulers.boundedElastic())
+                .map(result -> {
+                    if (result.getCode() != HttpStatus.OK.value()) {
+                        return false;
+                    }
+                    UserPermissionResp permissions = result.getData();
+                    return checkApiPermission(permissions, path, method);
+                });
     }
 
     private Mono<Boolean> checkPermission(String userId, String path, String method) {
-        return Mono.fromCallable(() -> 
-                redisTemplate.opsForHash().get(UserPermissionConstant.USER_PERMISSION, userId)
-            )
-            .flatMap(userPermissions -> 
-                Mono.just(checkApiPermission(
-                    JSON.parseObject(JSON.toJSONString(userPermissions), UserPermissionResp.class),
-                    path, method))
-            )
-            .switchIfEmpty(
-                Mono.fromCallable(() -> permissionClient.getUserPermissions(userId))
-                    .subscribeOn(Schedulers.boundedElastic())
-                    .map(result -> {
-                        if (result.getCode() != HttpStatus.OK.value()) {
-                            return false;
-                        }
-                        UserPermissionResp permissions = result.getData();
-                        return checkApiPermission(permissions, path, method);
-                    })
-            );
+        return Mono.fromCallable(() -> permissionClient.getUserPermissions(userId))
+                        .subscribeOn(Schedulers.boundedElastic())
+                        .map(result -> {
+                            if (result.getCode() != HttpStatus.OK.value()) {
+                                return false;
+                            }
+                            UserPermissionResp permissions = result.getData();
+                            return checkApiPermission(permissions, path, method);
+                        });
     }
 
     private boolean checkApiPermission(UserPermissionResp permissions, String path, String method) {
@@ -140,26 +118,26 @@ public class CustomGlobeFilter implements GlobalFilter {
         if (permissions == null) {
             return false;
         }
-        
+
         // 检查modules列表是否为空
         List<ModuleDTO> modules = permissions.getModules();
         if (modules == null || modules.isEmpty()) {
             return false;
         }
-        
+
         // 检查moduleApis映射是否为空
         Map<String, List<ApiDTO>> moduleApis = permissions.getModuleApis();
         if (moduleApis == null || moduleApis.isEmpty()) {
             return false;
         }
-        
+
         // 遍历模块
         return modules.stream().anyMatch(module -> {
             // 检查模块是否为空或模块前缀是否为空
             if (module == null || module.getModulePrefix() == null) {
                 return false;
             }
-            
+
             // 检查是否匹配模块前缀
             if (path.startsWith(module.getModulePrefix())) {
                 // 获取该模块的API列表
@@ -167,19 +145,19 @@ public class CustomGlobeFilter implements GlobalFilter {
                 if (moduleId == null) {
                     return false;
                 }
-                
+
                 List<ApiDTO> apis = moduleApis.get(moduleId);
                 if (apis == null || apis.isEmpty()) {
                     return false;
                 }
-                
+
                 // 检查是否有匹配的API权限
                 return apis.stream().anyMatch(api ->
-                        api != null && 
-                        api.getApiPath() != null && 
-                        api.getApiMethod() != null &&
-                        path.equals(api.getApiPath()) && 
-                        method.equals(api.getApiMethod())
+                        api != null &&
+                                api.getApiPath() != null &&
+                                api.getApiMethod() != null &&
+                                path.equals(api.getApiPath()) &&
+                                method.equals(api.getApiMethod())
                 );
             }
             return false;
@@ -207,4 +185,12 @@ public class CustomGlobeFilter implements GlobalFilter {
                 .wrap(responseBody.getBytes(StandardCharsets.UTF_8));
         return exchange.getResponse().writeWith(Mono.just(buffer));
     }
+
+    private String getToken(String authorizationString) {
+        if (authorizationString.startsWith(PasswordKeyConstant.AUTHORIZATION_TYPE)) {
+            return authorizationString.substring(7);
+        }
+        return authorizationString;
+    }
+
 }

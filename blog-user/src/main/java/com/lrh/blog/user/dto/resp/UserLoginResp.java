@@ -1,11 +1,10 @@
 package com.lrh.blog.user.dto.resp;
 
+import com.lrh.blog.user.dto.UserDTO;
 import com.lrh.blog.user.model.UserModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 
 /**
@@ -21,44 +20,27 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class  UserLoginResp {
 
-    private String userId;
+    private UserDTO userInfo;
 
-    private String userName;
+    private String token;
 
-    private String userPhone;
-
-    private Integer userLevel;
-
-    private String userSex;
-
-    private LocalDateTime userBirthday;
-
-    private LocalDateTime creatTime;
-
-    private String userIp;
-
-    private String userEmail;
-
-    private String userPhoto;
-
-    public UserLoginResp convertedUserModelToUserLoginResp(UserModel userModel) {
+    public UserLoginResp convertedUserModelToUserLoginResp(UserModel userModel,String token) {
         if (userModel == null) {
             return null;
         }
-        this.userId = userModel.getUserId();
-        this.userName = userModel.getUserName();
-        this.userPhone = userModel.getUserPhone();
-        this.userLevel = userModel.getUserLevel();
-        this.userSex = userModel.getUserSex();
-        this.userBirthday = userModel.getUserBirthday();
-        this.userIp = userModel.getUserIp();
-        this.userPhoto = userModel.getUserPhoto();
-        this.userEmail = userModel.getUserEmail();
-        this.creatTime = userModel.getCreateTime();
+        this.userInfo = new UserDTO(
+                userModel.getUserId(),
+                userModel.getUserName(),
+                userModel.getUserPhone(),
+                userModel.getUserLevel(),
+                userModel.getUserSex(),
+                userModel.getUserBirthday(),
+                userModel.getUserIp(),
+                userModel.getUserPhoto(),
+                userModel.getUserEmail(),
+                userModel.getCreateTime()
+        );
+        this.token = token;
         return this;
     }
-
-
-
-
 }

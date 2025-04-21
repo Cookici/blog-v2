@@ -31,6 +31,7 @@ public class UserInfoFilter implements Filter, Ordered {
             HttpServletRequest httpServletRequest = (HttpServletRequest) request;
             String token = httpServletRequest.getHeader(PasswordKeyConstant.AUTHORIZATION);
             if (StringUtils.hasText(token)) {
+                token = getToken(token);
                 DecodedJWT verify = JwtUtil.verify(token);
                 Map<String, Claim> claims = verify.getClaims();
                 String userName = String.valueOf(claims.get("userName").asString());
@@ -46,6 +47,13 @@ public class UserInfoFilter implements Filter, Ordered {
         } finally {
             UserContext.removeUser();
         }
+    }
+
+    private String getToken(String authorizationString) {
+        if (authorizationString.startsWith(PasswordKeyConstant.AUTHORIZATION_TYPE)) {
+            return authorizationString.substring(7);
+        }
+        return authorizationString;
     }
 
     @Override

@@ -11,8 +11,7 @@ package com.lrh.gateway.constant;
 
 public class PasswordKeyConstant {
 
-    public static final String HEADER_USER_ID = "HEADER_USER_ID";
-    public static final String Authorization = "Authorization";
-    public static final String LOGIN_HASH_KEY = "user:login_hash";
+    public static final String AUTHORIZATION = "Authorization";
+    public static final String AUTHORIZATION_TYPE = "Bearer ";
 
 }

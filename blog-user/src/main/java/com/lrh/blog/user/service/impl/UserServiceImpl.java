@@ -107,22 +107,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
             log.error("[UserServiceImpl] login error : {}", query.getUserPassword());
             throw new RuntimeException("Login failed");
         }
-        UserLoginResp resp = new UserLoginResp().convertedUserModelToUserLoginResp(userModel);
-        fetchOrGenerateToken(resp.getUserId(), resp, userModel);
-        return resp;
+        return new UserLoginResp().convertedUserModelToUserLoginResp(userModel,
+                fetchOrGenerateToken(userModel.getUserId(), userModel.getUserName()));
     }
 
-    private void fetchOrGenerateToken(String redisKey, UserLoginResp resp, UserModel userModel) {
+    private String fetchOrGenerateToken(String userId, String userName) {
         LockUtil lockUtil = new LockUtil(redissonClient);
-        lockUtil.executeWithLock(
-                String.format(RedisKeyConstant.LOGIN_LOCK_KEY, redisKey), 4, TimeUnit.SECONDS,
+        return lockUtil.executeWithLock(
+                String.format(RedisKeyConstant.LOGIN_LOCK_KEY, userId), 4, TimeUnit.SECONDS,
                 () -> {
-                    String token = (String) redisTemplate.opsForHash().get(RedisKeyConstant.LOGIN_HASH_KEY, userModel.getUserId());
+                    String token = (String) redisTemplate.opsForHash().get(RedisKeyConstant.LOGIN_HASH_KEY, userId);
                     if (token == null) {
-                        token = getToken(resp.getUserId(), resp.getUserName());
-                        redisTemplate.opsForHash().put(RedisKeyConstant.LOGIN_HASH_KEY, userModel.getUserId(), token);
+                        token = getToken(userId, userName);
+                        redisTemplate.opsForHash().put(RedisKeyConstant.LOGIN_HASH_KEY, userId, token);
                         redisTemplate.expire(RedisKeyConstant.LOGIN_HASH_KEY, 2, TimeUnit.HOURS);
                     }
+                    return token;
                 }
         );
     }
