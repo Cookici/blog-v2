@@ -11,7 +11,7 @@ package com.lrh.common.constant;
 
 public class PasswordKeyConstant {
 
-    public static final String HEADER_USER_ID = "HEADER_USER_ID";
+    public static final String AUTHORIZATION_TYPE = "Bearer ";
     public static final String AUTHORIZATION = "Authorization";
 
 }

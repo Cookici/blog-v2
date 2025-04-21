@@ -13,7 +13,6 @@ public class UserConstant {
     public final static String SEX_MAN = "男";
     public final static String SEX_WOMAN = "女";
     public final static String SEX_PRIVATE= "保密";
-    public final static String NO_LOGIN_ROLE = "anonymous";
     public final static Integer DEFAULT_LEVEL = 0;
     public final static String LOGIN_ROLE = "user";
 }
