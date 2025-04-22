@@ -129,9 +129,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
 
 
     private String getToken(String userId, String userName) {
+        Result<String> rolesByUserId = roleClient.getRolesByUserId(userId);
+        String role = rolesByUserId.getData();
         Map<String, String> payload = new HashMap<>();
         payload.put("userId", userId);
         payload.put("userName", userName);
+        payload.put("role", role);
         return JwtUtil.getToken(payload);
     }
 

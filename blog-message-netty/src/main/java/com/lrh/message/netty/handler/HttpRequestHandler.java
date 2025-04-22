@@ -1,7 +1,9 @@
 package com.lrh.message.netty.handler;
 
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.lrh.common.util.JwtUtil;
 import com.lrh.message.config.NettyConfig;
+import com.lrh.message.constants.AuthorizationConstant;
 import com.lrh.message.constants.RedisKeyConstant;
 import com.lrh.message.netty.Attributes;
 import com.lrh.message.netty.ChannelContext;
@@ -41,24 +43,26 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
 
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, FullHttpRequest msg) throws Exception {
-        // 获取 HTTP 请求头信息
-        String uri = msg.uri();
-        String userId = extractUserId(uri);
-        if (userId == null || userId.isEmpty()) {
-            log.info("[HttpRequestHandler] error userId is null");
-            throw new RuntimeException(HttpStatus.UNAUTHORIZED.getReasonPhrase());
-        }
-        String token = (String) redisTemplate.opsForHash().get(RedisKeyConstant.LOGIN_HASH_KEY, userId);
+        String token = extractTokenFromCookie(msg);
         if (token == null) {
             log.info("[HttpRequestHandler] error token is null");
             throw new RuntimeException(HttpStatus.UNAUTHORIZED.getReasonPhrase());
         }
+
+        String userId;
         try {
-            JwtUtil.verify(token);
+            DecodedJWT verify = JwtUtil.verify(token);
+            userId = verify.getClaim("userId").asString();
         } catch (Exception e) {
             log.info("[HttpRequestHandler] error : {}", e.getMessage());
             throw new RuntimeException(e);
         }
+
+        if (userId == null || userId.isEmpty()) {
+            log.info("[HttpRequestHandler] error userId is null");
+            throw new RuntimeException(HttpStatus.UNAUTHORIZED.getReasonPhrase());
+        }
+
         NettyConfig.group.add(channelHandlerContext.channel());
         channelHandlerContext.channel().attr(Attributes.USERID).set(userId);
         ChannelContext.addChannel(userId, channelHandlerContext.channel());
@@ -70,25 +74,36 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
     }
 
 
-    private String extractUserId(String uri) {
-        try {
-            String[] parts = uri.split("\\?");
-            if (parts.length != 2) {
-                return null;
-            }
-            String queryString = parts[1];
-            String[] params = queryString.split("&");
-            for (String param : params) {
-                String[] keyValue = param.split("=");
-                if (keyValue.length == 2 && "userId".equals(keyValue[0])) {
-                    return keyValue[1];
-                }
-            }
-            return null;
-        } catch (Exception e) {
-            log.error("[HttpRequestHandler] extractUserId 解析userId失败", e);
+    /**
+     * 从HTTP请求的Cookie中提取Authorization令牌
+     * @param request HTTP请求
+     * @return Authorization令牌，如果不存在则返回null
+     */
+    private String extractTokenFromCookie(FullHttpRequest request) {
+        String cookieHeader = request.headers().get("Cookie");
+        if (cookieHeader == null || cookieHeader.isEmpty()) {
             return null;
         }
+        
+        // 解析Cookie字符串
+        String[] cookies = cookieHeader.split(";");
+        for (String cookie : cookies) {
+            String[] parts = cookie.trim().split("=", 2);
+            if (parts.length == 2 && AuthorizationConstant.AUTHORIZATION.equals(parts[0])) {
+                return parts[1];
+            }
+        }
+        
+        // 如果没有在Cookie中找到，尝试从Authorization头获取
+        String authHeader = request.headers().get(AuthorizationConstant.AUTHORIZATION);
+        if (authHeader != null && !authHeader.isEmpty()) {
+            // 如果Authorization头以"Bearer "开头，则去掉前缀
+            if (authHeader.startsWith(AuthorizationConstant.AUTHORIZATION_TYPE)) {
+                return authHeader.substring(7);
+            }
+            return authHeader;
+        }
+        
+        return null;
     }
-
 }
