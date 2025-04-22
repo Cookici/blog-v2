@@ -2,13 +2,12 @@ package com.lrh.gateway.filter;
 
 import com.alibaba.fastjson2.JSON;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.lrh.gateway.client.PermissionClient;
+import com.lrh.gateway.client.RoleClient;
 import com.lrh.gateway.client.dto.ApiDTO;
+import com.lrh.gateway.client.dto.ModuleApisDTO;
 import com.lrh.gateway.client.dto.ModuleDTO;
-import com.lrh.gateway.client.dto.UserPermissionResp;
 import com.lrh.gateway.constant.PasswordKeyConstant;
 import com.lrh.gateway.constant.UserPermissionConstant;
-import com.lrh.gateway.constant.WhiteListConstant;
 import com.lrh.gateway.result.Result;
 import com.lrh.gateway.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -39,24 +38,16 @@ import java.util.Objects;
 @Component
 public class CustomGlobeFilter implements GlobalFilter {
 
-    private final PermissionClient permissionClient;
+    private final RoleClient roleClient;
 
-    public CustomGlobeFilter(PermissionClient permissionClient) {
-        this.permissionClient = permissionClient;
+    public CustomGlobeFilter(RoleClient roleClient) {
+        this.roleClient = roleClient;
     }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         String requestPath = exchange.getRequest().getURI().getPath();
         String method = Objects.requireNonNull(exchange.getRequest().getMethod()).name();
-
-        // 白名单直接放行
-        for (String whiteUrl : WhiteListConstant.WHITE_LIST) {
-            if (requestPath.contains(whiteUrl)) {
-                return chain.filter(exchange);
-            }
-        }
-
         String token = exchange.getRequest().getHeaders().getFirst(PasswordKeyConstant.AUTHORIZATION);
 
         if (token == null || token.isEmpty()) {
@@ -67,10 +58,12 @@ public class CustomGlobeFilter implements GlobalFilter {
 
 
         String userId;
+        String role;
         try {
             token = getToken(token);
             DecodedJWT verify = JwtUtil.verify(token);
             userId = verify.getClaim("userId").asString();
+            role = verify.getClaim("role").asString();
             exchange.getRequest().mutate()
                     .header(PasswordKeyConstant.AUTHORIZATION, token)
                     .build();
@@ -79,93 +72,90 @@ public class CustomGlobeFilter implements GlobalFilter {
             return unauthorized(exchange);
         }
 
-        if (userId == null) {
+        if(userId == null || userId.isEmpty()) {
             return unauthorized(exchange);
         }
 
+        if(role == null || role.isEmpty()) {
+            return unauthorized(exchange);
+        }
+
+
         // 验证权限
-        return checkPermission(userId, requestPath, method)
+        return checkPermission(role, requestPath, method)
                 .flatMap(hasPermission ->
                         hasPermission ? chain.filter(exchange) : forbidden(exchange));
     }
 
     private Mono<Boolean> isAnonymousAccessible(String path, String method) {
-        return Mono.fromCallable(() -> permissionClient.getUserPermissions(UserPermissionConstant.NO_LOGIN_USER_ID))
+        return Mono.fromCallable(() -> roleClient.getRoleApis(UserPermissionConstant.NO_LOGIN_ROLE))
                 .subscribeOn(Schedulers.boundedElastic())
                 .map(result -> {
                     if (result.getCode() != HttpStatus.OK.value()) {
                         return false;
                     }
-                    UserPermissionResp permissions = result.getData();
-                    return checkApiPermission(permissions, path, method);
+                    List<ModuleApisDTO> data = result.getData();
+                    return checkApiPermission(data, path, method);
                 });
     }
 
-    private Mono<Boolean> checkPermission(String userId, String path, String method) {
-        return Mono.fromCallable(() -> permissionClient.getUserPermissions(userId))
+    private Mono<Boolean> checkPermission(String role, String path, String method) {
+        return Mono.fromCallable(() -> roleClient.getRoleApis(role))
                         .subscribeOn(Schedulers.boundedElastic())
                         .map(result -> {
                             if (result.getCode() != HttpStatus.OK.value()) {
                                 return false;
                             }
-                            UserPermissionResp permissions = result.getData();
-                            return checkApiPermission(permissions, path, method);
+                            List<ModuleApisDTO> data = result.getData();
+                            return checkApiPermission(data, path, method);
                         });
     }
 
-    private boolean checkApiPermission(UserPermissionResp permissions, String path, String method) {
-        // 首先检查permissions对象是否为空
-        if (permissions == null) {
+    private boolean checkApiPermission(List<ModuleApisDTO> moduleApisList, String path, String method) {
+        // 检查数据是否为空
+        if (moduleApisList == null || moduleApisList.isEmpty()) {
             return false;
         }
 
-        // 检查modules列表是否为空
-        List<ModuleDTO> modules = permissions.getModules();
-        if (modules == null || modules.isEmpty()) {
-            return false;
-        }
+        // 遍历所有模块
+        for (ModuleApisDTO moduleApis : moduleApisList) {
+            // 检查模块信息是否为空
+            if (moduleApis == null || moduleApis.getModules() == null || moduleApis.getModules().isEmpty()) {
+                continue;
+            }
 
-        // 检查moduleApis映射是否为空
-        Map<String, List<ApiDTO>> moduleApis = permissions.getModuleApis();
-        if (moduleApis == null || moduleApis.isEmpty()) {
-            return false;
-        }
-
-        // 遍历模块
-        return modules.stream().anyMatch(module -> {
-            // 检查模块是否为空或模块前缀是否为空
+            // 获取模块信息
+            ModuleDTO module = moduleApis.getModules().get(0);
             if (module == null || module.getModulePrefix() == null) {
-                return false;
+                continue;
             }
 
-            // 检查是否匹配模块前缀
+            // 检查路径是否匹配模块前缀
             if (path.startsWith(module.getModulePrefix())) {
-                // 获取该模块的API列表
-                String moduleId = module.getModuleId();
-                if (moduleId == null) {
-                    return false;
+                // 检查模块API是否为空
+                Map<String, ApiDTO> apiMap = moduleApis.getModuleApis();
+                if (apiMap == null || apiMap.isEmpty()) {
+                    continue;
                 }
 
-                List<ApiDTO> apis = moduleApis.get(moduleId);
-                if (apis == null || apis.isEmpty()) {
-                    return false;
+                // 遍历所有API检查是否有匹配的权限
+                for (ApiDTO api : apiMap.values()) {
+                    if (api != null &&
+                            api.getApiPath() != null &&
+                            api.getApiMethod() != null &&
+                            matchesPath(path, api.getApiPath()) &&
+                            method.equals(api.getApiMethod())) {
+                        return true;
+                    }
                 }
-
-                // 检查是否有匹配的API权限
-                return apis.stream().anyMatch(api ->
-                        api != null &&
-                                api.getApiPath() != null &&
-                                api.getApiMethod() != null &&
-                                path.equals(api.getApiPath()) &&
-                                method.equals(api.getApiMethod())
-                );
             }
-            return false;
-        });
+        }
+
+        return false;
     }
 
     private Mono<Void> unauthorized(ServerWebExchange exchange) {
-        return writeResponse(exchange, HttpStatus.UNAUTHORIZED, "未授权访问");
+        return writeResponse(exchange, HttpStatus.UNAUTHORIZED, "未授权访问或登录已过期");
     }
 
     private Mono<Void> forbidden(ServerWebExchange exchange) {
@@ -193,4 +183,29 @@ public class CustomGlobeFilter implements GlobalFilter {
         return authorizationString;
     }
 
+    /**
+     * 匹配请求路径与API路径
+     * 支持路径参数匹配，例如：/api/article/get/{articleId} 可以匹配 /api/article/get/article_88ff38930b5b4ad3b5c61fce603f3f3f
+     * @param requestPath 请求路径
+     * @param apiPath API路径定义
+     * @return 是否匹配
+     */
+    private boolean matchesPath(String requestPath, String apiPath) {
+        // 如果是精确匹配，直接返回
+        if (requestPath.equals(apiPath)) {
+            return true;
+        }
+        
+        // 检查API路径是否包含路径参数 {xxx}
+        if (!apiPath.contains("{")) {
+            return false;
+        }
+        
+        // 将API路径转换为正则表达式
+        // 例如：/api/article/get/{articleId} -> /api/article/get/[^/]+
+        String regexPath = apiPath.replaceAll("\\{[^/]+\\}", "[^/]+");
+        
+        // 使用正则表达式匹配
+        return requestPath.matches(regexPath);
+    }
 }

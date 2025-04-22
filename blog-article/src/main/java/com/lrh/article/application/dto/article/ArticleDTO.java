@@ -39,8 +39,6 @@ public class ArticleDTO {
 
     private List<LabelDTO> labels;
 
-    private Long commentCount;
-
     private Long likeCount;
 
     private Long viewCount;

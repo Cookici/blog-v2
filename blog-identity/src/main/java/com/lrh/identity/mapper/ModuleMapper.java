@@ -9,12 +9,11 @@ import java.util.List;
 
 @Mapper
 public interface ModuleMapper extends BaseMapper<ModuleModel> {
-
+    
     /**
-     * 获取所有模块列表
+     * 获取所有模块
      * @return 模块列表
      */
-    @Select("SELECT * FROM t_module WHERE is_deleted = 0")
+    @Select("SELECT * FROM t_module WHERE is_deleted = 0 ORDER BY sort_order ASC")
     List<ModuleModel> getAllModules();
-
 }
