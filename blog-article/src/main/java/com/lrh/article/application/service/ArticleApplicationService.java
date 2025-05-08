@@ -3,6 +3,7 @@ package com.lrh.article.application.service;
 import com.lrh.article.application.cqe.article.*;
 import com.lrh.article.application.dto.PageDTO;
 import com.lrh.article.application.dto.UserDataDTO;
+import com.lrh.article.application.dto.article.ArticleAdminDTO;
 import com.lrh.article.application.dto.article.ArticleDTO;
 import com.lrh.article.constants.RedisConstant;
 import com.lrh.article.domain.entity.ArticleEntity;
@@ -11,16 +12,13 @@ import com.lrh.article.domain.repository.ArticleCacheRepository;
 import com.lrh.article.domain.repository.ArticleLikeRepository;
 import com.lrh.article.domain.service.ArticleOperateService;
 import com.lrh.article.domain.service.CommentOperateService;
-import com.lrh.article.domain.vo.ArticleStatusEnum;
 import com.lrh.article.domain.vo.UserVO;
 import com.lrh.article.infrastructure.client.UserClient;
-import com.lrh.article.infrastructure.event.ArticleUpdateEvent;
 import com.lrh.article.util.LockUtil;
 import com.lrh.common.context.UserContext;
 import com.lrh.common.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -264,24 +262,24 @@ public class ArticleApplicationService {
     public List<ArticleDTO> recommendArticles(ArticleRecommendQuery query) {
         query.valid();
         String userId = query.getUserId();
-        
+
         // 先从缓存获取推荐文章
         List<ArticleDTO> result = articleCacheRepository.getUserRecommendArticles(userId);
-        if(result != null && !result.isEmpty()) {
+        if (result != null && !result.isEmpty()) {
             return result;
         }
-        
+
         // 缓存未命中，生成推荐并缓存
         List<ArticleDTO> recommendArticles = generateRecommendArticles(userId);
-        
+
         // 异步保存到缓存
         if (recommendArticles != null && !recommendArticles.isEmpty()) {
             saveUserRecommendCache(userId, recommendArticles);
         }
-        
+
         return recommendArticles;
     }
-    
+
     /**
      * 生成用户推荐文章
      * 拆分出核心推荐逻辑
@@ -289,19 +287,19 @@ public class ArticleApplicationService {
     public List<ArticleDTO> generateRecommendArticles(String userId) {
         // 获取推荐文章列表
         List<ArticleEntity> articleEntityList = articleOperateService.getRecommendArticles(userId);
-        
+
         if (articleEntityList == null || articleEntityList.isEmpty()) {
             return new ArrayList<>();
         }
-        
+
         // 获取文章作者信息
         List<String> userIds = articleEntityList.stream()
                 .map(ArticleEntity::getUserId)
                 .collect(Collectors.toList());
-        
+
         Result<Map<String, UserVO>> userList = userClient.getByIds(userIds);
         Map<String, UserVO> userIdForUser = userList.getData();
-        
+
         // 组装文章DTO
         List<ArticleDTO> articleDTOList = new ArrayList<>();
         articleEntityList.forEach(articleEntity -> {
@@ -310,27 +308,27 @@ public class ArticleApplicationService {
                 articleDTOList.add(ArticleDTO.fromEntity(articleEntity, userVO));
             }
         });
-        
+
         // 获取文章点赞和浏览数
         List<String> articleIds = articleEntityList.stream()
                 .map(ArticleEntity::getArticleId)
                 .collect(Collectors.toList());
-                
+
         Map<String, Long> articleLikeCountBatch = articleCacheRepository.getArticleLikeCountBatch(articleIds);
         Map<String, Long> articleViewCountBatch = articleCacheRepository.getArticleViewCountBatch(articleIds);
-        
+
         articleDTOList.forEach(articleDTO -> {
             Long likeCount = articleLikeCountBatch.getOrDefault(articleDTO.getArticleId(), 0L);
             Long viewCount = articleViewCountBatch.getOrDefault(articleDTO.getArticleId(), 0L);
             articleDTO.setLikeCount(likeCount);
             articleDTO.setViewCount(viewCount);
         });
-        
+
         // 限制返回10条记录
         if (articleDTOList.size() > 10) {
             return articleDTOList.subList(0, 10);
         }
-        
+
         return articleDTOList;
     }
 
@@ -461,5 +459,81 @@ public class ArticleApplicationService {
     @Async("articleAsyncExecutor")
     protected void saveUserHotCache(String userId, List<String> articleIds) {
         articleCacheRepository.saveUserHotArticleIds(userId, articleIds);
+    }
+
+    public void changeStatus(ArticleChangeStatusCommand command) {
+        command.valid();
+        articleOperateService.changeStatus(command);
+    }
+
+    public PageDTO<ArticleAdminDTO> pageArticlesAll(ArticlePageAllQuery query) {
+        query.valid();
+        Long total = articleOperateService.countArticlesPageAll(query);
+        if (total == null || total == 0) {
+            return new PageDTO<>();
+        }
+        List<ArticleEntity> articleEntityList = articleOperateService.getArticlesPageAll(query);
+        List<String> userIds = articleEntityList.stream().map(ArticleEntity::getUserId).collect(Collectors.toList());
+
+        Result<Map<String, UserVO>> userList = userClient.getByIds(userIds);
+        Map<String, UserVO> userIdForUser = userList.getData();
+
+        List<ArticleAdminDTO> articleDTOList = new ArrayList<>();
+        articleEntityList.forEach(articleEntity -> {
+                    UserVO userVO = userIdForUser.get(articleEntity.getUserId());
+                    if (userVO != null) {
+                        articleDTOList.add(ArticleAdminDTO.fromEntity(articleEntity, userVO));
+                    }
+                }
+        );
+
+        List<String> articleIds = articleEntityList.stream().map(ArticleEntity::getArticleId).collect(Collectors.toList());
+        Map<String, Long> articleLikeCountBatch = articleCacheRepository.getArticleLikeCountBatch(articleIds);
+        Map<String, Long> articleViewCountBatch = articleCacheRepository.getArticleViewCountBatch(articleIds);
+
+        articleDTOList.forEach(articleDTO -> {
+            Long likeCount = articleLikeCountBatch.getOrDefault(articleDTO.getArticleId(), 0L);
+            Long viewCount = articleViewCountBatch.getOrDefault(articleDTO.getArticleId(), 0L);
+            articleDTO.setLikeCount(likeCount);
+            articleDTO.setViewCount(viewCount);
+        });
+
+
+        return PageDTO.<ArticleAdminDTO>builder()
+                .page(query.getPage())
+                .total(total)
+                .pageSize(query.getPageSize())
+                .data(articleDTOList).
+                build();
+    }
+
+    public void restoreDeleted(ArticleRestoreDeletedCommand command) {
+        command.valid();
+        articleOperateService.restoreDeleted(command);
+    }
+
+    public ArticleDTO getDeletedArticle(ArticleQuery query) {
+        query.valid();
+        ArticleEntity articleEntity = articleOperateService.getDeletedArticleById(query);
+        if (articleEntity == null) {
+            return new ArticleDTO();
+        }
+        List<String> userIdList = new ArrayList<>();
+        userIdList.add(articleEntity.getUserId());
+        Result<Map<String, UserVO>> userList = userClient.getByIds(userIdList);
+        Map<String, UserVO> userIdForUser = userList.getData();
+        UserVO userInfo = userIdForUser.get(articleEntity.getUserId());
+        if (userInfo == null) {
+            userInfo = new UserVO();
+        }
+
+        ArticleDTO articleDTO = ArticleDTO.fromEntity(articleEntity, userInfo);
+
+        Long articleViewCount = articleCacheRepository.getArticleViewCount(articleDTO.getArticleId());
+        Long articleLikeCount = articleCacheRepository.getArticleLikeCount(articleDTO.getArticleId());
+        articleDTO.setLikeCount(articleLikeCount);
+        articleDTO.setViewCount(articleViewCount);
+
+        return articleDTO;
     }
 }

@@ -80,6 +80,12 @@ public class ArticleLabelRepositoryImpl implements ArticleLabelOperateRepository
     }
 
     @Override
+    public List<ArticleLabelPO> getIncludeDeleteArticleLabelListByArticles(List<String> articleIdList) {
+        List<ArticleLabelPO> articleLabelPOList = articleLabelMapper.getIncludeDeleteArticleLabelListByArticles(articleIdList);
+        return articleLabelPOList;
+    }
+
+    @Override
     public void upsertLabelForArticle(String articleId, List<String> labelIdList) {
         List<ArticleLabelPO> articleLabelPOList =
                 ArticleLabelConvertor.buildArticleLabelPOConvertor(articleId, labelIdList);

@@ -3,6 +3,7 @@ package com.lrh.article.adapter.http;
 import com.lrh.article.application.cqe.article.*;
 import com.lrh.article.application.dto.PageDTO;
 import com.lrh.article.application.dto.UserDataDTO;
+import com.lrh.article.application.dto.article.ArticleAdminDTO;
 import com.lrh.article.application.dto.article.ArticleDTO;
 import com.lrh.article.application.service.ArticleApplicationService;
 import com.lrh.common.result.Result;
@@ -35,6 +36,13 @@ public class ArticleApplicationController {
     public Result<ArticleDTO> getArticle(@PathVariable("articleId") String articleId) {
         ArticleQuery articleQuery = new ArticleQuery(articleId);
         ArticleDTO articleDTO = articleApplicationService.getArticleById(articleQuery);
+        return Result.success(articleDTO);
+    }
+
+    @GetMapping("/get/deleted/{articleId}")
+    public Result<ArticleDTO> getDeletedArticle(@PathVariable("articleId") String articleId) {
+        ArticleQuery articleQuery = new ArticleQuery(articleId);
+        ArticleDTO articleDTO = articleApplicationService.getDeletedArticle(articleQuery);
         return Result.success(articleDTO);
     }
 
@@ -105,6 +113,24 @@ public class ArticleApplicationController {
     public Result<Object> deleteLike(@RequestBody ArticleDeleteLikeCommand command) {
         articleApplicationService.deleteLike(command);
         return Result.success();
+    }
+
+    @PostMapping("/change/status")
+    public Result<Object> changeStatus(@RequestBody ArticleChangeStatusCommand command) {
+        articleApplicationService.changeStatus(command);
+        return Result.success();
+    }
+
+    @PostMapping("/restore/deleted")
+    public Result<Object> restoreDeleted(@RequestBody ArticleRestoreDeletedCommand command) {
+        articleApplicationService.restoreDeleted(command);
+        return Result.success();
+    }
+
+    @GetMapping("/page/all")
+    public Result<PageDTO<ArticleAdminDTO>> pageArticleAll(ArticlePageAllQuery query) {
+        PageDTO<ArticleAdminDTO> resp = articleApplicationService.pageArticlesAll(query);
+        return Result.success(resp);
     }
 
     //下面接口为ES

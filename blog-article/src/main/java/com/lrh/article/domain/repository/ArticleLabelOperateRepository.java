@@ -29,4 +29,6 @@ public interface ArticleLabelOperateRepository {
      * @return 标签列表
      */
     List<String> getUserLikedLabels(String userId);
+
+    List<ArticleLabelPO> getIncludeDeleteArticleLabelListByArticles(List<String> articleIdList);
 }

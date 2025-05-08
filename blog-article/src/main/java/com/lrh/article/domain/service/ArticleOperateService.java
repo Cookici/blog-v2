@@ -1,7 +1,9 @@
 package com.lrh.article.domain.service;
 
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.lrh.article.application.cqe.article.*;
 import com.lrh.article.constants.RedisConstant;
+import com.lrh.article.constants.RoleConstant;
 import com.lrh.article.domain.entity.ArticleEntity;
 import com.lrh.article.domain.entity.LabelEntity;
 import com.lrh.article.domain.entity.UserArticleDataEntity;
@@ -17,6 +19,7 @@ import com.lrh.article.infrastructure.po.LabelPO;
 import com.lrh.article.util.LockUtil;
 import com.lrh.common.context.UserContext;
 import com.lrh.common.util.IdUtil;
+import com.lrh.common.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
 import org.springframework.context.ApplicationEventPublisher;
@@ -99,6 +102,9 @@ public class ArticleOperateService {
 
         // 获取文章与标签 ID 的映射关系
         List<ArticleLabelPO> articleLabelPOList = articleLabelOperateRepository.getArticleLabelListByArticles(articleIdList);
+        if(articleLabelPOList == null || articleLabelPOList.isEmpty()){
+            return;
+        }
         Map<String, List<String>> articleIdToLabelIdsMap = articleLabelPOList.stream().collect(Collectors.groupingBy(
                 ArticleLabelPO::getArticleId,
                 Collectors.mapping(ArticleLabelPO::getLabelId, Collectors.toList())
@@ -167,6 +173,7 @@ public class ArticleOperateService {
 
     @Transactional(rollbackFor = Exception.class)
     public void deleteById(ArticleDeleteCommand command) {
+        validExceptionOperate(command.getArticleId(), command.getUserId());
         LockUtil lockUtil = new LockUtil(redissonClient);
         lockUtil.tryWriteLock(String.format(RedisConstant.ARTICLE_LOCK, command.getArticleId()), () -> {
             articleLabelOperateRepository.deleteLabelForArticle(command.getArticleId());
@@ -181,6 +188,19 @@ public class ArticleOperateService {
     }
 
     private void validExceptionOperate(String articleId, String userId) {
+        String token = UserContext.getToken();
+        if (token != null && !token.isEmpty()) {
+            DecodedJWT verify = null;
+            try {
+                verify = JwtUtil.verify(token);
+            } catch (Exception e) {
+                throw new RuntimeException("非法操作");
+            }
+            String role = verify.getClaim("role").asString();
+            if (role.equals(RoleConstant.ROLE_ADMIN)) {
+                return;
+            }
+        }
         ArticlePO articlePO = articleRepository.getArticlesById(articleId);
         if (articlePO == null || !Objects.equals(articlePO.getUserId(), userId)) {
             throw new RuntimeException("非法操作");
@@ -196,10 +216,10 @@ public class ArticleOperateService {
         LockUtil lockUtil = new LockUtil(redissonClient);
         lockUtil.tryWriteLock(String.format(RedisConstant.ARTICLE_LOCK, command.getArticleId()), () -> {
             articleRepository.updateArticleById(command.getArticleId(), command.getArticleTitle(), command.getArticleContent(), UnderAudit.getStatus());
+            articleLabelOperateRepository.deleteLabelForArticle(command.getArticleId());
             if (command.getLabelIdList().isEmpty()) {
                 return;
             }
-            articleLabelOperateRepository.deleteLabelForArticle(command.getArticleId());
             articleLabelOperateRepository.restoreDeletedArticleLabel(command.getArticleId(), command.getLabelIdList());
             articleLabelOperateRepository.upsertLabelForArticle(command.getArticleId(), command.getLabelIdList());
         });
@@ -406,5 +426,109 @@ public class ArticleOperateService {
         setLabelListForArticleEntityList(articleEntityList);
 
         return articleEntityList;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void changeStatus(ArticleChangeStatusCommand command) {
+        ArticlePO articlePO = articleRepository.getArticlesById(command.getArticleId());
+        if (articlePO == null) {
+            return;
+        }
+        if (articlePO.getStatus().equals(UnderAudit.getStatus()) && command.getStatus().equals(Published.getStatus())) {
+            articleRepository.updateArticleSatusById(articlePO.getArticleId(), command.getStatus());
+            ArticleEntity articleEntity = ArticleEntity.fromPO(articlePO);
+            ArticleDO articleDO = ArticleDO.fromArticleEntity(articleEntity, command.getUserName());
+            articleRepository.saveArticleDo(articleDO);
+        } else if (articlePO.getStatus().equals(UnderAudit.getStatus()) && command.getStatus().equals(FailedAudit.getStatus())) {
+            articleRepository.updateArticleSatusById(articlePO.getArticleId(), command.getStatus());
+        } else {
+            throw new RuntimeException("规则错误");
+        }
+    }
+
+    public Long countArticlesPageAll(ArticlePageAllQuery query) {
+        return articleRepository.countArticlesPageAll(query);
+    }
+
+    public List<ArticleEntity> getArticlesPageAll(ArticlePageAllQuery query) {
+        List<ArticlePO> articlePOList = articleRepository.getArticlesPageAll(query,
+                query.getOffset(), query.getLimit());
+        if (articlePOList == null) {
+            return new ArrayList<>();
+        }
+
+        List<ArticleEntity> articleEntityList = ArticleConvertor.toArticleEntityListConvertor(articlePOList);
+
+        // 为每篇文章设置对应的标签列表
+        setIncludeDeleteLabelListForArticleEntityList(articleEntityList);
+
+        // 返回分页结果
+        return articleEntityList;
+    }
+
+    private void setIncludeDeleteLabelListForArticleEntityList(List<ArticleEntity> articleEntityList) {
+
+        if (articleEntityList == null || articleEntityList.isEmpty()) {
+            return;
+        }
+
+        // 提取文章 ID 列表
+        List<String> articleIdList = articleEntityList.stream()
+                .map(ArticleEntity::getArticleId)
+                .collect(Collectors.toList());
+
+        // 获取文章与标签 ID 的映射关系
+        List<ArticleLabelPO> articleLabelPOList = articleLabelOperateRepository.getIncludeDeleteArticleLabelListByArticles(articleIdList);
+        if(articleLabelPOList == null || articleLabelPOList.isEmpty()) {
+            return;
+        }
+        Map<String, List<String>> articleIdToLabelIdsMap = articleLabelPOList.stream().collect(Collectors.groupingBy(
+                ArticleLabelPO::getArticleId,
+                Collectors.mapping(ArticleLabelPO::getLabelId, Collectors.toList())
+        ));
+
+        // 获取标签详细信息
+        List<LabelPO> labelPOList = labelOperateRepository.getLabelListByIds(
+                articleIdToLabelIdsMap.values().stream()
+                        .flatMap(Collection::stream)
+                        .distinct()
+                        .collect(Collectors.toList())
+        );
+
+        List<LabelEntity> labelEntityList = LabelConvertor.toListLabelEntityConvertor(labelPOList);
+
+        // 构建标签 ID 到标签实体的映射
+        Map<String, LabelEntity> labelIdToLabelEntityMap = labelEntityList.stream()
+                .collect(Collectors.toMap(LabelEntity::getLabelId, label -> label));
+
+        // 为每篇文章设置对应的标签列表
+        articleEntityList.forEach(articleEntity -> {
+            List<String> labelIds = articleIdToLabelIdsMap.getOrDefault(articleEntity.getArticleId(), Collections.emptyList());
+            List<LabelEntity> labels = labelIds.stream()
+                    .map(labelIdToLabelEntityMap::get)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+            articleEntity.setLabelEntityList(labels);
+        });
+    }
+
+    public void restoreDeleted(ArticleRestoreDeletedCommand command) {
+        articleRepository.restoreDeleted(command.getArticleId());
+        articleRepository.restoreDeletedEs(command.getArticleId());
+    }
+
+    public ArticleEntity getDeletedArticleById(ArticleQuery query) {
+        ArticlePO articlePO = articleRepository.getDeletedArticlesById(query.getArticleId());
+        if (articlePO == null) {
+            return null;
+        }
+        ArticleEntity articleEntity = ArticleEntity.fromPO(articlePO);
+        List<LabelPO> articleIdList = labelOperateRepository.selectLabelsByArticleIdAll(query.getArticleId());
+        if (articleIdList == null) {
+            articleEntity.setLabelEntityList(new ArrayList<>());
+        } else {
+            articleEntity.setLabelEntityList(LabelConvertor.toListLabelEntityConvertor(articleIdList));
+        }
+        return articleEntity;
     }
 }

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.lrh.blog.user.dto.cqe.*;
 import com.lrh.blog.user.dto.req.ImageUploadReq;
 import com.lrh.blog.user.dto.resp.*;
+import com.lrh.blog.user.dto.vo.UserStausVO;
 import com.lrh.blog.user.dto.vo.UserVO;
 import com.lrh.blog.user.model.UserModel;
 
@@ -40,6 +41,9 @@ public interface UserService extends IService<UserModel> {
     String updateIp(UserUpdateIpCmd cmd);
 
     PageDTO<UserVO> searchPage(UserSearchPageCmd cmd);
+
+
+    PageDTO<UserStausVO> adminSearchPage(UserAdminSearchPageCmd cmd);
     
     /**
      * 获取活跃用户ID列表
@@ -47,4 +51,6 @@ public interface UserService extends IService<UserModel> {
      * @return 活跃用户ID列表
      */
     List<String> getActiveUserIds(int limit);
+
+    void operatorUser(UserOperatorCmd cmd);
 }

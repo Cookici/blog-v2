@@ -22,4 +22,6 @@ public interface ArticleLabelMapper extends BaseMapper<ArticleLabelPO> {
     void restoreDeleted(@Param("articleId")String articleId,@Param("labelIdList") List<String> labelIdList);
 
     List<ArticleLabelPO> getArticleLabelListByArticles(@Param("articleIdList") List<String> articleIdList);
+
+    List<ArticleLabelPO> getIncludeDeleteArticleLabelListByArticles(@Param("articleIdList") List<String> articleIdList);
 }

@@ -34,6 +34,8 @@ public class ArticleEntity {
 
     private List<LabelEntity> labelEntityList;
 
+    private Integer isDeleted;
+
     public static ArticleEntity fromPO(ArticlePO articlePO) {
         if(articlePO == null){
             return null;
@@ -48,6 +50,7 @@ public class ArticleEntity {
                 .status(articlePO.getStatus())
                 .likeCount(articlePO.getLikeCount())
                 .viewCount(articlePO.getViewCount())
+                .isDeleted(articlePO.getIsDeleted())
                 .build();
     }
 }

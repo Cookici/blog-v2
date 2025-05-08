@@ -20,4 +20,6 @@ public interface LabelMapper extends BaseMapper<LabelPO> {
     List<LabelPO> selectLabelsByArticleId(String articleId);
 
     List<LabelPO> getLabelKinds();
+
+    List<LabelPO> selectLabelsByArticleIdAll(String articleId);
 }

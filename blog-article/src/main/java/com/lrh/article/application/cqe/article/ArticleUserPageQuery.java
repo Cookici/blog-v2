@@ -8,9 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * @ProjectName: blog-v2
  * @Package: com.lrh.article.application.cqe.article
@@ -31,8 +28,6 @@ public class ArticleUserPageQuery extends PageQuery {
 
     private String articleContent;
 
-    private List<String> labelNameList;
-
 
     public void valid() {
         String realUserId = IdUtil.getUserId(userId);
@@ -45,17 +40,6 @@ public class ArticleUserPageQuery extends PageQuery {
         this.userId = realUserId;
         if (articleTitle != null && articleTitle.length() > BusinessConstant.ID_MAX_LENGTH) {
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "文章标题"));
-        }
-        if (labelNameList == null) {
-            labelNameList = new ArrayList<>();
-        }
-        for (String label : labelNameList) {
-            if (label == null || label.trim().isEmpty()) {
-                throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "标签信息"));
-            }
-            if (label.length() > 64) {
-                throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "标签信息"));
-            }
         }
     }
 

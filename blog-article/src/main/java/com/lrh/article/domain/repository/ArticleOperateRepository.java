@@ -128,4 +128,14 @@ public interface ArticleOperateRepository {
     int batchUpdateArticleDo(List<ArticleDO> needUpdateEsArticles);
 
     Integer updateArticleEsUserName(String userId, String userName);
+
+    Long countArticlesPageAll(ArticlePageAllQuery query);
+
+    List<ArticlePO> getArticlesPageAll(ArticlePageAllQuery query, Long offset, Long limit);
+
+    void restoreDeleted(String articleId);
+
+    void restoreDeletedEs(String articleId);
+
+    ArticlePO getDeletedArticlesById(String articleId);
 }
