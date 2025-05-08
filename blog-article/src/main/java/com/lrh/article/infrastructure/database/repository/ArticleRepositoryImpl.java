@@ -361,4 +361,38 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
         log.info("[ArticleRepositoryImpl] updateArticleEsUserName ES中成功更新用户[{}]的{}篇文章用户名", userId, updatedCount);
         return updatedCount;
     }
+
+    @Override
+    public Long countArticlesPageAll(ArticlePageAllQuery query) {
+        return articleMapper.selectCountPageAll(query);
+    }
+
+    @Override
+    public List<ArticlePO> getArticlesPageAll(ArticlePageAllQuery query, Long offset, Long limit) {
+        return articleMapper.selectPageArticleAll(query, offset, limit);
+    }
+
+    @Override
+    public void restoreDeleted(String articleId) {
+        LambdaUpdateWrapper<ArticlePO> updateWrapper = Wrappers.lambdaUpdate(ArticlePO.class)
+                .eq(ArticlePO::getArticleId, articleId)
+                .eq(ArticlePO::getStatus, ArticleStatusEnum.Published)
+                .eq(ArticlePO::getIsDeleted, BusinessConstant.IS_DELETED)
+                .set(ArticlePO::getStatus, ArticleStatusEnum.UnderAudit.getStatus())
+                .set(ArticlePO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
+        articleMapper.update(updateWrapper);
+    }
+
+    @Override
+    public void restoreDeletedEs(String articleId) {
+        articleEsDao.updateRestoreDeleted(articleId);
+    }
+
+    @Override
+    public ArticlePO getDeletedArticlesById(String articleId) {
+        LambdaQueryWrapper<ArticlePO> queryWrapper = Wrappers.lambdaQuery(ArticlePO.class)
+                .eq(ArticlePO::getArticleId, articleId)
+                .eq(ArticlePO::getIsDeleted, BusinessConstant.IS_DELETED);
+        return articleMapper.selectOne(queryWrapper);
+    }
 }

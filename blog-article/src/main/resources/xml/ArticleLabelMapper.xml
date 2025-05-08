@@ -35,4 +35,14 @@
         AND is_deleted = 0
     </select>
 
+    <select id="getIncludeDeleteArticleLabelListByArticles" resultType="com.lrh.article.infrastructure.po.ArticleLabelPO">
+        SELECT *
+        FROM t_article_label
+        WHERE article_id IN
+        <foreach collection="articleIdList" item="articleId" open="(" separator="," close=")">
+            #{articleId}
+        </foreach>
+    </select>
+
+
 </mapper>

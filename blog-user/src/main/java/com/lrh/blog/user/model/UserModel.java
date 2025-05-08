@@ -57,6 +57,9 @@ public class UserModel {
     @TableField("user_email")
     private String userEmail;
 
+    @TableField("status")
+    private Integer status;
+
     @TableField("create_time")
     private LocalDateTime createTime;
 

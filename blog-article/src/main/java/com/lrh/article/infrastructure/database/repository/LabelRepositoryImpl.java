@@ -8,6 +8,7 @@ import com.lrh.article.infrastructure.po.LabelPO;
 import com.lrh.common.constant.BusinessConstant;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -44,5 +45,10 @@ public class LabelRepositoryImpl implements LabelOperateRepository {
     @Override
     public List<LabelPO> getLabelKinds() {
         return labelMapper.getLabelKinds();
+    }
+
+    @Override
+    public List<LabelPO> selectLabelsByArticleIdAll(String articleId) {
+        return labelMapper.selectLabelsByArticleIdAll(articleId);
     }
 }

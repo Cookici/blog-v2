@@ -1,6 +1,7 @@
 package com.lrh.article.infrastructure.database.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.lrh.article.application.cqe.article.ArticlePageAllQuery;
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
 import com.lrh.article.application.cqe.article.ArticleUserPageQuery;
 import com.lrh.article.infrastructure.po.ArticlePO;
@@ -34,7 +35,14 @@ public interface ArticleMapper extends BaseMapper<ArticlePO> {
 
     /**
      * 批量更新文章指标数据
+     *
      * @param updateBatch 更新数据批次
      */
     void batchUpdateMetrics(@Param("list") List<Map<String, Object>> updateBatch);
+
+    Long selectCountPageAll(@Param("query") ArticlePageAllQuery query);
+
+    List<ArticlePO> selectPageArticleAll(@Param("query") ArticlePageAllQuery query,
+                                         @Param("offset") Long offset,
+                                         @Param("limit") Long limit);
 }

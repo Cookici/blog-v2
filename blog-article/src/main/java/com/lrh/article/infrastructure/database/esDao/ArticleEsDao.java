@@ -16,6 +16,7 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -343,6 +344,44 @@ public class ArticleEsDao {
         } catch (Exception e) {
             log.error("[ArticleEsDao] updateUserNameByUserId 更新用户[{}]的ES文章用户名失败: {}", userId, e.getMessage(), e);
             return 0;
+        }
+    }
+
+    public void updateRestoreDeleted(String articleId) {
+        if (StringUtils.isBlank(articleId)) {
+            log.warn("[ArticleEsDao] updateRestoreDeleted 恢复ES文章失败：articleId为空");
+            return;
+        }
+
+        try {
+            // 构建查询条件：查找指定ID的文章
+            NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder();
+            BoolQueryBuilder boolQuery = QueryBuilders.boolQuery()
+                    .must(QueryBuilders.termQuery("articleId", articleId));
+
+            queryBuilder.withQuery(boolQuery);
+
+            // 执行查询获取文章
+            SearchHits<ArticleDO> searchHits = elasticsearchRestTemplate.search(
+                    queryBuilder.build(), ArticleDO.class);
+
+            List<ArticleDO> articles = searchHits.stream()
+                    .map(SearchHit::getContent)
+                    .collect(Collectors.toList());
+
+            if (articles.isEmpty()) {
+                log.info("[ArticleEsDao] updateRestoreDeleted 文章[{}]在ES中不存在", articleId);
+                return;
+            }
+
+            // 更新文章状态
+            ArticleDO article = articles.get(0);
+            article.setIsDeleted(BusinessConstant.IS_NOT_DELETED);
+            article.setUpdateTime(LocalDateTime.now());
+            elasticsearchRestTemplate.save(article);
+            log.info("[ArticleEsDao] updateRestoreDeleted 成功恢复文章[{}]，状态更新为待审核", articleId);
+        } catch (Exception e) {
+            log.error("[ArticleEsDao] updateRestoreDeleted 恢复文章[{}]失败: {}", articleId, e.getMessage(), e);
         }
     }
 }

@@ -3,6 +3,7 @@ package com.lrh.blog.user.controller;
 import com.lrh.blog.user.dto.cqe.*;
 import com.lrh.blog.user.dto.req.*;
 import com.lrh.blog.user.dto.resp.*;
+import com.lrh.blog.user.dto.vo.UserStausVO;
 import com.lrh.blog.user.dto.vo.UserVO;
 import com.lrh.blog.user.service.UserService;
 import com.lrh.common.exception.NoUserException;
@@ -113,6 +114,21 @@ public class UserController {
     Result<List<String>> getActiveUserIds(@RequestParam("limit") Integer limit) {
         List<String> activeUserIds = userService.getActiveUserIds(limit);
         return Result.success(activeUserIds);
+    }
+
+
+    @GetMapping("/search/admin")
+    Result<PageDTO<UserStausVO>> search(UserAdminSearchPageReq req) {
+        UserAdminSearchPageCmd cmd = new UserAdminSearchPageCmd(req);
+        PageDTO<UserStausVO> userVOList = userService.adminSearchPage(cmd);
+        return Result.success(userVOList);
+    }
+
+    @PostMapping("/operator")
+    Result<Object> operatorUser(@RequestBody UserOperatorReq req) {
+        UserOperatorCmd cmd = new UserOperatorCmd(req);
+        userService.operatorUser(cmd);
+        return Result.success();
     }
 
 }

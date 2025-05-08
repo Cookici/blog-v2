@@ -12,6 +12,7 @@ import com.lrh.blog.user.constant.UserConstant;
 import com.lrh.blog.user.dto.cqe.*;
 import com.lrh.blog.user.dto.req.ImageUploadReq;
 import com.lrh.blog.user.dto.resp.*;
+import com.lrh.blog.user.dto.vo.UserStausVO;
 import com.lrh.blog.user.dto.vo.UserVO;
 import com.lrh.blog.user.event.UserUpdateEvent;
 import com.lrh.blog.user.mapper.UserMapper;
@@ -98,6 +99,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
                 .eq(UserModel::getUserPhone, query.getUserPhone())
                 .eq(UserModel::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
         UserModel userModel = userMapper.selectOne(queryWrapper);
+        if (userModel == null) {
+            throw new RuntimeException("用户不存在");
+        }
+        if (userModel.getStatus().equals(UserConstant.NO_ACTIVE_STATUS)) {
+            throw new RuntimeException("账号被封禁");
+        }
         try {
             String password = DESUtil.decrypt(userModel.getUserPassword(), DESConstant.PASSWORD_KEY);
             if (!password.equals(query.getUserPassword())) {
@@ -114,17 +121,34 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
     private String fetchOrGenerateToken(String userId, String userName) {
         LockUtil lockUtil = new LockUtil(redissonClient);
         return lockUtil.executeWithLock(
-                String.format(RedisKeyConstant.LOGIN_LOCK_KEY, userId), 4, TimeUnit.SECONDS,
+                String.format(RedisKeyConstant.LOGIN_LOCK_KEY, userId),
+                4, TimeUnit.SECONDS,
                 () -> {
-                    String token = (String) redisTemplate.opsForHash().get(RedisKeyConstant.LOGIN_HASH_KEY, userId);
-                    if (token == null) {
-                        token = getToken(userId, userName);
-                        redisTemplate.opsForHash().put(RedisKeyConstant.LOGIN_HASH_KEY, userId, token);
-                        redisTemplate.expire(RedisKeyConstant.LOGIN_HASH_KEY, 2, TimeUnit.HOURS);
+                    String token = (String) redisTemplate.opsForHash()
+                            .get(RedisKeyConstant.LOGIN_HASH_KEY, userId);
+
+                    if (token == null || isTokenInvalid(token)) {
+                        token = generateAndStoreNewToken(userId, userName);
                     }
                     return token;
                 }
         );
+    }
+
+    private boolean isTokenInvalid(String token) {
+        try {
+            JwtUtil.verify(token);
+            return false;
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    private String generateAndStoreNewToken(String userId, String userName) {
+        String token = getToken(userId, userName);
+        redisTemplate.opsForHash().put(RedisKeyConstant.LOGIN_HASH_KEY, userId, token);
+        redisTemplate.expire(RedisKeyConstant.LOGIN_HASH_KEY, 2, TimeUnit.HOURS);
+        return token;
     }
 
 
@@ -153,6 +177,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
             userModel.setUserSex(cmd.getUserSex());
             userModel.setUserLevel(UserConstant.DEFAULT_LEVEL);
             userModel.setUserIp(cmd.getUserIp());
+            userModel.setStatus(UserConstant.ACTIVE_STATUS);
             userModel.setUserEmail(cmd.getUserEmail());
             int insert = userMapper.insert(userModel);
             if (insert <= 0) {
@@ -319,6 +344,46 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
     }
 
     @Override
+    public PageDTO<UserStausVO> adminSearchPage(UserAdminSearchPageCmd cmd) {
+
+        LambdaQueryWrapper<UserModel> queryWrapper = Wrappers.lambdaQuery(UserModel.class)
+                .eq(UserModel::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
+                .and(wrapper ->
+                        wrapper.like(UserModel::getUserName, cmd.getKeyword())
+                                .or()
+                                .like(UserModel::getUserPhone, cmd.getKeyword())
+                )
+                .ne(UserModel::getUserId, UserContext.getUserId());
+
+        if (cmd.getStatus() != null) {
+            queryWrapper.eq(UserModel::getStatus, cmd.getStatus());
+        }
+
+        Long total = userMapper.selectCount(queryWrapper);
+        if (total == null || total == 0L) {
+            return new PageDTO<>();
+        }
+
+        queryWrapper.last("limit " + (cmd.getPageNum() - 1) * cmd.getPageSize() + "," + cmd.getPageSize());
+        List<UserModel> userModels = userMapper.selectList(queryWrapper);
+        List<UserStausVO> userVOList = userModels.stream().map(userModel -> new UserStausVO(
+                userModel.getUserId(),
+                userModel.getUserName(),
+                userModel.getUserPhone(),
+                userModel.getUserEmail(),
+                userModel.getCreateTime(),
+                userModel.getStatus()
+        )).collect(Collectors.toList());
+
+        return PageDTO.<UserStausVO>builder()
+                .total(total)
+                .page(cmd.getPageNum())
+                .pageSize(cmd.getPageSize())
+                .data(userVOList)
+                .build();
+    }
+
+    @Override
     public String parseIp(String ip) {
         Boolean isIp = HostUtil.judgeIp(ip);
         if (!isIp) {
@@ -377,6 +442,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel> implemen
         return activeUsers.stream()
                 .map(UserModel::getUserId)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void operatorUser(UserOperatorCmd cmd) {
+        LambdaUpdateWrapper<UserModel> updateWrapper = Wrappers.lambdaUpdate(UserModel.class)
+                .eq(UserModel::getUserId, cmd.getUserId())
+                .eq(UserModel::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
+                .set(UserModel::getStatus, cmd.getStatus());
+        userMapper.update(updateWrapper);
     }
 
 }

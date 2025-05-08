@@ -8,39 +8,20 @@
 
     <!-- 查询语句 -->
     <select id="selectPageArticle" resultType="com.lrh.article.infrastructure.po.ArticlePO">
-        SELECT DISTINCT
-        a.*
+        SELECT
+        *
         FROM
-        t_article a
-        LEFT JOIN
-        t_article_label al
-        ON
-        a.article_id = al.article_id
-        LEFT JOIN
-        t_label l
-        ON
-        al.label_id = l.label_id
+        t_article
         WHERE
-        a.is_deleted = 0
-        AND al.is_deleted = 0
-        AND l.is_deleted = 0
+        is_deleted = 0
         <if test="query.articleTitle != null and query.articleTitle.trim() != ''">
-            AND a.article_title LIKE CONCAT('%', #{query.articleTitle}, '%')
+            AND article_title LIKE CONCAT('%', #{query.articleTitle}, '%')
         </if>
         <if test="query.articleContent != null and query.articleContent.trim() != ''">
-            AND a.article_content LIKE CONCAT('%', #{query.articleContent}, '%')
-        </if>
-        <if test="query.labelNameList != null and query.labelNameList.size() > 0">
-            AND (
-            <foreach collection="query.labelNameList" item="labelName" separator="OR">
-                <if test="labelName != null and labelName.trim() != ''">
-                    l.label_name = #{labelName}
-                </if>
-            </foreach>
-            )
+            AND article_content LIKE CONCAT('%', #{query.articleContent}, '%')
         </if>
         ORDER BY
-        a.update_time DESC
+        update_time DESC
         LIMIT #{offset}, #{limit}
     </select>
 
@@ -48,110 +29,51 @@
     <!-- 查询符合条件的条数 -->
     <select id="selectCountPage" parameterType="map" resultType="java.lang.Long">
         SELECT
-        COUNT(DISTINCT a.article_id)
+        COUNT(*)
         FROM
-        t_article a
-        LEFT JOIN
-        t_article_label al
-        ON
-        a.article_id = al.article_id
-        LEFT JOIN
-        t_label l
-        ON
-        al.label_id = l.label_id
+        t_article
         WHERE
-        a.is_deleted = 0
-        AND al.is_deleted = 0
-        AND l.is_deleted = 0
+        is_deleted = 0
         <if test="query.articleTitle != null and query.articleTitle.trim() != ''">
-            AND a.article_title LIKE CONCAT('%', #{query.articleTitle}, '%')
+            AND article_title LIKE CONCAT('%', #{query.articleTitle}, '%')
         </if>
         <if test="query.articleContent != null and query.articleContent.trim() != ''">
-            AND a.article_content LIKE CONCAT('%', #{query.articleContent}, '%')
-        </if>
-        <if test="query.labelNameList != null and query.labelNameList.size() > 0">
-            AND (
-            <foreach collection="query.labelNameList" item="labelName" separator="OR">
-                <if test="labelName != null and labelName.trim() != ''">
-                    l.label_name = #{labelName}
-                </if>
-            </foreach>
-            )
+            AND article_content LIKE CONCAT('%', #{query.articleContent}, '%')
         </if>
     </select>
 
     <!-- 查询符合条件的条数 -->
     <select id="selectUserCountPage" parameterType="map" resultType="java.lang.Long">
         SELECT
-        COUNT(DISTINCT a.article_id)
+        COUNT(*)
         FROM
-        t_article a
-        LEFT JOIN
-        t_article_label al
-        ON
-        a.article_id = al.article_id
-        LEFT JOIN
-        t_label l
-        ON
-        al.label_id = l.label_id
+        t_article
         WHERE
-        a.is_deleted = 0
-        AND al.is_deleted = 0
-        AND l.is_deleted = 0
-        AND a.user_id = #{query.userId}
+        is_deleted = 0
         <if test="query.articleTitle != null and query.articleTitle.trim() != ''">
-            AND a.article_title LIKE CONCAT('%', #{query.articleTitle}, '%')
+            AND article_title LIKE CONCAT('%', #{query.articleTitle}, '%')
         </if>
         <if test="query.articleContent != null and query.articleContent.trim() != ''">
-            AND a.article_content LIKE CONCAT('%', #{query.articleContent}, '%')
-        </if>
-        <if test="query.labelNameList != null and query.labelNameList.size() > 0">
-            AND (
-            <foreach collection="query.labelNameList" item="labelName" separator="OR">
-                <if test="labelName != null and labelName.trim() != ''">
-                    l.label_name = #{labelName}
-                </if>
-            </foreach>
-            )
+            AND article_content LIKE CONCAT('%', #{query.articleContent}, '%')
         </if>
     </select>
 
     <!-- 查询语句 -->
     <select id="selectUserPageArticle" resultType="com.lrh.article.infrastructure.po.ArticlePO">
-        SELECT DISTINCT
-        a.*
+        SELECT
+        *
         FROM
-        t_article a
-        LEFT JOIN
-        t_article_label al
-        ON
-        a.article_id = al.article_id
-        LEFT JOIN
-        t_label l
-        ON
-        al.label_id = l.label_id
+        t_article
         WHERE
-        a.is_deleted = 0
-        AND al.is_deleted = 0
-        AND l.is_deleted = 0
-        AND a.user_id = #{query.userId}
+        is_deleted = 0
         <if test="query.articleTitle != null and query.articleTitle.trim() != ''">
-            AND a.article_title LIKE CONCAT('%', #{query.articleTitle}, '%')
+            AND article_title LIKE CONCAT('%', #{query.articleTitle}, '%')
         </if>
         <if test="query.articleContent != null and query.articleContent.trim() != ''">
-            AND a.article_content LIKE CONCAT('%', #{query.articleContent}, '%')
-        </if>
-        <if test="query.labelNameList != null and query.labelNameList.size() > 0">
-            AND (
-            <foreach collection="query.labelNameList" item="labelName" separator="OR">
-                <if test="labelName != null and labelName.trim() != ''">
-                    l.label_name = #{labelName}
-                </if>
-            </foreach>
-            )
+            AND article_content LIKE CONCAT('%', #{query.articleContent}, '%')
         </if>
         ORDER BY
-        a.update_time DESC
+        update_time DESC
         LIMIT #{offset}, #{limit}
     </select>
 
@@ -175,5 +97,55 @@
         </foreach>
         AND is_deleted = 0
     </update>
+
+
+    <!-- 查询语句 -->
+    <select id="selectPageArticleAll" resultType="com.lrh.article.infrastructure.po.ArticlePO">
+        SELECT *
+        FROM t_article
+        <where>
+            <if test="query.isDeleted != null">
+                AND is_deleted = #{query.isDeleted}
+            </if>
+            <!-- 只有当status参数存在时才添加状态条件 -->
+            <if test="query.status != null and query.status.trim() != ''">
+                AND status = #{query.status}
+            </if>
+            <!-- 其他查询条件 -->
+            <if test="query.articleTitle != null and query.articleTitle.trim() != ''">
+                AND article_title LIKE CONCAT('%', #{query.articleTitle}, '%')
+            </if>
+            <if test="query.articleContent != null and query.articleContent.trim() != ''">
+                AND article_content LIKE CONCAT('%', #{query.articleContent}, '%')
+            </if>
+        </where>
+        ORDER BY
+        update_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 查询符合条件的条数 -->
+    <select id="selectCountPageAll" parameterType="map" resultType="java.lang.Long">
+        SELECT
+        COUNT(*)
+        FROM t_article
+        <where>
+            <if test="query.isDeleted != null">
+                AND is_deleted = #{query.isDeleted}
+            </if>
+            <!-- 只有当status参数存在时才添加状态条件 -->
+            <if test="query.status != null and query.status.trim() != ''">
+                AND status = #{query.status}
+            </if>
+            <!-- 其他查询条件 -->
+            <if test="query.articleTitle != null and query.articleTitle.trim() != ''">
+                AND article_title LIKE CONCAT('%', #{query.articleTitle}, '%')
+            </if>
+            <if test="query.articleContent != null and query.articleContent.trim() != ''">
+                AND article_content LIKE CONCAT('%', #{query.articleContent}, '%')
+            </if>
+        </where>
+    </select>
+
 
 </mapper>

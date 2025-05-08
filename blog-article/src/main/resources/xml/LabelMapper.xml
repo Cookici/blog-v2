@@ -14,6 +14,13 @@
           AND al.is_deleted = 0
     </select>
 
+    <select id="selectLabelsByArticleIdAll" resultType="com.lrh.article.infrastructure.po.LabelPO">
+        SELECT *
+        FROM t_label l
+                 LEFT JOIN t_article_label al ON l.label_id = al.label_id
+        WHERE al.article_id = #{articleId}
+    </select>
+
     <select id="getLabelKinds" resultType="com.lrh.article.infrastructure.po.LabelPO">
         SELECT *
         FROM t_label
