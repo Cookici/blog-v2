@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @ProjectName: blog-ddd
@@ -45,6 +46,10 @@ public class ArticleInsertCommand {
         this.userId = realUserId;
         if (labelIdList == null) {
             labelIdList = new ArrayList<>();
+        } else {
+            labelIdList = labelIdList.stream()
+                    .filter(labelId -> labelId != null && !labelId.trim().isEmpty())
+                    .collect(Collectors.toList());
         }
         if (articleTitle == null) {
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "文章标题"));

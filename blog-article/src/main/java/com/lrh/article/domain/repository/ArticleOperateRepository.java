@@ -138,4 +138,6 @@ public interface ArticleOperateRepository {
     void restoreDeletedEs(String articleId);
 
     ArticlePO getDeletedArticlesById(String articleId);
+
+    void updateArticleLikeAndViewByCache(String articleId,Long articleLikeCount, Long articleViewCount);
 }

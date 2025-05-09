@@ -40,7 +40,7 @@ public class RedisRepository implements ArticleCacheRepository, CommentCacheRepo
 
     @Override
     public void incrArticleViewCount(String articleId, String ukId) {
-        redisTemplate.opsForHash().increment(String.format(RedisConstant.ARTICLE_VIEW, articleId), ukId, 1);
+        redisTemplate.opsForValue().increment(String.format(RedisConstant.ARTICLE_VIEW, articleId), 1);
     }
 
     @Override
@@ -55,11 +55,15 @@ public class RedisRepository implements ArticleCacheRepository, CommentCacheRepo
 
     @Override
     public Long getArticleViewCount(String articleId) {
-        Map<Object, Object> entries = redisTemplate.opsForHash().entries(String.format(RedisConstant.ARTICLE_VIEW, articleId));
-        long count = 0;
-        for (Object value : entries.values()) {
+        long count = 0L;
+        Object value = redisTemplate.opsForValue().get(String.format(RedisConstant.ARTICLE_VIEW, articleId));
+        if (value != null) {
             if (value instanceof Integer) {
-                count += (Integer) value;
+                count = ((Integer) value).longValue();
+            } else if (value instanceof Long) {
+                count = (Long) value;
+            } else if (value instanceof String) {
+                count = Long.parseLong((String) value);
             }
         }
         return count;
@@ -89,7 +93,7 @@ public class RedisRepository implements ArticleCacheRepository, CommentCacheRepo
         List<Object> results = redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
             for (String articleId : articleIds) {
                 String key = String.format(RedisConstant.ARTICLE_VIEW, articleId);
-                connection.hVals(key.getBytes());
+                connection.get(key.getBytes());
             }
             return null;
         });
@@ -97,13 +101,15 @@ public class RedisRepository implements ArticleCacheRepository, CommentCacheRepo
         Map<String, Long> result = new HashMap<>();
         for (int i = 0; i < articleIds.size(); i++) {
             String articleId = articleIds.get(i);
-            long count = 0;
-            if (results.get(i) instanceof List<?>) {
-                List<?> values = (List<?>) results.get(i);
-                for (Object value : values) {
-                    if (value instanceof Integer) {
-                        count += (Integer) value;
-                    }
+            long count = 0L;
+            Object value = results.get(i);
+            if (value != null) {
+                if (value instanceof Integer) {
+                    count = ((Integer) value).longValue();
+                } else if (value instanceof Long) {
+                    count = (Long) value;
+                } else if (value instanceof String) {
+                    count = Long.parseLong((String) value);
                 }
             }
             result.put(articleId, count);
@@ -192,6 +198,24 @@ public class RedisRepository implements ArticleCacheRepository, CommentCacheRepo
         } catch (Exception e) {
             log.error("[RedisRepository] saveUserRecommendCache error : {} ", e.getMessage());
         }
+    }
+
+    @Override
+    public void restoreArticleLikeAndView(String articleId, List<String> userIdList, Long viewCount) {
+        if (viewCount != null) {
+            String viewKey = String.format(RedisConstant.ARTICLE_VIEW, articleId);
+            redisTemplate.opsForValue().set(viewKey, String.valueOf(viewCount));
+        }
+
+        String likeKey = String.format(RedisConstant.ARTICLE_LIKE, articleId);
+        redisTemplate.delete(likeKey);
+        Map<String, Integer> likeMap = new HashMap<>();
+        for (String userId : userIdList) {
+            if (userId != null && !userId.isEmpty()) {
+                likeMap.put(userId, 1);
+            }
+        }
+        redisTemplate.opsForHash().putAll(likeKey, likeMap);
     }
 
     @Override

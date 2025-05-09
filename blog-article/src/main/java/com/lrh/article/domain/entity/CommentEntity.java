@@ -39,6 +39,8 @@ public class CommentEntity {
 
     private LocalDateTime updateTime;
 
+    private Integer isDeleted;
+
     public static CommentEntity fromPO(CommentPO commentPO) {
         if (commentPO == null) {
             return null;
@@ -53,6 +55,7 @@ public class CommentEntity {
                 .articleId(commentPO.getArticleId())
                 .createTime(commentPO.getCreateTime())
                 .updateTime(commentPO.getUpdateTime())
+                .isDeleted(commentPO.getIsDeleted())
                 .build();
     }
 

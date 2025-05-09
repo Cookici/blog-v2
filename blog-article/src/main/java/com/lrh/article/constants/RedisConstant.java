@@ -68,4 +68,6 @@ public class RedisConstant {
      * 子评论计数缓存键
      */
     public static final String COMMENT_CHILD_COUNT = "child:%s:%s";
+
+    public static final String LABEL_LOCK = "article:label_lock";
 }

@@ -1,11 +1,12 @@
 package com.lrh.article.adapter.http;
 
+import com.lrh.article.application.cqe.label.*;
+import com.lrh.article.application.dto.PageDTO;
+import com.lrh.article.application.dto.label.LabelAdminDTO;
 import com.lrh.article.application.dto.label.LabelDTO;
 import com.lrh.article.application.service.LabelApplicationService;
 import com.lrh.common.result.Result;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -29,8 +30,39 @@ public class LabelApplicationController {
 
     @GetMapping("/kinds")
     public Result<List<LabelDTO>> getLabelKinds() {
-        List<LabelDTO> labelDTOList =  labelApplicationService.getLabelKinds();
+        List<LabelDTO> labelDTOList = labelApplicationService.getLabelKinds();
         return Result.success(labelDTOList);
     }
+
+    @GetMapping("/page/admin")
+    public Result<PageDTO<LabelAdminDTO>> pageLabelAdmin(LabelPageQuery query) {
+        PageDTO<LabelAdminDTO> resp = labelApplicationService.pageLabelAdmin(query);
+        return Result.success(resp);
+    }
+
+    @PostMapping("/update")
+    public Result<Object> updateLabel(@RequestBody LabelUpdateCommand command) {
+        labelApplicationService.updateLabel(command);
+        return Result.success();
+    }
+
+    @PostMapping("/delete")
+    public Result<Object> deleteLabel(@RequestBody LabelDeleteCommand command){
+        labelApplicationService.deleteLabel(command);
+        return Result.success();
+    }
+
+    @PostMapping("/insert")
+    public Result<Object> insertLabel(@RequestBody LabelInsertCommand command){
+        labelApplicationService.insertLabel(command);
+        return Result.success();
+    }
+
+    @PostMapping("/restore")
+    public Result<Object> restoreLabel(@RequestBody LabelRestoreCommand command){
+        labelApplicationService.restoreLabel(command);
+        return Result.success();
+    }
+
 
 }

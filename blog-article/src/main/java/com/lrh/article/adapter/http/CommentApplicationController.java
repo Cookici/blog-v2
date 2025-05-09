@@ -1,7 +1,9 @@
 package com.lrh.article.adapter.http;
 
+import com.lrh.article.application.cqe.PageQuery;
 import com.lrh.article.application.cqe.comment.*;
 import com.lrh.article.application.dto.PageDTO;
+import com.lrh.article.application.dto.comment.CommentAdminDTO;
 import com.lrh.article.application.dto.comment.CommentDTO;
 import com.lrh.article.application.dto.comment.CommentUserDTO;
 import com.lrh.article.application.service.CommentApplicationService;
@@ -54,6 +56,30 @@ public class CommentApplicationController {
     public Result<PageDTO<CommentUserDTO>> getUserCommentPage(CommentUserPageQuery query) {
         PageDTO<CommentUserDTO> resp = commentApplicationService.userComment(query);
         return Result.success(resp);
+    }
+
+    @GetMapping("/page/all")
+    public Result<PageDTO<CommentAdminDTO>> getCommentPageAll(PageQuery query) {
+        PageDTO<CommentAdminDTO> resp = commentApplicationService.commentPageAll(query);
+        return Result.success(resp);
+    }
+
+    @GetMapping("/page/child/all")
+    public Result<PageDTO<CommentAdminDTO>> getCommentChildPageAll(CommentChildPageAllQuery query) {
+        PageDTO<CommentAdminDTO> resp = commentApplicationService.commentChildPageAll(query);
+        return Result.success(resp);
+    }
+
+    @GetMapping("/get/all/{commentId}")
+    public Result<CommentAdminDTO> getCommentByCommentId(@PathVariable("commentId") String commentId) {
+        CommentAdminDTO resp = commentApplicationService.getCommentAll(commentId);
+        return Result.success(resp);
+    }
+
+    @PostMapping("/delete/admin")
+    public Result<Object> deleteAdminComment(@RequestBody CommentDeleteAminCommand command) {
+        commentApplicationService.deleteAdminComment(command);
+        return Result.success();
     }
 
 }

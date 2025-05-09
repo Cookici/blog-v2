@@ -1,5 +1,6 @@
 package com.lrh.article.domain.repository;
 
+import com.lrh.article.application.cqe.comment.CommentChildPageAllQuery;
 import com.lrh.article.infrastructure.po.CommentPO;
 
 import java.util.List;
@@ -42,4 +43,22 @@ public interface CommentOperateRepository {
     List<CommentPO> getUserCommentPage(String userId, Long offset, Long limit);
 
     CommentPO selectParentCommentByCommentId(String commentId);
+
+    void restoreCommentByArticleId(String articleId);
+
+    Long countCommentPageAll();
+
+    List<CommentPO> pageCommentAll(Long limit, Long offset);
+
+    Long countCommentChildAll(CommentChildPageAllQuery query);
+
+    List<CommentPO> pageChildCommentAll(String commentId, Long limit, Long offset);
+
+    CommentPO getCommentByCommentIdAll(String commentId);
+
+    void deleteCommentAdmin(String commentId, String parentCommentId);
+
+    void deleteChildCommentAdmin(String parentCommentId);
+
+    void deleteTopCommentAdmin(String commentId);
 }

@@ -385,7 +385,7 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
 
     @Override
     public void restoreDeletedEs(String articleId) {
-        articleEsDao.updateRestoreDeleted(articleId);
+        articleEsDao.deleteArticleById(articleId);
     }
 
     @Override
@@ -394,5 +394,15 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
                 .eq(ArticlePO::getArticleId, articleId)
                 .eq(ArticlePO::getIsDeleted, BusinessConstant.IS_DELETED);
         return articleMapper.selectOne(queryWrapper);
+    }
+
+    @Override
+    public void updateArticleLikeAndViewByCache(String articleId,Long articleLikeCount, Long articleViewCount) {
+        LambdaUpdateWrapper<ArticlePO> updateWrapper = Wrappers.lambdaUpdate(ArticlePO.class)
+                .eq(ArticlePO::getArticleId, articleId)
+                .eq(ArticlePO::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
+                .set(ArticlePO::getLikeCount, articleLikeCount)
+                .set(ArticlePO::getViewCount, articleViewCount);
+        articleMapper.update(updateWrapper);
     }
 }

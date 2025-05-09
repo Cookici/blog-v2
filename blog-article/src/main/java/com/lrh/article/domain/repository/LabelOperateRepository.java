@@ -21,4 +21,20 @@ public interface LabelOperateRepository {
     List<LabelPO> getLabelKinds();
 
     List<LabelPO> selectLabelsByArticleIdAll(String articleId);
+
+    List<LabelPO> getLabelList();
+
+    void update(String labelId ,String labelAlias, String labelName, String labelDescription);
+
+    Long countLabel(String keyword);
+
+    List<LabelPO> pageLabel(String keyword, Long limit, Long offset);
+
+    void delete(String labelId);
+
+    List<LabelPO> getDeletedLable();
+
+    void insert(LabelPO labelPO);
+
+    void restore(String labelId);
 }
