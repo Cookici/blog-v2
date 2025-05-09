@@ -30,5 +30,7 @@ public interface ArticleLabelOperateRepository {
      */
     List<String> getUserLikedLabels(String userId);
 
-    List<ArticleLabelPO> getIncludeDeleteArticleLabelListByArticles(List<String> articleIdList);
+    void deleteArticleByLabel(String labelId);
+
+    void deleteArticleLabel(List<String> labelIdList);
 }

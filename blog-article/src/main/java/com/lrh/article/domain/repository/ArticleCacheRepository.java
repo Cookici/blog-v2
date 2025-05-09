@@ -39,4 +39,6 @@ public interface ArticleCacheRepository {
     List<ArticleDTO> getUserRecommendArticles(String userId);
 
     void saveUserRecommendCache(String userId, List<ArticleDTO> articleDTOList);
+
+    void restoreArticleLikeAndView(String articleId,  List<String> userIdList, Long viewCount);
 }

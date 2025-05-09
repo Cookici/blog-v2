@@ -80,9 +80,21 @@ public class ArticleLabelRepositoryImpl implements ArticleLabelOperateRepository
     }
 
     @Override
-    public List<ArticleLabelPO> getIncludeDeleteArticleLabelListByArticles(List<String> articleIdList) {
-        List<ArticleLabelPO> articleLabelPOList = articleLabelMapper.getIncludeDeleteArticleLabelListByArticles(articleIdList);
-        return articleLabelPOList;
+    public void deleteArticleByLabel(String labelId) {
+        LambdaUpdateWrapper<ArticleLabelPO> updateWrapper = Wrappers.lambdaUpdate(ArticleLabelPO.class)
+                .eq(ArticleLabelPO::getLabelId, labelId)
+                .eq(ArticleLabelPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED).
+                set(ArticleLabelPO::getIsDeleted, BusinessConstant.IS_DELETED);
+        articleLabelMapper.update(updateWrapper);
+    }
+
+    @Override
+    public void deleteArticleLabel(List<String> labelIdList) {
+        LambdaUpdateWrapper<ArticleLabelPO> updateWrapper = Wrappers.lambdaUpdate(ArticleLabelPO.class)
+                .in(ArticleLabelPO::getLabelId, labelIdList)
+                .eq(ArticleLabelPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED).
+                set(ArticleLabelPO::getIsDeleted, BusinessConstant.IS_DELETED);
+        articleLabelMapper.update(updateWrapper);
     }
 
     @Override

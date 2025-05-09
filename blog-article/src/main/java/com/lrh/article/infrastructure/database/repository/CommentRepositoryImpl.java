@@ -3,6 +3,7 @@ package com.lrh.article.infrastructure.database.repository;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.lrh.article.application.cqe.comment.CommentChildPageAllQuery;
 import com.lrh.article.constants.CommentConstant;
 import com.lrh.article.domain.repository.CommentOperateRepository;
 import com.lrh.article.infrastructure.database.mapper.CommentMapper;
@@ -145,6 +146,79 @@ public class CommentRepositoryImpl implements CommentOperateRepository {
                 .eq(CommentPO::getCommentId, commentId)
                 .eq(CommentPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
         return commentMapper.selectOne(queryWrapper);
+    }
+
+    @Override
+    public void restoreCommentByArticleId(String articleId) {
+        LambdaUpdateWrapper<CommentPO> updateWrapper = Wrappers.lambdaUpdate(CommentPO.class)
+                .eq(CommentPO::getArticleId, articleId)
+                .eq(CommentPO::getIsDeleted, BusinessConstant.IS_DELETED)
+                .set(CommentPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
+        commentMapper.update(updateWrapper);
+    }
+
+    @Override
+    public Long countCommentPageAll() {
+        return commentMapper.selectCount(Wrappers.lambdaQuery(CommentPO.class));
+    }
+
+    @Override
+    public List<CommentPO> pageCommentAll(Long limit, Long offset) {
+        LambdaQueryWrapper<CommentPO> queryWrapper = Wrappers.lambdaQuery(CommentPO.class)
+                .orderByDesc(CommentPO::getCreateTime)
+                .last("limit " + offset + ", " + limit);
+        return commentMapper.selectList(queryWrapper);
+    }
+
+    @Override
+    public Long countCommentChildAll(CommentChildPageAllQuery query) {
+        LambdaQueryWrapper<CommentPO> queryWrapper = Wrappers.lambdaQuery(CommentPO.class)
+                .eq(CommentPO::getParentCommentId, query.getCommentId());
+        return commentMapper.selectCount(queryWrapper);
+    }
+
+    @Override
+    public List<CommentPO> pageChildCommentAll(String parentCommentId, Long limit, Long offset) {
+        LambdaQueryWrapper<CommentPO> queryWrapper = Wrappers.lambdaQuery(CommentPO.class)
+                .eq(CommentPO::getParentCommentId, parentCommentId)
+                .orderByDesc(CommentPO::getCreateTime)
+                .last("limit " + offset + ", " + limit);
+        return commentMapper.selectList(queryWrapper);
+    }
+
+    @Override
+    public CommentPO getCommentByCommentIdAll(String commentId) {
+        LambdaQueryWrapper<CommentPO> queryWrapper = Wrappers.lambdaQuery(CommentPO.class)
+                .eq(CommentPO::getCommentId, commentId);
+        return commentMapper.selectOne(queryWrapper);
+    }
+
+    @Override
+    public void deleteCommentAdmin(String commentId, String parentCommentId) {
+        LambdaUpdateWrapper<CommentPO> updateWrapper = Wrappers.lambdaUpdate(CommentPO.class)
+                .eq(CommentPO::getCommentId, commentId)
+                .eq(CommentPO::getParentCommentId, parentCommentId)
+                .eq(CommentPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
+                .set(CommentPO::getIsDeleted, BusinessConstant.IS_DELETED);
+        commentMapper.update(updateWrapper);
+    }
+
+    @Override
+    public void deleteChildCommentAdmin(String commentId) {
+        LambdaUpdateWrapper<CommentPO> updateWrapper = Wrappers.lambdaUpdate(CommentPO.class)
+                .eq(CommentPO::getParentCommentId, commentId)
+                .eq(CommentPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
+                .set(CommentPO::getIsDeleted, BusinessConstant.IS_DELETED);
+        commentMapper.update(updateWrapper);
+    }
+
+    @Override
+    public void deleteTopCommentAdmin(String commentId) {
+        LambdaUpdateWrapper<CommentPO> updateWrapper = Wrappers.lambdaUpdate(CommentPO.class)
+                .eq(CommentPO::getCommentId, commentId)
+                .eq(CommentPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
+                .set(CommentPO::getIsDeleted, BusinessConstant.IS_DELETED);
+        commentMapper.update(updateWrapper);
     }
 
 }

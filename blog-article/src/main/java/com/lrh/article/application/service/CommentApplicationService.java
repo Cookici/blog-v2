@@ -1,7 +1,9 @@
 package com.lrh.article.application.service;
 
+import com.lrh.article.application.cqe.PageQuery;
 import com.lrh.article.application.cqe.comment.*;
 import com.lrh.article.application.dto.PageDTO;
+import com.lrh.article.application.dto.comment.CommentAdminDTO;
 import com.lrh.article.application.dto.comment.CommentDTO;
 import com.lrh.article.application.dto.comment.CommentUserDTO;
 import com.lrh.article.constants.CommentConstant;
@@ -17,11 +19,9 @@ import com.lrh.article.util.LockUtil;
 import com.lrh.common.result.Result;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -66,7 +66,7 @@ public class CommentApplicationService {
         if (commentEntityList == null || commentEntityList.isEmpty()) {
             return new ArrayList<>();
         }
-        
+
         List<String> uniqueUserIdList = Stream.concat(
                 commentEntityList.stream().map(CommentEntity::getUserId),
                 commentEntityList.stream().map(CommentEntity::getToUserId)
@@ -87,6 +87,35 @@ public class CommentApplicationService {
 
 
     /**
+     * 获取完整的评论列表
+     *
+     * @param commentEntityList 没有填充用户信息的评论列表
+     * @return List<CommentDTO>
+     */
+    private List<CommentAdminDTO> getFullCommentListAdmin(List<CommentEntity> commentEntityList) {
+        if (commentEntityList == null || commentEntityList.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<String> uniqueUserIdList = Stream.concat(
+                commentEntityList.stream().map(CommentEntity::getUserId),
+                commentEntityList.stream().map(CommentEntity::getToUserId)
+        ).distinct().collect(Collectors.toList());
+
+        Result<Map<String, UserVO>> userList = userClient.getByIds(uniqueUserIdList);
+        Map<String, UserVO> userIdForUser = userList.getData();
+
+        List<CommentAdminDTO> commentDTOList = new ArrayList<>();
+        commentEntityList.forEach(commentEntity -> {
+            UserVO userVO = userIdForUser.getOrDefault(commentEntity.getUserId(), new UserVO());
+            UserVO toUserVO = userIdForUser.getOrDefault(commentEntity.getToUserId(), new UserVO());
+            CommentAdminDTO commentDTO = CommentAdminDTO.fromEntity(commentEntity, userVO, toUserVO);
+            commentDTOList.add(commentDTO);
+        });
+        return commentDTOList;
+    }
+
+    /**
      * 插入评论并清除相关缓存
      */
     public String insertComment(CommentInsertCommand command) {
@@ -105,17 +134,17 @@ public class CommentApplicationService {
         LockUtil lockUtil = new LockUtil(redissonClient);
         return lockUtil.tryLockAndReturn(lockKey, () -> {
             String commentId = commentOperateService.insertComment(command);
-            
+
             // 清除相关缓存
             commentCacheRepository.deleteCommentCache(command.getArticleId());
-            
+
             if (!CommentConstant.TOP_COMMENT_PARENT_ID.equals(command.getParentCommentId())) {
                 commentCacheRepository.deleteCommentChildCache(command.getArticleId(), command.getParentCommentId());
                 commentCacheRepository.deleteChildCommentCountCache(command.getArticleId(), command.getParentCommentId());
             }
-            
+
             commentCacheRepository.deleteUserCommentCache(command.getUserId());
-            
+
             return commentId;
         });
     }
@@ -139,19 +168,19 @@ public class CommentApplicationService {
         LockUtil lockUtil = new LockUtil(redissonClient);
         return lockUtil.tryLockAndReturn(lockKey, () -> {
             commentOperateService.deleteComment(command);
-            
+
             // 清除相关缓存
             commentCacheRepository.deleteCommentCache(command.getArticleId());
-            
+
             if (!CommentConstant.TOP_COMMENT_PARENT_ID.equals(command.getParentCommentId())) {
                 commentCacheRepository.deleteCommentChildCache(command.getArticleId(), command.getParentCommentId());
                 commentCacheRepository.deleteChildCommentCountCache(command.getArticleId(), command.getParentCommentId());
             } else {
                 commentCacheRepository.deleteAllChildCommentsCache(command.getArticleId(), command.getCommentId());
             }
-            
+
             commentCacheRepository.deleteUserCommentCache(command.getUserId());
-            
+
             return true;
         });
     }
@@ -209,16 +238,16 @@ public class CommentApplicationService {
         }
 
         // 缓存未命中，使用分布式锁防止缓存击穿
-        String listLockKey = String.format(RedisConstant.COMMENT_LIST_LOCK, 
+        String listLockKey = String.format(RedisConstant.COMMENT_LIST_LOCK,
                 query.getArticleId(), query.getPage(), query.getPageSize());
-        
+
         // 确保totalComments是final或有效final
         final Long finalTotalComments = totalComments;
         return lockUtil.tryLockAndReturn(listLockKey, () -> {
             // 双重检查，避免重复查询数据库
             List<CommentDTO> doubleCheckCachedComments = commentCacheRepository.getTopComments(
                     query.getArticleId(), query.getPage(), query.getPageSize());
-            
+
             if (doubleCheckCachedComments != null) {
                 return PageDTO.<CommentDTO>builder()
                         .total(finalTotalComments)
@@ -227,7 +256,7 @@ public class CommentApplicationService {
                         .pageSize(query.getPageSize())
                         .build();
             }
-            
+
             // 缓存未命中，从数据库获取
             List<CommentEntity> commentEntityList = commentOperateService.getTopCommentsPage(query);
             List<CommentDTO> commentDTOList = getFullCommentList(commentEntityList);
@@ -252,10 +281,10 @@ public class CommentApplicationService {
         query.valid();
 
         String countCacheKey = String.format(RedisConstant.COMMENT_CHILD_COUNT,
-            query.getArticleId(), query.getCommentId());
-            
+                query.getArticleId(), query.getCommentId());
+
         // 使用RedisConstant定义的常量构建锁键
-        String countLockKey = String.format(RedisConstant.COMMENT_CHILD_COUNT_LOCK, 
+        String countLockKey = String.format(RedisConstant.COMMENT_CHILD_COUNT_LOCK,
                 query.getArticleId(), query.getCommentId());
         LockUtil lockUtil = new LockUtil(redissonClient);
 
@@ -305,16 +334,16 @@ public class CommentApplicationService {
         }
 
         // 缓存未命中，使用分布式锁防止缓存击穿
-        String listLockKey = String.format(RedisConstant.COMMENT_CHILD_LIST_LOCK, 
+        String listLockKey = String.format(RedisConstant.COMMENT_CHILD_LIST_LOCK,
                 query.getArticleId(), query.getCommentId(), query.getPage(), query.getPageSize());
-                
+
         // 确保totalChildComments是final或有效final
         final Long finalTotalChildComments = totalChildComments;
         return lockUtil.tryLockAndReturn(listLockKey, () -> {
             // 双重检查，避免重复查询数据库
             List<CommentDTO> doubleCheckCachedComments = commentCacheRepository.getChildComments(
                     query.getArticleId(), query.getCommentId(), query.getPage(), query.getPageSize());
-                    
+
             if (doubleCheckCachedComments != null) {
                 return PageDTO.<CommentDTO>builder()
                         .total(finalTotalChildComments)
@@ -346,7 +375,7 @@ public class CommentApplicationService {
      */
     public PageDTO<CommentUserDTO> userComment(CommentUserPageQuery query) {
         query.valid();
-        
+
         // 构建用户评论锁键
         String countLockKey = String.format(RedisConstant.USER_COMMENT_COUNT_LOCK, query.getUserId());
         LockUtil lockUtil = new LockUtil(redissonClient);
@@ -388,7 +417,7 @@ public class CommentApplicationService {
                 query.getUserId(), query.getPage(), query.getPageSize());
 
         // 缓存未命中，使用分布式锁防止缓存击穿
-        String listLockKey = String.format(RedisConstant.USER_COMMENT_LIST_LOCK, 
+        String listLockKey = String.format(RedisConstant.USER_COMMENT_LIST_LOCK,
                 query.getUserId(), query.getPage(), query.getPageSize());
 
         // 确保totalUserComments是final或有效final
@@ -398,11 +427,11 @@ public class CommentApplicationService {
                 // 双重检查，避免重复查询数据库
                 List<CommentDTO> doubleCheckCachedComments = commentCacheRepository.getUserComments(
                         query.getUserId(), query.getPage(), query.getPageSize());
-                
+
                 if (doubleCheckCachedComments != null && !doubleCheckCachedComments.isEmpty()) {
                     return processUserComments(doubleCheckCachedComments, finalTotalUserComments, query);
                 }
-                
+
                 // 缓存未命中，从数据库获取
                 List<CommentEntity> commentEntityList = commentOperateService.getUserComment(query);
                 List<CommentDTO> commentDTOList = getFullCommentList(commentEntityList);
@@ -418,7 +447,7 @@ public class CommentApplicationService {
             return processUserComments(cachedComments, finalTotalUserComments, query);
         }
     }
-    
+
     /**
      * 处理用户评论数据，获取文章标题信息
      */
@@ -445,5 +474,80 @@ public class CommentApplicationService {
                 .page(query.getPage())
                 .pageSize(query.getPageSize())
                 .build();
+    }
+
+    public PageDTO<CommentAdminDTO> commentPageAll(PageQuery query) {
+        Long total = commentOperateService.countCommentPageAll();
+        if (total == null || total == 0) {
+            return new PageDTO<>();
+        }
+        List<CommentEntity> commentEntityList = commentOperateService.commentPageAll(query);
+        List<CommentAdminDTO> fullCommentList = getFullCommentListAdmin(commentEntityList);
+        return PageDTO.<CommentAdminDTO>builder()
+                .total(total)
+                .data(fullCommentList)
+                .page(query.getPage())
+                .pageSize(query.getPageSize())
+                .build();
+    }
+
+    public PageDTO<CommentAdminDTO> commentChildPageAll(CommentChildPageAllQuery query) {
+        Long total = commentOperateService.countCommentChildPageAll(query);
+        if (total == null || total == 0) {
+            return new PageDTO<>();
+        }
+        List<CommentEntity> commentEntityList = commentOperateService.commentChildPageAll(query);
+        List<CommentAdminDTO> fullCommentList = getFullCommentListAdmin(commentEntityList);
+        return PageDTO.<CommentAdminDTO>builder()
+                .total(total)
+                .data(fullCommentList)
+                .page(query.getPage())
+                .pageSize(query.getPageSize())
+                .build();
+    }
+
+    public CommentAdminDTO getCommentAll(String commentId) {
+        CommentEntity commentAll = commentOperateService.getCommentAll(commentId);
+        if (commentAll == null) {
+            return new CommentAdminDTO();
+        }
+        List<CommentAdminDTO> fullCommentList = getFullCommentListAdmin(new ArrayList<>(Collections.singleton(commentAll)));
+        return fullCommentList.get(0);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteAdminComment(CommentDeleteAminCommand command) {
+        command.valid();
+
+        // 构建锁键，使用统一的命名规则
+        String lockKey;
+        if (!CommentConstant.TOP_COMMENT_PARENT_ID.equals(command.getParentCommentId())) {
+            // 子评论锁 - 以父评论ID为锁
+            lockKey = String.format(RedisConstant.COMMENT_LOCK_PARENT, command.getParentCommentId());
+        } else {
+            // 顶级评论锁 - 以评论ID为锁
+            lockKey = String.format(RedisConstant.COMMENT_LOCK_COMMENT, command.getCommentId());
+        }
+
+        LockUtil lockUtil = new LockUtil(redissonClient);
+        lockUtil.tryLock(lockKey, () -> {
+            CommentEntity commentEntity = commentOperateService.getCommentByCommentId(command.getCommentId());
+            if (commentEntity != null) {
+                commentOperateService.deleteCommentAdmin(command);
+
+                // 清除相关缓存
+                commentCacheRepository.deleteCommentCache(commentEntity.getArticleId());
+
+                if (!CommentConstant.TOP_COMMENT_PARENT_ID.equals(command.getParentCommentId())) {
+                    commentCacheRepository.deleteCommentChildCache(commentEntity.getArticleId(), command.getParentCommentId());
+                    commentCacheRepository.deleteChildCommentCountCache(commentEntity.getArticleId(), command.getParentCommentId());
+                } else {
+                    commentCacheRepository.deleteAllChildCommentsCache(commentEntity.getArticleId(), command.getCommentId());
+                }
+
+                commentCacheRepository.deleteUserCommentCache(commentEntity.getUserId());
+            }
+        });
+
     }
 }

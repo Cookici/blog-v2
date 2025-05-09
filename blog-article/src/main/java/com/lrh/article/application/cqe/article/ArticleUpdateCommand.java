@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @ProjectName: blog-ddd
@@ -50,6 +51,10 @@ public class ArticleUpdateCommand {
         }
         if (labelIdList == null) {
             labelIdList = new ArrayList<>();
+        } else {
+            labelIdList = labelIdList.stream()
+                    .filter(labelId -> labelId != null && !labelId.trim().isEmpty())
+                    .collect(Collectors.toList());
         }
         if (articleTitle != null) {
             if (articleTitle.length() > BusinessConstant.ID_MAX_LENGTH || articleTitle.trim().isEmpty()) {

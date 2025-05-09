@@ -21,6 +21,9 @@ import lombok.NoArgsConstructor;
 public class LabelEntity {
     private String labelId;
     private String labelName;
+    private String labelAlias;
+    private String labelDescription;
+    private Integer isDeleted;
 
     public static LabelEntity fromPO(LabelPO labelPO) {
         if(labelPO == null){
@@ -29,6 +32,9 @@ public class LabelEntity {
         return LabelEntity.builder()
                 .labelId(labelPO.getLabelId())
                 .labelName(labelPO.getLabelName())
+                .labelAlias(labelPO.getLabelAlias())
+                .labelDescription(labelPO.getLabelDescription())
+                .isDeleted(labelPO.getIsDeleted())
                 .build();
     }
 }

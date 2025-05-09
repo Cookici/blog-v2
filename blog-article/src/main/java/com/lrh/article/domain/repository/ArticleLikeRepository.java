@@ -1,5 +1,8 @@
 package com.lrh.article.domain.repository;
 
+import com.lrh.article.infrastructure.po.ArticleLikePO;
+
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -22,4 +25,7 @@ public interface ArticleLikeRepository {
 
     Map<String, Set<String>> getUserLikedArticlesMap();
 
+    void deleteLikeByArticleId(String articleId);
+
+    List<ArticleLikePO> getDeletedLikeListByArticleId(String articleId);
 }

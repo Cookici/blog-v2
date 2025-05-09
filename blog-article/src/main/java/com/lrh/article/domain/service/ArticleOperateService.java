@@ -14,6 +14,7 @@ import com.lrh.article.infrastructure.database.convertor.LabelConvertor;
 import com.lrh.article.infrastructure.doc.ArticleDO;
 import com.lrh.article.infrastructure.event.ArticleUpdateEvent;
 import com.lrh.article.infrastructure.po.ArticleLabelPO;
+import com.lrh.article.infrastructure.po.ArticleLikePO;
 import com.lrh.article.infrastructure.po.ArticlePO;
 import com.lrh.article.infrastructure.po.LabelPO;
 import com.lrh.article.util.LockUtil;
@@ -90,7 +91,6 @@ public class ArticleOperateService {
     }
 
     private void setLabelListForArticleEntityList(List<ArticleEntity> articleEntityList) {
-
         if (articleEntityList == null || articleEntityList.isEmpty()) {
             return;
         }
@@ -102,7 +102,7 @@ public class ArticleOperateService {
 
         // 获取文章与标签 ID 的映射关系
         List<ArticleLabelPO> articleLabelPOList = articleLabelOperateRepository.getArticleLabelListByArticles(articleIdList);
-        if(articleLabelPOList == null || articleLabelPOList.isEmpty()){
+        if (articleLabelPOList == null || articleLabelPOList.isEmpty()) {
             return;
         }
         Map<String, List<String>> articleIdToLabelIdsMap = articleLabelPOList.stream().collect(Collectors.groupingBy(
@@ -176,6 +176,10 @@ public class ArticleOperateService {
         validExceptionOperate(command.getArticleId(), command.getUserId());
         LockUtil lockUtil = new LockUtil(redissonClient);
         lockUtil.tryWriteLock(String.format(RedisConstant.ARTICLE_LOCK, command.getArticleId()), () -> {
+            Long articleLikeCount = articleCacheRepository.getArticleLikeCount(command.getArticleId());
+            Long articleViewCount = articleCacheRepository.getArticleViewCount(command.getArticleId());
+            articleRepository.updateArticleLikeAndViewByCache(command.getArticleId(), articleLikeCount, articleViewCount);
+            articleLikeRepository.deleteLikeByArticleId(command.getArticleId());
             articleLabelOperateRepository.deleteLabelForArticle(command.getArticleId());
             Integer update = articleRepository.deleteArticleById(command.getArticleId());
             if (update == null || update == 0) {
@@ -460,61 +464,26 @@ public class ArticleOperateService {
         List<ArticleEntity> articleEntityList = ArticleConvertor.toArticleEntityListConvertor(articlePOList);
 
         // 为每篇文章设置对应的标签列表
-        setIncludeDeleteLabelListForArticleEntityList(articleEntityList);
+        setLabelListForArticleEntityList(articleEntityList);
 
         // 返回分页结果
         return articleEntityList;
     }
 
-    private void setIncludeDeleteLabelListForArticleEntityList(List<ArticleEntity> articleEntityList) {
 
-        if (articleEntityList == null || articleEntityList.isEmpty()) {
-            return;
-        }
-
-        // 提取文章 ID 列表
-        List<String> articleIdList = articleEntityList.stream()
-                .map(ArticleEntity::getArticleId)
-                .collect(Collectors.toList());
-
-        // 获取文章与标签 ID 的映射关系
-        List<ArticleLabelPO> articleLabelPOList = articleLabelOperateRepository.getIncludeDeleteArticleLabelListByArticles(articleIdList);
-        if(articleLabelPOList == null || articleLabelPOList.isEmpty()) {
-            return;
-        }
-        Map<String, List<String>> articleIdToLabelIdsMap = articleLabelPOList.stream().collect(Collectors.groupingBy(
-                ArticleLabelPO::getArticleId,
-                Collectors.mapping(ArticleLabelPO::getLabelId, Collectors.toList())
-        ));
-
-        // 获取标签详细信息
-        List<LabelPO> labelPOList = labelOperateRepository.getLabelListByIds(
-                articleIdToLabelIdsMap.values().stream()
-                        .flatMap(Collection::stream)
-                        .distinct()
-                        .collect(Collectors.toList())
-        );
-
-        List<LabelEntity> labelEntityList = LabelConvertor.toListLabelEntityConvertor(labelPOList);
-
-        // 构建标签 ID 到标签实体的映射
-        Map<String, LabelEntity> labelIdToLabelEntityMap = labelEntityList.stream()
-                .collect(Collectors.toMap(LabelEntity::getLabelId, label -> label));
-
-        // 为每篇文章设置对应的标签列表
-        articleEntityList.forEach(articleEntity -> {
-            List<String> labelIds = articleIdToLabelIdsMap.getOrDefault(articleEntity.getArticleId(), Collections.emptyList());
-            List<LabelEntity> labels = labelIds.stream()
-                    .map(labelIdToLabelEntityMap::get)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-            articleEntity.setLabelEntityList(labels);
-        });
-    }
-
+    @Transactional(rollbackFor = Exception.class)
     public void restoreDeleted(ArticleRestoreDeletedCommand command) {
         articleRepository.restoreDeleted(command.getArticleId());
-        articleRepository.restoreDeletedEs(command.getArticleId());
+        ArticlePO articlePO = articleRepository.getArticlesById(command.getArticleId());
+        commentOperateRepository.restoreCommentByArticleId(command.getArticleId());
+
+        List<ArticleLikePO> likePOList = articleLikeRepository.getDeletedLikeListByArticleId(command.getArticleId());
+        if (likePOList != null && !likePOList.isEmpty()) {
+            List<String> userIdList = likePOList.stream().map(ArticleLikePO::getUserId).collect(Collectors.toList());
+            articleCacheRepository.restoreArticleLikeAndView(command.getArticleId(), userIdList, articlePO.getViewCount());
+        }
+
+        eventPublisher.publishEvent(new ArticleUpdateEvent(this, command.getArticleId(), UserContext.getUsername(), Deleted));
     }
 
     public ArticleEntity getDeletedArticleById(ArticleQuery query) {

@@ -1,5 +1,6 @@
 package com.lrh.article.domain.service;
 
+import com.lrh.article.application.cqe.PageQuery;
 import com.lrh.article.application.cqe.comment.*;
 import com.lrh.article.constants.CommentConstant;
 import com.lrh.article.domain.entity.CommentEntity;
@@ -123,5 +124,43 @@ public class CommentOperateService {
         List<CommentPO> commentPOList =
                 commentOperateRepository.getUserCommentPage(query.getUserId(), query.getOffset(), query.getLimit());
         return CommentConvertor.toCommentEntityListConvertor(commentPOList);
+    }
+
+    public Long countCommentPageAll() {
+        return commentOperateRepository.countCommentPageAll();
+    }
+
+    public List<CommentEntity> commentPageAll(PageQuery query) {
+        List<CommentPO> commentPOList = commentOperateRepository.pageCommentAll(query.getLimit(), query.getOffset());
+        return CommentConvertor.toCommentEntityListConvertor(commentPOList);
+    }
+
+    public Long countCommentChildPageAll(CommentChildPageAllQuery query) {
+        return commentOperateRepository.countCommentChildAll(query);
+    }
+
+    public List<CommentEntity> commentChildPageAll(CommentChildPageAllQuery query) {
+        List<CommentPO> commentPOList = commentOperateRepository.pageChildCommentAll(query.getCommentId(),query.getLimit(), query.getOffset());
+        return CommentConvertor.toCommentEntityListConvertor(commentPOList);
+    }
+
+    public CommentEntity getCommentAll(String commentId) {
+        CommentPO commentPO = commentOperateRepository.getCommentByCommentIdAll(commentId);
+        return CommentEntity.fromPO(commentPO);
+    }
+
+    public void deleteCommentAdmin(CommentDeleteAminCommand command) {
+        if (command.getParentCommentId().equals(CommentConstant.TOP_COMMENT_PARENT_ID)) {
+            commentOperateRepository.deleteTopCommentAdmin(command.getCommentId());
+            commentOperateRepository.deleteChildCommentAdmin(command.getCommentId());
+        } else {
+            commentOperateRepository.deleteCommentAdmin(command.getCommentId(),command.getParentCommentId());
+        }
+
+    }
+
+    public CommentEntity getCommentByCommentId(String commentId) {
+        CommentPO commentByCommentId = commentOperateRepository.getCommentByCommentId(commentId);
+        return CommentEntity.fromPO(commentByCommentId);
     }
 }

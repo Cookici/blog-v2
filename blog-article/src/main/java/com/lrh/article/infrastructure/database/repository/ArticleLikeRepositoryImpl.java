@@ -75,5 +75,23 @@ public class ArticleLikeRepositoryImpl implements ArticleLikeRepository {
         return userLikedArticlesMap;
     }
 
+    @Override
+    public void deleteLikeByArticleId(String articleId) {
+        LambdaUpdateWrapper<ArticleLikePO> updateWrapper = Wrappers.lambdaUpdate(ArticleLikePO.class)
+                .eq(ArticleLikePO::getArticleId, articleId)
+                .eq(ArticleLikePO::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
+                .set(ArticleLikePO::getIsDeleted, BusinessConstant.IS_DELETED);
+        articleLikeMapper.update(updateWrapper);
+    }
+
+    @Override
+    public List<ArticleLikePO> getDeletedLikeListByArticleId(String articleId) {
+        LambdaQueryWrapper<ArticleLikePO> queryWrapper = Wrappers.lambdaQuery(ArticleLikePO.class)
+                .eq(ArticleLikePO::getArticleId, articleId)
+                .eq(ArticleLikePO::getIsDeleted, BusinessConstant.IS_DELETED);
+        return articleLikeMapper.selectList(queryWrapper);
+    }
+
+
 
 }
