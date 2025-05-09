@@ -7,6 +7,8 @@ import com.lrh.article.application.dto.article.ArticleAdminDTO;
 import com.lrh.article.application.dto.article.ArticleDTO;
 import com.lrh.article.application.service.ArticleApplicationService;
 import com.lrh.common.result.Result;
+import com.lrh.article.application.cqe.article.ArticleDateRangeQuery;
+import com.lrh.article.application.dto.article.ArticleDailyCountDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -164,6 +166,22 @@ public class ArticleApplicationController {
     public Result<PageDTO<ArticleDTO>> listQueryUserArticle(ArticleEsUserPageQuery query) {
         PageDTO<ArticleDTO> resp = articleApplicationService.listQueryUserArticles(query);
         return Result.success(resp);
+    }
+
+    /**
+     * 获取日期范围内每天的文章数量
+     * @param query 日期范围查询参数
+     * @return 每日文章数量列表
+     */
+    @PostMapping("/daily-count")
+    public Result<List<ArticleDailyCountDTO>> getArticleDailyCount(@RequestBody ArticleDateRangeQuery query) {
+        List<ArticleDailyCountDTO> dailyCountList = articleApplicationService.getArticleDailyCount(query);
+        return Result.success(dailyCountList);
+    }
+
+    @GetMapping("/count")
+    public Result<Long> count(){
+        return Result.success(articleApplicationService.count());
     }
 
 }

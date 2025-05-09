@@ -2,6 +2,7 @@ package com.lrh.article.domain.service;
 
 import com.lrh.article.application.cqe.PageQuery;
 import com.lrh.article.application.cqe.comment.*;
+import com.lrh.article.application.dto.comment.CommentDailyCountDTO;
 import com.lrh.article.constants.CommentConstant;
 import com.lrh.article.domain.entity.CommentEntity;
 import com.lrh.article.domain.repository.CommentOperateRepository;
@@ -11,6 +12,8 @@ import com.lrh.common.util.IdUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -162,5 +165,13 @@ public class CommentOperateService {
     public CommentEntity getCommentByCommentId(String commentId) {
         CommentPO commentByCommentId = commentOperateRepository.getCommentByCommentId(commentId);
         return CommentEntity.fromPO(commentByCommentId);
+    }
+
+    public List<CommentDailyCountDTO> getCommentDailyCount(LocalDateTime startDate, LocalDateTime endDate) {
+        return commentOperateRepository.getCommentDailyCount(startDate, endDate);
+    }
+
+    public Long count() {
+        return commentOperateRepository.count();
     }
 }

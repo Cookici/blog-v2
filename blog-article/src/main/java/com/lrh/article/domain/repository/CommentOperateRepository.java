@@ -1,8 +1,10 @@
 package com.lrh.article.domain.repository;
 
 import com.lrh.article.application.cqe.comment.CommentChildPageAllQuery;
+import com.lrh.article.application.dto.comment.CommentDailyCountDTO;
 import com.lrh.article.infrastructure.po.CommentPO;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -61,4 +63,8 @@ public interface CommentOperateRepository {
     void deleteChildCommentAdmin(String parentCommentId);
 
     void deleteTopCommentAdmin(String commentId);
+
+    List<CommentDailyCountDTO> getCommentDailyCount(LocalDateTime startDate, LocalDateTime endDate);
+
+    Long count();
 }

@@ -5,10 +5,13 @@ import com.lrh.article.application.cqe.comment.*;
 import com.lrh.article.application.dto.PageDTO;
 import com.lrh.article.application.dto.comment.CommentAdminDTO;
 import com.lrh.article.application.dto.comment.CommentDTO;
+import com.lrh.article.application.dto.comment.CommentDailyCountDTO;
 import com.lrh.article.application.dto.comment.CommentUserDTO;
 import com.lrh.article.application.service.CommentApplicationService;
 import com.lrh.common.result.Result;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * @ProjectName: blog-ddd
@@ -80,6 +83,17 @@ public class CommentApplicationController {
     public Result<Object> deleteAdminComment(@RequestBody CommentDeleteAminCommand command) {
         commentApplicationService.deleteAdminComment(command);
         return Result.success();
+    }
+
+    @PostMapping("/daily-count")
+    public Result<List<CommentDailyCountDTO>> getCommentDailyCount(@RequestBody CommentDateRangeQuery query) {
+        List<CommentDailyCountDTO> dailyCountList = commentApplicationService.getCountDailyCount(query);
+        return Result.success(dailyCountList);
+    }
+
+    @GetMapping("/count")
+    public Result<Long> count(){
+        return Result.success(commentApplicationService.count());
     }
 
 }

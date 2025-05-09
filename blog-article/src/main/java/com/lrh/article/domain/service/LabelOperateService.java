@@ -67,4 +67,8 @@ public class LabelOperateService {
     public void restoreLabel(LabelRestoreCommand command) {
         labelRepository.restore(command.getLabelId());
     }
+
+    public Long count() {
+        return labelRepository.count();
+    }
 }

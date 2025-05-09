@@ -64,5 +64,10 @@ public class LabelApplicationController {
         return Result.success();
     }
 
+    @GetMapping("/count")
+    public Result<Long> countLabel(){
+        return Result.success(labelApplicationService.count());
+    }
+
 
 }

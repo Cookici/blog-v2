@@ -5,6 +5,7 @@ import com.lrh.article.application.cqe.comment.*;
 import com.lrh.article.application.dto.PageDTO;
 import com.lrh.article.application.dto.comment.CommentAdminDTO;
 import com.lrh.article.application.dto.comment.CommentDTO;
+import com.lrh.article.application.dto.comment.CommentDailyCountDTO;
 import com.lrh.article.application.dto.comment.CommentUserDTO;
 import com.lrh.article.constants.CommentConstant;
 import com.lrh.article.constants.RedisConstant;
@@ -549,5 +550,14 @@ public class CommentApplicationService {
             }
         });
 
+    }
+
+    public List<CommentDailyCountDTO> getCountDailyCount(CommentDateRangeQuery query) {
+        query.valid();
+        return commentOperateService.getCommentDailyCount(query.getStartDate(), query.getEndDate());
+    }
+
+    public Long count() {
+        return commentOperateService.count();
     }
 }

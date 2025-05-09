@@ -130,4 +130,9 @@ public class LabelRepositoryImpl implements LabelOperateRepository {
                 .set(LabelPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED);
         labelMapper.update(updateWrapper);
     }
+
+    @Override
+    public Long count() {
+        return labelMapper.selectCount(Wrappers.lambdaQuery(LabelPO.class));
+    }
 }

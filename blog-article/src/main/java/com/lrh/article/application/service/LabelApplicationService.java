@@ -79,4 +79,8 @@ public class LabelApplicationService {
         command.valid();
         labelRepository.restoreLabel(command);
     }
+
+    public Long count() {
+        return labelRepository.count();
+    }
 }

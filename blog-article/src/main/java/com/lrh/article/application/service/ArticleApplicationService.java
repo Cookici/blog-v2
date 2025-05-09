@@ -5,6 +5,8 @@ import com.lrh.article.application.dto.PageDTO;
 import com.lrh.article.application.dto.UserDataDTO;
 import com.lrh.article.application.dto.article.ArticleAdminDTO;
 import com.lrh.article.application.dto.article.ArticleDTO;
+import com.lrh.article.application.cqe.article.ArticleDateRangeQuery;
+import com.lrh.article.application.dto.article.ArticleDailyCountDTO;
 import com.lrh.article.constants.RedisConstant;
 import com.lrh.article.domain.entity.ArticleEntity;
 import com.lrh.article.domain.entity.UserArticleDataEntity;
@@ -535,5 +537,19 @@ public class ArticleApplicationService {
         articleDTO.setViewCount(articleViewCount);
 
         return articleDTO;
+    }
+
+    /**
+     * 获取日期范围内每天的文章数量
+     * @param query 日期范围查询参数
+     * @return 每日文章数量列表
+     */
+    public List<ArticleDailyCountDTO> getArticleDailyCount(ArticleDateRangeQuery query) {
+        query.valid();
+        return articleOperateService.getArticleDailyCount(query.getStartDate(), query.getEndDate());
+    }
+
+    public Long count() {
+        return articleOperateService.count();
     }
 }
