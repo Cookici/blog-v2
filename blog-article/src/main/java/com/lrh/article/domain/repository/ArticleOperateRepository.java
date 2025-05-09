@@ -1,6 +1,7 @@
 package com.lrh.article.domain.repository;
 
 import com.lrh.article.application.cqe.article.*;
+import com.lrh.article.application.dto.article.ArticleDailyCountDTO;
 import com.lrh.article.infrastructure.doc.ArticleDO;
 import com.lrh.article.infrastructure.po.ArticlePO;
 
@@ -140,4 +141,14 @@ public interface ArticleOperateRepository {
     ArticlePO getDeletedArticlesById(String articleId);
 
     void updateArticleLikeAndViewByCache(String articleId,Long articleLikeCount, Long articleViewCount);
+    
+    /**
+     * 获取日期范围内每天的文章数量
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @return 每日文章数量列表
+     */
+    List<ArticleDailyCountDTO> getArticleDailyCount(LocalDateTime startDate, LocalDateTime endDate);
+
+    Long count();
 }

@@ -131,4 +131,10 @@ public class UserController {
         return Result.success();
     }
 
+    @GetMapping("/count")
+    Result<Long> countUser(){
+        return Result.success(userService.count());
+    }
+
+
 }

@@ -147,5 +147,19 @@
         </where>
     </select>
 
+    <select id="selectArticleDailyCount" resultType="com.lrh.article.application.dto.article.ArticleDailyCountDTO">
+        SELECT
+            DATE(create_time) as date,
+            COUNT(*) as count
+        FROM
+            t_article
+        WHERE
+            DATE(create_time) BETWEEN #{startDate} AND #{endDate}
+          AND is_deleted = 0
+        GROUP BY
+            DATE(create_time)
+        ORDER BY
+            date ASC
+    </select>
 
 </mapper>

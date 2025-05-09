@@ -4,10 +4,12 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.lrh.article.application.cqe.article.ArticlePageAllQuery;
 import com.lrh.article.application.cqe.article.ArticlePageQuery;
 import com.lrh.article.application.cqe.article.ArticleUserPageQuery;
+import com.lrh.article.application.dto.article.ArticleDailyCountDTO;
 import com.lrh.article.infrastructure.po.ArticlePO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -45,4 +47,13 @@ public interface ArticleMapper extends BaseMapper<ArticlePO> {
     List<ArticlePO> selectPageArticleAll(@Param("query") ArticlePageAllQuery query,
                                          @Param("offset") Long offset,
                                          @Param("limit") Long limit);
+    
+    /**
+     * 查询日期范围内每天的文章数量
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @return 每日文章数量列表
+     */
+    List<ArticleDailyCountDTO> selectArticleDailyCount(@Param("startDate") LocalDateTime startDate,
+                                                      @Param("endDate") LocalDateTime endDate);
 }

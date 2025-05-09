@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.lrh.article.application.cqe.comment.CommentChildPageAllQuery;
+import com.lrh.article.application.dto.comment.CommentDailyCountDTO;
 import com.lrh.article.constants.CommentConstant;
 import com.lrh.article.domain.repository.CommentOperateRepository;
 import com.lrh.article.infrastructure.database.mapper.CommentMapper;
@@ -11,6 +12,8 @@ import com.lrh.article.infrastructure.po.CommentPO;
 import com.lrh.common.constant.BusinessConstant;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -219,6 +222,16 @@ public class CommentRepositoryImpl implements CommentOperateRepository {
                 .eq(CommentPO::getIsDeleted, BusinessConstant.IS_NOT_DELETED)
                 .set(CommentPO::getIsDeleted, BusinessConstant.IS_DELETED);
         commentMapper.update(updateWrapper);
+    }
+
+    @Override
+    public List<CommentDailyCountDTO> getCommentDailyCount(LocalDateTime startDate, LocalDateTime endDate) {
+        return commentMapper.selectCommentDailyCount(startDate, endDate);
+    }
+
+    @Override
+    public Long count() {
+        return commentMapper.selectCount(null);
     }
 
 }

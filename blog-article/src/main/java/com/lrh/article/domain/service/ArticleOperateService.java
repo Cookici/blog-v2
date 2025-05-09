@@ -2,6 +2,7 @@ package com.lrh.article.domain.service;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.lrh.article.application.cqe.article.*;
+import com.lrh.article.application.dto.article.ArticleDailyCountDTO;
 import com.lrh.article.constants.RedisConstant;
 import com.lrh.article.constants.RoleConstant;
 import com.lrh.article.domain.entity.ArticleEntity;
@@ -28,6 +29,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -499,5 +501,19 @@ public class ArticleOperateService {
             articleEntity.setLabelEntityList(LabelConvertor.toListLabelEntityConvertor(articleIdList));
         }
         return articleEntity;
+    }
+
+    /**
+     * 获取日期范围内每天的文章数量
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @return 每日文章数量列表
+     */
+    public List<ArticleDailyCountDTO> getArticleDailyCount(LocalDateTime startDate, LocalDateTime endDate) {
+        return articleRepository.getArticleDailyCount(startDate, endDate);
+    }
+
+    public Long count() {
+        return articleRepository.count();
     }
 }

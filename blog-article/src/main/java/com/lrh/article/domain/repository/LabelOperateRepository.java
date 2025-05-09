@@ -37,4 +37,6 @@ public interface LabelOperateRepository {
     void insert(LabelPO labelPO);
 
     void restore(String labelId);
+
+    Long count();
 }

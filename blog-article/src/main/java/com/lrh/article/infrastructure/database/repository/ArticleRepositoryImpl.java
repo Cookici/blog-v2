@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.lrh.article.application.cqe.article.*;
+import com.lrh.article.application.dto.article.ArticleDailyCountDTO;
 import com.lrh.article.domain.repository.ArticleOperateRepository;
 import com.lrh.article.domain.vo.ArticleStatusEnum;
 import com.lrh.article.infrastructure.database.esDao.ArticleEsDao;
@@ -16,6 +17,7 @@ import com.lrh.common.constant.BusinessConstant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -404,5 +406,15 @@ public class ArticleRepositoryImpl implements ArticleOperateRepository {
                 .set(ArticlePO::getLikeCount, articleLikeCount)
                 .set(ArticlePO::getViewCount, articleViewCount);
         articleMapper.update(updateWrapper);
+    }
+
+    @Override
+    public List<ArticleDailyCountDTO> getArticleDailyCount(LocalDateTime startDate, LocalDateTime endDate) {
+        return articleMapper.selectArticleDailyCount(startDate, endDate);
+    }
+
+    @Override
+    public Long count() {
+        return articleMapper.selectCount(null);
     }
 }
