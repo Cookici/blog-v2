@@ -1,6 +1,5 @@
 package com.lrh.article.domain.service;
 
-import com.lrh.article.application.cqe.PageQuery;
 import com.lrh.article.application.cqe.comment.*;
 import com.lrh.article.application.dto.comment.CommentDailyCountDTO;
 import com.lrh.article.constants.CommentConstant;
@@ -12,7 +11,6 @@ import com.lrh.common.util.IdUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -129,21 +127,22 @@ public class CommentOperateService {
         return CommentConvertor.toCommentEntityListConvertor(commentPOList);
     }
 
-    public Long countCommentPageAll() {
-        return commentOperateRepository.countCommentPageAll();
+    public Long countCommentPageAll(CommentPageAllQuery query) {
+        return commentOperateRepository.countCommentPageAll(query.getKeyword());
     }
 
-    public List<CommentEntity> commentPageAll(PageQuery query) {
-        List<CommentPO> commentPOList = commentOperateRepository.pageCommentAll(query.getLimit(), query.getOffset());
+    public List<CommentEntity> commentPageAll(CommentPageAllQuery query) {
+        List<CommentPO> commentPOList = commentOperateRepository.pageCommentAll(query.getKeyword(),query.getLimit(), query.getOffset());
         return CommentConvertor.toCommentEntityListConvertor(commentPOList);
     }
 
     public Long countCommentChildPageAll(CommentChildPageAllQuery query) {
-        return commentOperateRepository.countCommentChildAll(query);
+        return commentOperateRepository.countCommentChildAll(query.getCommentId(),query.getKeyword());
     }
 
     public List<CommentEntity> commentChildPageAll(CommentChildPageAllQuery query) {
-        List<CommentPO> commentPOList = commentOperateRepository.pageChildCommentAll(query.getCommentId(),query.getLimit(), query.getOffset());
+        List<CommentPO> commentPOList =
+                commentOperateRepository.pageChildCommentAll(query.getKeyword(),query.getCommentId(),query.getLimit(), query.getOffset());
         return CommentConvertor.toCommentEntityListConvertor(commentPOList);
     }
 

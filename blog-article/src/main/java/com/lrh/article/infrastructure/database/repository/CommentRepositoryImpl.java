@@ -3,7 +3,6 @@ package com.lrh.article.infrastructure.database.repository;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.lrh.article.application.cqe.comment.CommentChildPageAllQuery;
 import com.lrh.article.application.dto.comment.CommentDailyCountDTO;
 import com.lrh.article.constants.CommentConstant;
 import com.lrh.article.domain.repository.CommentOperateRepository;
@@ -12,7 +11,6 @@ import com.lrh.article.infrastructure.po.CommentPO;
 import com.lrh.common.constant.BusinessConstant;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -161,29 +159,34 @@ public class CommentRepositoryImpl implements CommentOperateRepository {
     }
 
     @Override
-    public Long countCommentPageAll() {
-        return commentMapper.selectCount(Wrappers.lambdaQuery(CommentPO.class));
+    public Long countCommentPageAll(String keyword) {
+        LambdaQueryWrapper<CommentPO> queryWrapper = Wrappers.lambdaQuery(CommentPO.class)
+                .like(CommentPO::getCommentContent, keyword);
+        return commentMapper.selectCount(queryWrapper);
     }
 
     @Override
-    public List<CommentPO> pageCommentAll(Long limit, Long offset) {
+    public List<CommentPO> pageCommentAll(String keyword,Long limit, Long offset) {
         LambdaQueryWrapper<CommentPO> queryWrapper = Wrappers.lambdaQuery(CommentPO.class)
+                .like(CommentPO::getCommentContent, keyword)
                 .orderByDesc(CommentPO::getCreateTime)
                 .last("limit " + offset + ", " + limit);
         return commentMapper.selectList(queryWrapper);
     }
 
     @Override
-    public Long countCommentChildAll(CommentChildPageAllQuery query) {
+    public Long countCommentChildAll(String commentId,String keyword) {
         LambdaQueryWrapper<CommentPO> queryWrapper = Wrappers.lambdaQuery(CommentPO.class)
-                .eq(CommentPO::getParentCommentId, query.getCommentId());
+                .eq(CommentPO::getParentCommentId, commentId)
+                .like(CommentPO::getCommentContent, keyword);
         return commentMapper.selectCount(queryWrapper);
     }
 
     @Override
-    public List<CommentPO> pageChildCommentAll(String parentCommentId, Long limit, Long offset) {
+    public List<CommentPO> pageChildCommentAll(String keyword,String parentCommentId, Long limit, Long offset) {
         LambdaQueryWrapper<CommentPO> queryWrapper = Wrappers.lambdaQuery(CommentPO.class)
                 .eq(CommentPO::getParentCommentId, parentCommentId)
+                .like(CommentPO::getCommentContent, keyword)
                 .orderByDesc(CommentPO::getCreateTime)
                 .last("limit " + offset + ", " + limit);
         return commentMapper.selectList(queryWrapper);

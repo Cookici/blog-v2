@@ -14,6 +14,8 @@ public class CommentChildPageAllQuery extends PageQuery {
 
     private String commentId;
 
+    private String keyword;
+
     public void valid() {
         if (commentId == null) {
             throw new ValidException(String.format(BusinessConstant.VALID_ERROR, "校验失败"));

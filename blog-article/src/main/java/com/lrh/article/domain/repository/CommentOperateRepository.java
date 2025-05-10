@@ -1,6 +1,5 @@
 package com.lrh.article.domain.repository;
 
-import com.lrh.article.application.cqe.comment.CommentChildPageAllQuery;
 import com.lrh.article.application.dto.comment.CommentDailyCountDTO;
 import com.lrh.article.infrastructure.po.CommentPO;
 
@@ -48,13 +47,13 @@ public interface CommentOperateRepository {
 
     void restoreCommentByArticleId(String articleId);
 
-    Long countCommentPageAll();
+    Long countCommentPageAll(String keyword);
 
-    List<CommentPO> pageCommentAll(Long limit, Long offset);
+    List<CommentPO> pageCommentAll(String keyword,Long limit, Long offset);
 
-    Long countCommentChildAll(CommentChildPageAllQuery query);
+    Long countCommentChildAll(String commentId,String keyword);
 
-    List<CommentPO> pageChildCommentAll(String commentId, Long limit, Long offset);
+    List<CommentPO> pageChildCommentAll(String keyword,String commentId, Long limit, Long offset);
 
     CommentPO getCommentByCommentIdAll(String commentId);
 
