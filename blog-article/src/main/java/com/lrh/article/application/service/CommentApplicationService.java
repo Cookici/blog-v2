@@ -1,6 +1,5 @@
 package com.lrh.article.application.service;
 
-import com.lrh.article.application.cqe.PageQuery;
 import com.lrh.article.application.cqe.comment.*;
 import com.lrh.article.application.dto.PageDTO;
 import com.lrh.article.application.dto.comment.CommentAdminDTO;
@@ -477,8 +476,8 @@ public class CommentApplicationService {
                 .build();
     }
 
-    public PageDTO<CommentAdminDTO> commentPageAll(PageQuery query) {
-        Long total = commentOperateService.countCommentPageAll();
+    public PageDTO<CommentAdminDTO> commentPageAll(CommentPageAllQuery query) {
+        Long total = commentOperateService.countCommentPageAll(query);
         if (total == null || total == 0) {
             return new PageDTO<>();
         }

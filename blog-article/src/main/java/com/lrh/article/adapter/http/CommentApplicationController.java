@@ -1,6 +1,5 @@
 package com.lrh.article.adapter.http;
 
-import com.lrh.article.application.cqe.PageQuery;
 import com.lrh.article.application.cqe.comment.*;
 import com.lrh.article.application.dto.PageDTO;
 import com.lrh.article.application.dto.comment.CommentAdminDTO;
@@ -62,7 +61,7 @@ public class CommentApplicationController {
     }
 
     @GetMapping("/page/all")
-    public Result<PageDTO<CommentAdminDTO>> getCommentPageAll(PageQuery query) {
+    public Result<PageDTO<CommentAdminDTO>> getCommentPageAll(CommentPageAllQuery query) {
         PageDTO<CommentAdminDTO> resp = commentApplicationService.commentPageAll(query);
         return Result.success(resp);
     }
