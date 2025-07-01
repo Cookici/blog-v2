@@ -254,7 +254,6 @@ public class ArticleOperateService {
         articleCacheRepository.incrArticleViewCount(command.getArticleId(), UserContext.getUserId());
     }
 
-    @Async("articleAsyncExecutor")
     public void articleLikeIncrement(ArticleLikeCommand command) {
         Boolean isSuccess = articleCacheRepository.incrArticleLikeCount(command.getArticleId(), UserContext.getUserId());
         if (isSuccess) {
@@ -273,7 +272,6 @@ public class ArticleOperateService {
         articleCacheRepository.incrArticleViewCount(command.getArticleId(), command.getIp());
     }
 
-    @Async("articleAsyncExecutor")
     public void articleNoLoginLikeIncrement(ArticleNoLoginLikeCommand command) {
         articleCacheRepository.incrArticleLikeCount(command.getArticleId(), command.getIp());
     }
